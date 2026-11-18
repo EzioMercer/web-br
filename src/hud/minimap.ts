@@ -14,7 +14,7 @@ export let bigBg: MapBg | null = null;
 export let bigMapOpen = false;
 
 /** Renders the terrain of map `m` (S x S pixels) with building footprints and, if `labels`, region names. */
-function renderMapBg(m: GeneratedWorld, S: number, labels: boolean): MapBg {
+const renderMapBg = (m: GeneratedWorld, S: number, labels: boolean): MapBg => {
   const T = m.terrain;
   const half = T.half;
   const c = document.createElement('canvas');
@@ -114,14 +114,14 @@ function renderMapBg(m: GeneratedWorld, S: number, labels: boolean): MapBg {
     }
   }
   return out;
-}
+};
 
-export function buildMinimap(m: GeneratedWorld) {
+export const buildMinimap = (m: GeneratedWorld) => {
   miniBg = renderMapBg(m, Math.round(MINIMAP_SIZE * Math.min(devicePixelRatio || 1, 2)), false);
-}
+};
 
 /** Draws the map background, the zone and the player's position and view cone. */
-export function drawMap(x: CanvasRenderingContext2D, Sd: number, bg: MapBg | null) {
+export const drawMap = (x: CanvasRenderingContext2D, Sd: number, bg: MapBg | null) => {
   const half = terrain!.half;
   const k = Sd / (2 * half);
 
@@ -169,13 +169,13 @@ export function drawMap(x: CanvasRenderingContext2D, Sd: number, bg: MapBg | nul
   x.lineWidth = 1.5 * sc;
   x.strokeStyle = '#000';
   x.stroke();
-}
+};
 
-export function openBigMap(v: boolean) {
+export const openBigMap = (v: boolean) => {
   bigMapOpen = v;
   byId('bigmap').style.display = bigMapOpen ? 'block' : 'none';
   if (bigMapOpen && !bigBg) {
     const S = Math.max(360, Math.min(780, Math.floor(Math.min(innerWidth, innerHeight) * 0.84)));
     bigBg = renderMapBg(getIsland(), S, true);
   }
-}
+};

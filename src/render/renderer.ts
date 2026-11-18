@@ -12,16 +12,16 @@ export const renderer = new THREE.WebGLRenderer({ canvas: glCanvas, antialias: t
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 
 // Canvas-drawn textures hold sRGB colors.
-export function srgbTex<T extends THREE.Texture>(t: T): T {
+export const srgbTex = <T extends THREE.Texture>(t: T): T => {
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
-}
+};
 
-function resize() {
+const resize = () => {
   renderer.setSize(innerWidth, innerHeight, false);
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
-}
+};
 
 addEventListener('resize', resize);
 resize();

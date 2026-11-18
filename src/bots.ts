@@ -74,7 +74,7 @@ const PALETTE = [0x6b5a3a, 0x3b3f45, 0x5a3a32, 0x39503f, 0x4a4a2e];
 const BOT_WEAPONS = ['rifle', 'rifle', 'm4', 'm4', 'mp5', 'p90', 'awp', 'scout', 'svd', 'm3', 'glock', 'deagle', 'pistol'];
 
 /** Builds the bot model into `g` and returns its animated parts and name label. */
-function buildBotModel(id: number, g: THREE.Group, legs: THREE.Group[], knees: THREE.Group[]): Pick<Bot, 'upperBody' | 'gunGroup' | 'labelCanvas' | 'labelTexture' | 'labelSprite'> {
+const buildBotModel = (id: number, g: THREE.Group, legs: THREE.Group[], knees: THREE.Group[]): Pick<Bot, 'upperBody' | 'gunGroup' | 'labelCanvas' | 'labelTexture' | 'labelSprite'> => {
   const mat = (c: number) => new THREE.MeshLambertMaterial({ color: c });
 
   const c = PALETTE[id % 5];
@@ -140,9 +140,9 @@ function buildBotModel(id: number, g: THREE.Group, legs: THREE.Group[], knees: T
   sp.visible = false;
   U.add(sp);
   return { upperBody: U, gunGroup: gunG, labelCanvas: cv, labelTexture: tex, labelSprite: sp };
-}
+};
 
-function buildBotGun(b: Bot) {
+const buildBotGun = (b: Bot) => {
   const G = b.gunGroup;
   while (G.children.length) {
     G.remove(G.children[0]);
@@ -177,9 +177,9 @@ function buildBotGun(b: Bot) {
     add(0.07, 0.07, 0.25, 0.4, 0, 0x6b4a2a);
     add(0.04, 0.14, 0.07, 0.05, -0.1, 0x1d2024);
   }
-}
+};
 
-function drawLabel(b: Bot) {
+const drawLabel = (b: Bot) => {
   const x = b.labelCanvas.getContext('2d')!;
   x.clearRect(0, 0, 256, 64);
   x.font = 'bold 30px sans-serif';
@@ -191,9 +191,9 @@ function drawLabel(b: Bot) {
   x.fillStyle = '#ffcf5a';
   x.fillText(t, 128, 40);
   b.labelTexture.needsUpdate = true;
-}
+};
 
-export function aimLabels() {
+export const aimLabels = () => {
   if (player.dead) {
     return;
   }
@@ -207,17 +207,17 @@ export function aimLabels() {
     }
     b.labelSprite.visible = b.health > 0 && simTime < b.labelUntil;
   }
-}
+};
 
-export function setBotWeapon(b: Bot, w: string) {
+export const setBotWeapon = (b: Bot, w: string) => {
   b.weaponId = w;
   buildBotGun(b);
   drawLabel(b);
-}
+};
 
 export const bots: Bot[] = [];
 
-export function addBot(i: number) {
+export const addBot = (i: number) => {
   const g = new THREE.Group();
   scene.add(g);
   const legs: THREE.Group[] = [];
@@ -259,10 +259,10 @@ export function addBot(i: number) {
     fallVel: 0,
   };
   bots.push(b);
-}
+};
 
 /** A new walk target: somewhere dry in the (next) zone, sometimes near the player. */
-function pickWaypoint(b: Bot) {
+const pickWaypoint = (b: Bot) => {
   const zt = zone.next || zone;
   for (let k = 0; k < 14; k++) {
     const a = Math.random() * 6.283;
@@ -277,10 +277,10 @@ function pickWaypoint(b: Bot) {
     b.targetX = playerBody.x + (Math.random() - 0.5) * 12;
     b.targetZ = playerBody.z + (Math.random() - 0.5) * 12;
   }
-}
+};
 
 /** Drops bot `b` at a random spot with full health and a random weapon. */
-export function respawnBot(b: Bot) {
+export const respawnBot = (b: Bot) => {
   const w = botDropSpot();
   b.x = w[0] + (Math.random() - 0.5) * 0.6;
   b.z = w[1];
@@ -298,9 +298,9 @@ export function respawnBot(b: Bot) {
   b.labelUntil = 0;
   setBotWeapon(b, BOT_WEAPONS[Math.random() * BOT_WEAPONS.length | 0]);
   pickWaypoint(b);
-}
+};
 
-export function botsTick(dt: number) {
+export const botsTick = (dt: number) => {
   for (const b of bots) {
     if (b.health <= 0) {
       if (b.corpse && b.fallY > b.y + 0.005) {
@@ -468,4 +468,4 @@ export function botsTick(dt: number) {
     }
     b.mesh.position.set(b.x, b.y, b.z);
   }
-}
+};

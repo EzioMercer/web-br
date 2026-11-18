@@ -11,7 +11,7 @@ export const settings = {
 
 const SAVE_KEY = 'web-br.settings';
 
-export function loadSettings() {
+export const loadSettings = () => {
   try {
     const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') as { sens?: number; vol?: number; diff?: string };
     if (typeof s.sens === 'number') {
@@ -24,11 +24,11 @@ export function loadSettings() {
       settings.difficulty = DIFFICULTIES[s.diff];
     }
   } catch { /* Storage unavailable: keep the defaults. */ }
-}
+};
 
-export function saveSettings() {
+export const saveSettings = () => {
   try {
     const diff = Object.keys(DIFFICULTIES).find(k => DIFFICULTIES[k] === settings.difficulty);
     localStorage.setItem(SAVE_KEY, JSON.stringify({ sens: settings.sensitivity, vol: settings.footstepVolume, diff }));
   } catch { /* Storage unavailable: settings last for this page only. */ }
-}
+};

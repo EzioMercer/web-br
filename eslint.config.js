@@ -38,6 +38,9 @@ export default tseslint.config(
         { blankLine: 'always', prev: '*', next: functionStatements },
       ],
       'curly': ['error', 'all'],
+      // Functions are arrow functions: `const f = () => ...`.
+      'func-style': ['error', 'expression'],
+      'prefer-arrow-callback': 'error',
       'one-var': ['error', 'never'],
     },
   },

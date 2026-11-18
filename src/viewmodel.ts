@@ -16,7 +16,7 @@ const darkMat = lambert(0x1d2024);
 const oliveMat = lambert(0x3d4a36);
 const lensGlass = new THREE.MeshPhongMaterial({ color: 0x7fd0ff, transparent: true, opacity: 0.4, shininess: 120, specular: 0xffffff });
 
-export function boxMesh(g: THREE.Object3D, w: number, h: number, d: number, x: number, y: number, z: number, m: THREE.Material, rx?: number) {
+export const boxMesh = (g: THREE.Object3D, w: number, h: number, d: number, x: number, y: number, z: number, m: THREE.Material, rx?: number) => {
   const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
   o.position.set(x, y, z);
   if (rx) {
@@ -24,16 +24,16 @@ export function boxMesh(g: THREE.Object3D, w: number, h: number, d: number, x: n
   }
   g.add(o);
   return o;
-}
+};
 
 /** Cylinder along z. */
-export function cylinderMesh(g: THREE.Object3D, r: number, l: number, x: number, y: number, z: number, m: THREE.Material) {
+export const cylinderMesh = (g: THREE.Object3D, r: number, l: number, x: number, y: number, z: number, m: THREE.Material) => {
   const o = new THREE.Mesh(new THREE.CylinderGeometry(r, r, l, 16), m);
   o.rotation.x = Math.PI / 2;
   o.position.set(x, y, z);
   g.add(o);
   return o;
-}
+};
 
 /** Viewmodel per weapon id. */
 export const viewModels: Record<string, THREE.Group> = { pistol: new THREE.Group(), rifle: new THREE.Group(), awp: new THREE.Group() };
@@ -92,7 +92,7 @@ magMeshes.awp.userData.y = -0.1;
 gunRig.add(viewModels.pistol, viewModels.rifle, viewModels.awp);
 
 /** Registers weapon `id` as a scaled, recolored copy of the `base` model. */
-function cloneModel(id: string, base: string, sc: number, col: number) {
+const cloneModel = (id: string, base: string, sc: number, col: number) => {
   const g = viewModels[base].clone(true);
   g.scale.setScalar(sc);
   if (col) {
@@ -110,14 +110,14 @@ function cloneModel(id: string, base: string, sc: number, col: number) {
     boltMeshes[id] = g.children[viewModels.awp.children.indexOf(bolt)];
     bulletMeshes[id] = g.children[viewModels.awp.children.indexOf(bullet)];
   }
-}
+};
 
 const opticBlack = lambert(0x151719);
 
 const lensMat = (t: OpticId) => new THREE.MeshBasicMaterial({ color: t === 'rd' ? 0xff4030 : t === 'ho' ? 0xff6a50 : 0x7fb8ff, transparent: true, opacity: 0.8 });
 
 /** Optic model (also used for Battle Royale pickups). */
-export function makeOptic(t: OpticId) {
+export const makeOptic = (t: OpticId) => {
   const bk = opticBlack;
   const g = new THREE.Group();
   const l = lensMat(t);
@@ -148,7 +148,7 @@ export function makeOptic(t: OpticId) {
     cylinderMesh(g, 0.006, 0.12, 0, 0.088, 0, lambert(0xff9a2a));
   }
   return g;
-}
+};
 
 for (const t of OPTIC_IDS) {
   const g = makeOptic(t);
@@ -235,12 +235,12 @@ const smoothstep = (a: number, b: number, u: number) => {
 };
 
 /** Bolt handle pose: `l` lifted, `b` pulled back (0..1). */
-function boltPose(l: number, b: number) {
+const boltPose = (l: number, b: number) => {
   bolt.rotation.z = 0.9 * l;
   bolt.position.set(0.05, 0.02 + 0.035 * l, 0.1 + 0.12 * b);
-}
+};
 
-export function animateViewModel() {
+export const animateViewModel = () => {
   if (boltMeshes[loadout.weaponId]) {
     bolt = boltMeshes[loadout.weaponId];
     bullet = bulletMeshes[loadout.weaponId];
@@ -300,7 +300,7 @@ export function animateViewModel() {
       bullet.rotation.z = 0.6 * (1 - bf);
     }
   }
-}
+};
 
 export const muzzleFlashMesh = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.08), new THREE.MeshBasicMaterial({ color: 0xffc94d }));
 muzzleFlashMesh.position.z = -0.34;

@@ -65,7 +65,7 @@ const KIND_SURFACE: Surface[] = ['water', 'dust', 'grass', 'grass', 'dust', 'sno
  */
 export const KIND_COLORS: Vec3[] = [[0.52, 0.58, 0.55], [0.86, 0.79, 0.58], [0.40, 0.62, 0.31], [0.64, 0.63, 0.36], [0.52, 0.50, 0.47], [0.95, 0.96, 0.98], [0.47, 0.46, 0.44], [0.74, 0.64, 0.30], [0.33, 0.52, 0.24], [0.28, 0.42, 0.22]];
 
-export function makeNoise(seed: number) {
+export const makeNoise = (seed: number) => {
   const hash = (i: number, j: number) => {
     let h = Math.imul(i, 374761393) ^ Math.imul(j, 668265263) ^ Math.imul(seed, 1274126177);
     h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -101,10 +101,10 @@ export function makeNoise(seed: number) {
   };
 
   return { n2, fbm };
-}
+};
 
 /** Catmull-Rom spline through `pts`, with `seg` points per segment. */
-function catmullRom(pts: Vec2[], seg: number) {
+const catmullRom = (pts: Vec2[], seg: number) => {
   const o: Vec2[] = [];
   for (let i = 0; i < pts.length - 1; i++) {
     const p0 = pts[Math.max(0, i - 1)];
@@ -120,9 +120,9 @@ function catmullRom(pts: Vec2[], seg: number) {
   }
   o.push(pts[pts.length - 1]);
   return o;
-}
+};
 
-export function genTerrain() {
+export const genTerrain = () => {
   const { n2, fbm } = makeNoise(777);
   const gridN = GRID_N;
   const step = GRID_STEP;
@@ -337,7 +337,7 @@ export function genTerrain() {
     return j * gridN + i;
   };
 
-  const T = { half: ISLAND_HALF, gridN: gridN, step: step, heights: heights, slopes: slopes, kinds: kinds, colors: colors, regionIds: regionIds, regions: regions, maxHeight: maxHeight, roads, rivers: rivers, height(x: number, z: number) {
+  const T = { half: ISLAND_HALF, gridN: gridN, step: step, heights: heights, slopes: slopes, kinds: kinds, colors: colors, regionIds: regionIds, regions: regions, maxHeight: maxHeight, roads, rivers: rivers, height: (x: number, z: number) => {
     let fx = (x + ISLAND_HALF) / step;
     let fz = (z + ISLAND_HALF) / step;
     if (fx < 0) {
@@ -363,21 +363,21 @@ export function genTerrain() {
     return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
   }, slope: (x: number, z: number) => slopes[cellIndex(x, z)], kind: (x: number, z: number) => kinds[cellIndex(x, z)], region: (x: number, z: number) => regionIds[cellIndex(x, z)], surface: (x: number, z: number) => KIND_SURFACE[kinds[cellIndex(x, z)]] };
   return T;
-}
+};
 
 // Terrain colors are authored in sRGB (the minimap canvas uses them as-is); vertex colors must be linear.
-function srgbToLinear(a: Float32Array) {
+const srgbToLinear = (a: Float32Array) => {
   const o = new Float32Array(a.length);
   for (let i = 0; i < a.length; i++) {
     const c = a[i];
     o[i] = c < 0.04045 ? c * 0.0773993808 : Math.pow(c * 0.9478672986 + 0.0521327014, 2.4);
   }
   return o;
-}
+};
 
 export type Terrain = ReturnType<typeof genTerrain>;
 
-export function terrainMesh(T: Terrain) {
+export const terrainMesh = (T: Terrain) => {
   const N = T.gridN;
   const ST = T.step;
   const pos = new Float32Array(N * N * 3);
@@ -411,10 +411,10 @@ export function terrainMesh(T: Terrain) {
   g.setIndex(new THREE.BufferAttribute(idx, 1));
   g.computeVertexNormals();
   return new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true }));
-}
+};
 
 /** Distance along the ray from `o` in direction `d` to the terrain, or Infinity. */
-export function rayTerrain(T: Terrain | null, o: Vec3, d: Vec3, maxT: number) {
+export const rayTerrain = (T: Terrain | null, o: Vec3, d: Vec3, maxT: number) => {
   if (!T) {
     return Infinity;
   }
@@ -453,4 +453,4 @@ export function rayTerrain(T: Terrain | null, o: Vec3, d: Vec3, maxT: number) {
     step = Math.min(6, step * 1.05 + 0.03);
   }
   return Infinity;
-}
+};

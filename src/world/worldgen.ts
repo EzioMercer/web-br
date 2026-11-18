@@ -43,7 +43,7 @@ interface BuildOpts {
 
 export type GeneratedWorld = ReturnType<typeof genWorld>;
 
-export function genWorld() {
+export const genWorld = () => {
   const T = genTerrain();
   let seed = 4242;
 
@@ -887,4 +887,4 @@ export function genWorld() {
     lootSpots.push([x, z, h, 1]);
   }
   return { terrain: T, mesh: terrainMesh(T), boxes: mapBoxes, glass: mapGlass, doors: mapDoors, loot: lootSpots, footprints: footprints, stairs: stairwells, pois: SITES, counts: { trees: treeCount, rocks: rockCount, cabins: cabins.length, gas: gasStations } };
-}
+};

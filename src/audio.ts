@@ -7,7 +7,7 @@ let ctx: AudioContext | undefined;
 export type Surface = 'dust' | 'grass' | 'snow' | 'water';
 
 /** Creates the audio context on first use and resumes it (browsers start it suspended until a click). */
-export function unlockAudio() {
+export const unlockAudio = () => {
   if (!ctx) {
     try {
       ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
@@ -16,10 +16,10 @@ export function unlockAudio() {
   if (ctx && ctx.state === 'suspended') {
     ctx.resume();
   }
-}
+};
 
 /** Filtered noise burst. */
-export function noiseBurst(vol: number, dur: number, freq: number) {
+export const noiseBurst = (vol: number, dur: number, freq: number) => {
   if (!ctx) {
     return;
   }
@@ -40,10 +40,10 @@ export function noiseBurst(vol: number, dur: number, freq: number) {
   f.connect(g);
   g.connect(ctx.destination);
   s.start();
-}
+};
 
 /** Pitch sweep from `f0` to `f1` Hz. */
-export function tone(f0: number, f1: number, dur: number, vol: number, type?: OscillatorType) {
+export const tone = (f0: number, f1: number, dur: number, vol: number, type?: OscillatorType) => {
   if (!ctx) {
     return;
   }
@@ -59,9 +59,9 @@ export function tone(f0: number, f1: number, dur: number, vol: number, type?: Os
   g.connect(ctx.destination);
   o.start(t);
   o.stop(t + dur);
-}
+};
 
-export function fireSound() {
+export const fireSound = () => {
   if (loadout.weapon.sniper) {
     const big = loadout.weaponId === 'm82';
     noiseBurst(big ? 1 : 0.8, big ? 0.7 : 0.55, big ? 800 : 1100);
@@ -94,13 +94,13 @@ export function fireSound() {
     noiseBurst(0.5, 0.16, loadout.weaponId === 'm4' ? 2800 : 2200);
     tone(loadout.weaponId === 'm4' ? 160 : 130, 45, 0.16, 0.5, 'triangle');
   }
-}
+};
 
 let stepBus: GainNode | null = null;
 let stepBusFor: AudioContext | null = null;
 
 /** Footstep output bus (through a compressor), rebuilt when the audio context changes. */
-function footstepBus(ac: AudioContext) {
+const footstepBus = (ac: AudioContext) => {
   if (!stepBus || stepBusFor !== ac) {
     stepBusFor = ac;
     stepBus = ac.createGain();
@@ -119,9 +119,9 @@ function footstepBus(ac: AudioContext) {
     }
   }
   return stepBus;
-}
+};
 
-export function stepNoise(vol: number, dur: number, f: number, att: number, at?: number) {
+export const stepNoise = (vol: number, dur: number, f: number, att: number, at?: number) => {
   if (!ctx || vol <= 0) {
     return;
   }
@@ -150,9 +150,9 @@ export function stepNoise(vol: number, dur: number, f: number, att: number, at?:
   f2.connect(g);
   g.connect(footstepBus(ctx));
   src.start(t);
-}
+};
 
-export function stepThump(f0: number, f1: number, dur: number, vol: number, at?: number) {
+export const stepThump = (f0: number, f1: number, dur: number, vol: number, at?: number) => {
   if (!ctx || vol <= 0) {
     return;
   }
@@ -169,9 +169,9 @@ export function stepThump(f0: number, f1: number, dur: number, vol: number, at?:
   g.connect(footstepBus(ctx));
   o.start(t);
   o.stop(t + dur + 0.02);
-}
+};
 
-export function footstep(s: Surface, v: number) {
+export const footstep = (s: Surface, v: number) => {
   if (!ctx || v <= 0) {
     return;
   }
@@ -192,11 +192,11 @@ export function footstep(s: Surface, v: number) {
     stepNoise(0.12 * v, 0.12, 900 * r, 0.01, 0.09);
     stepThump(320 * r, 190, 0.10, 0.06 * v, 0.11);
   }
-}
+};
 
 type ReloadClick = 'out' | 'in' | 'slap' | 'bolt' | 'shell' | 'pump';
 
-function reloadClick(k: ReloadClick) {
+const reloadClick = (k: ReloadClick) => {
   if (k === 'out') {
     noiseBurst(0.5, 0.07, 1800);
     tone(220, 90, 0.07, 0.5, 'triangle');
@@ -216,16 +216,16 @@ function reloadClick(k: ReloadClick) {
     noiseBurst(0.7, 0.12, 1500);
     tone(180, 70, 0.12, 0.6, 'triangle');
   }
-}
+};
 
 /** Reload sound cues: [delay in ms, click], scaled to the weapon's reload time. */
-export function reloadCues(): [number, ReloadClick][] {
+export const reloadCues = (): [number, ReloadClick][] => {
   const k = loadout.weapon.reloadTime / 2.4;
   const a: [number, ReloadClick][] = loadout.weapon.boltAction ? [[500, 'bolt'], [1000, 'in'], [1500, 'in'], [2000, 'in'], [2800, 'bolt']] : loadout.weapon.pellets ? [[500, 'shell'], [900, 'shell'], [1300, 'shell'], [1700, 'shell'], [2100, 'shell'], [2400, 'pump']] : loadout.weapon.slot === 2 ? [[600, 'out'], [1250, 'in'], [1600, 'slap']] : [[600, 'out'], [1400, 'in'], [1750, 'slap'], [2050, 'bolt']];
   return a.map(([ms, t]) => [ms * k, t]);
-}
+};
 
-export function playReloadCues(list: [number, ReloadClick][]) {
+export const playReloadCues = (list: [number, ReloadClick][]) => {
   const w = loadout.weaponId;
   for (const [ms, t] of list) {
     setTimeout(() => {
@@ -234,4 +234,4 @@ export function playReloadCues(list: [number, ReloadClick][]) {
       }
     }, ms);
   }
-}
+};

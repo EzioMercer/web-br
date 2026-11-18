@@ -25,7 +25,7 @@ let aimBlend = 0;
 let slideRoll = 0;
 
 /** Render loop: runs the fixed-step simulation, then updates the camera, viewmodel, effects and HUD. */
-export function frame(now: number) {
+export const frame = (now: number) => {
   requestAnimationFrame(frame);
   const dt = Math.min((now - lastFrame) / 1000, 0.1);
   lastFrame = now;
@@ -176,4 +176,4 @@ export function frame(now: number) {
   if (!input.inMenu) {
     renderer.render(scene, camera);
   }
-}
+};

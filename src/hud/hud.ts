@@ -13,7 +13,7 @@ import { phase, phaseEnd } from '../match';
 import type { GrenadeId } from '../types';
 
 /** Grenade selected, or the pickup and door prompt (HTML). */
-export function promptText() {
+export const promptText = () => {
   if (player.dead) {
     return '';
   }
@@ -21,25 +21,25 @@ export function promptText() {
     return GRENADE_NAMES[loadout.grenade] + ' ready – hold click to aim, release to throw · Right-click: ' + (grenadeThrow.lob ? 'far throw' : 'short toss');
   }
   return pickupPrompt;
-}
+};
 
 /** Adds a line to the kill feed for 4 s. */
 
-export function feedMessage(t: string) {
+export const feedMessage = (t: string) => {
   const d = document.createElement('div');
   d.textContent = t;
   byId('kf').appendChild(d);
   setTimeout(() => d.remove(), 4000);
-}
+};
 
 const PLAYER_ICON = '<svg width="22" height="22" viewBox="0 0 20 20"><circle cx="10" cy="6" r="4" fill="currentColor"/><path d="M2 19c0-5 3-8 8-8s8 3 8 8z" fill="currentColor"/></svg>';
 let miniCtx: CanvasRenderingContext2D | null = null;
 
 /** Seconds as m:ss. */
-function formatTime(s: number) {
+const formatTime = (s: number) => {
   const v = Math.max(0, Math.ceil(s));
   return Math.floor(v / 60) + ':' + ('0' + v % 60).slice(-2);
-}
+};
 
 /** Weapon class icons (SVG paths): pistol, SMG, rifle, shotgun, sniper, knife. */
 const CLASS_ICONS: Record<string, string> = { p: 'M10 12h62v9H60l-3 14H46l3-14H34l-3 5H10z', s: 'M6 14h74v8H66l-2 14h-9l2-14H44l-2 12h-8l2-12H6z M80 16h30v4H80z', r: 'M4 16h40l6-4h30l4 3h30v5H84l-4 3H58l-2 12h-9l1-12H20l-6 7H4z', g: 'M4 18h100v5H60v4H40v-4H4z M50 23h14v8H50z', n: 'M2 20h104v4H70l-6 4H44l-4 10h-8l3-10H18l-4 3H2z M40 12h30v4H40z', k: 'M18 29L76 13l8 2-6 7-58 9z M12 29h10v6H12z' };
@@ -48,7 +48,7 @@ let lastWeaponKey: string | null = null;
 let lastChips = '';
 let compassCtx: CanvasRenderingContext2D | null = null;
 
-export function updateHud() {
+export const updateHud = () => {
   byId('hpf').style.width = Math.max(0, Math.min(100, player.health)) + '%';
   byId('hpn').textContent = String(Math.ceil(player.health));
   byId('arf').style.width = Math.max(0, Math.min(100, player.armor)) + '%';
@@ -81,9 +81,9 @@ export function updateHud() {
     byId('chips').innerHTML = h;
     lastChips = h;
   }
-}
+};
 
-export function drawCompass() {
+export const drawCompass = () => {
   const c = byId<HTMLCanvasElement>('cmp');
   const dpr = Math.min(devicePixelRatio || 1, 2);
   const W = 460;
@@ -148,10 +148,10 @@ export function drawCompass() {
   x.lineTo(W / 2, 8);
   x.closePath();
   x.fill();
-}
+};
 
 /** Battle Royale HUD: player count, minimap, big map and zone strip (shown once the island is loaded). */
-export function mapHud() {
+export const mapHud = () => {
   document.body.classList.toggle('br', !!terrain);
   if (!terrain) {
     return;
@@ -228,4 +228,4 @@ export function mapHud() {
     zd.textContent = d + 'm';
     zd.style.color = out ? '#ff8a7a' : '#fff';
   }
-}
+};

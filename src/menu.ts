@@ -27,29 +27,29 @@ const CONTROLS: [string, string[]][] = [
   ['Pause', ['Esc']],
 ];
 
-export function showMenu() {
+export const showMenu = () => {
   input.inMenu = true;
   setPlaying(false);
   byId('menu').style.display = 'flex';
-}
+};
 
-function startGame() {
+const startGame = () => {
   openSettings(false);
   startMatch();
   input.inMenu = false;
   byId('menu').style.display = 'none';
   unlockAudio();
   lockMouse();
-}
+};
 
-function openSettings(v: boolean) {
+const openSettings = (v: boolean) => {
   byId('settings').classList.toggle('on', v);
-}
+};
 
-function selectTab(id: string) {
+const selectTab = (id: string) => {
   document.querySelectorAll<HTMLElement>('#settings .tab').forEach(t => t.classList.toggle('on', t.dataset.tab === id));
   document.querySelectorAll<HTMLElement>('#settings .tpane').forEach(p => p.classList.toggle('on', p.id === id));
-}
+};
 
 loadSettings();
 

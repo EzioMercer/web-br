@@ -18,17 +18,17 @@ export let phase: Phase = 'start';
 export let phaseEnd = 0;
 
 /** Starts a new match from the menu: builds the island (fresh doors and glass) and drops everyone in. */
-export function startMatch() {
+export const startMatch = () => {
   while (bots.length < BOT_COUNT) {
     addBot(bots.length);
   }
   zoneMesh.visible = true;
   loadMap();
   newMatch();
-}
+};
 
 /** Advances the match: zone while live, the countdown before it, and the next match after it ends. */
-export function matchTick(dt: number) {
+export const matchTick = (dt: number) => {
   if (phase === 'live') {
     zoneTick(dt);
   } else if (phase === 'start') {
@@ -38,19 +38,19 @@ export function matchTick(dt: number) {
   } else if (simTime >= phaseEnd) {
     newMatch();
   }
-}
+};
 
-export function endMatch(win: boolean) {
+export const endMatch = (win: boolean) => {
   phase = 'over';
   phaseEnd = simTime + 4;
   input.fireHeld = false;
   const m = byId('msg');
   m.style.color = win ? 'var(--xh)' : 'var(--hp)';
   m.textContent = win ? 'VICTORY ROYALE!' : 'Eliminated';
-}
+};
 
 /** Resets the loadout, the zone and everyone's position, then counts down to the start. */
-export function newMatch() {
+export const newMatch = () => {
   loadout.owned = { pistol: { ammo: 12, reserve: 12 }, knife: { ammo: 1, reserve: 0 } };
   loadout.weaponId = 'pistol';
   loadout.weapon = WEAPONS.pistol;
@@ -70,4 +70,4 @@ export function newMatch() {
   }
   phase = 'start';
   phaseEnd = simTime + 5;
-}
+};

@@ -30,7 +30,7 @@ zoneMesh.visible = false;
 scene.add(zoneMesh);
 
 /** A random clear, dry, flat spot on the island, at least `minD` from the player if `fromP`. */
-function landingSpot(minD: number, fromP: boolean): Vec2 {
+const landingSpot = (minD: number, fromP: boolean): Vec2 => {
   const T = terrain!;
   for (let i = 0; i < 300; i++) {
     const a = Math.random() * 6.283;
@@ -42,14 +42,14 @@ function landingSpot(minD: number, fromP: boolean): Vec2 {
     }
   }
   return [0, 0];
-}
+};
 
-export function botDropSpot() {
+export const botDropSpot = () => {
   return landingSpot(110, true);
-}
+};
 
 /** Plans the zone schedule and scatters the loot. Returns the player's landing spot. */
-export function startZone(): Vec2 {
+export const startZone = (): Vec2 => {
   clearPickups();
   const spawnAt = landingSpot(0, false);
   const R0 = ISLAND_HALF * 1.5;
@@ -89,9 +89,9 @@ export function startZone(): Vec2 {
     spawnPickup(x, z, t, t === 'weapon' ? (t2 ? LOOT_TIER2 : LOOT_TIER1)[Math.random() * (t2 ? LOOT_TIER2 : LOOT_TIER1).length | 0] : t === 'ammo' ? AT[Math.random() * AT.length | 0] : t === 'grenade' ? GI[Math.random() * 3 | 0] : t === 'optic' ? OI[Math.random() * 8 | 0] : null, undefined, y);
   }
   return spawnAt;
-}
+};
 
-function phaseAt(t: number): { phase: ZonePhase; stage: number; timeLeft: number; next: Circle | null } {
+const phaseAt = (t: number): { phase: ZonePhase; stage: number; timeLeft: number; next: Circle | null } => {
   let acc = 0;
   for (let i = 0; i < stages.length; i++) {
     const q = stages[i];
@@ -104,17 +104,17 @@ function phaseAt(t: number): { phase: ZonePhase; stage: number; timeLeft: number
     acc += q.hold + q.shrink;
   }
   return { phase: 'final', stage: stages.length, timeLeft: 0, next: null };
-}
+};
 
-function applyZonePhase(t: number) {
+const applyZonePhase = (t: number) => {
   const zp = phaseAt(t);
   zone.phase = zp.phase;
   zone.stage = zp.stage;
   zone.timeLeft = zp.timeLeft;
   zone.next = zp.next;
-}
+};
 
-export function zoneTick(dt: number) {
+export const zoneTick = (dt: number) => {
   if (!zoneStartTime) {
     zoneStartTime = simTime;
   }
@@ -215,4 +215,4 @@ export function zoneTick(dt: number) {
   } else if (bots.every(b => b.health <= 0)) {
     endMatch(true);
   }
-}
+};

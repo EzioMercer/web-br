@@ -26,12 +26,12 @@ let slideSpeed = 8;
 let wasInWater = false;
 
 /** The player is in a slide. */
-export function isSliding() {
+export const isSliding = () => {
   return simTime < slideEnd;
-}
+};
 
 /** One fixed simulation step. */
-export function tick(dt: number) {
+export const tick = (dt: number) => {
   simTime += dt;
   matchTick(dt);
   if (!player.dead) {
@@ -153,4 +153,4 @@ export function tick(dt: number) {
   if (phase !== 'start') {
     botsTick(dt);
   }
-}
+};

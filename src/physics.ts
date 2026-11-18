@@ -13,7 +13,7 @@ let lastRay = 0;
 export let lastHit: Box | null = null;
 
 /** Distance along the ray to the box (0 if `o` is inside), or Infinity. */
-export function rayBox(o: Vec3, d: Vec3, mn: Vec3, mx: Vec3) {
+export const rayBox = (o: Vec3, d: Vec3, mn: Vec3, mx: Vec3) => {
   let t0 = 0;
   let t1 = 1e9;
   for (let i = 0; i < 3; i++) {
@@ -36,13 +36,13 @@ export function rayBox(o: Vec3, d: Vec3, mn: Vec3, mx: Vec3) {
     }
   }
   return t0;
-}
+};
 
-function cellKey(i: number, j: number) {
+const cellKey = (i: number, j: number) => {
   return (i + 2048) * 4096 + (j + 2048);
-}
+};
 
-export function buildGrid() {
+export const buildGrid = () => {
   grid = new Map<number, Box[]>();
   for (const b of boxes) {
     b.rayStamp = 0;
@@ -62,10 +62,10 @@ export function buildGrid() {
       }
     }
   }
-}
+};
 
 /** Boxes in the grid cells around (x, z). */
-export function boxesNear(x: number, z: number, r: number) {
+export const boxesNear = (x: number, z: number, r: number) => {
   const i0 = Math.floor((x - r) / CELL);
   const i1 = Math.floor((x + r) / CELL);
   const j0 = Math.floor((z - r) / CELL);
@@ -85,10 +85,10 @@ export function boxesNear(x: number, z: number, r: number) {
     }
   }
   return out;
-}
+};
 
 /** Distance along the ray to the first wall or the ground, or Infinity. Sets `lastHit` to the box hit. */
-export function castRay(o: Vec3, d: Vec3, maxTIn?: number, noGlass?: boolean) {
+export const castRay = (o: Vec3, d: Vec3, maxTIn?: number, noGlass?: boolean) => {
   const maxT = maxTIn || 1e4;
   let t = rayTerrain(terrain, o, d, Math.min(maxT, 1500));
   lastHit = null;
@@ -136,13 +136,13 @@ export function castRay(o: Vec3, d: Vec3, maxTIn?: number, noGlass?: boolean) {
     }
   }
   return t;
-}
+};
 
-export function overlaps(p: Body, b: Box) {
+export const overlaps = (p: Body, b: Box) => {
   return !b.disabled && p.x + PLAYER_RADIUS > b.min[0] && p.x - PLAYER_RADIUS < b.max[0] && p.y + (p.height || PLAYER_HEIGHT) > b.min[1] && p.y < b.max[1] && p.z + PLAYER_RADIUS > b.min[2] && p.z - PLAYER_RADIUS < b.max[2];
-}
+};
 
-export function moveBody(p: Body, v: Velocity, dt: number) {
+export const moveBody = (p: Body, v: Velocity, dt: number) => {
   const g0 = p.onGround;
   const half = terrain ? terrain.half - 3 : 1e9;
   const ox = p.x;
@@ -222,10 +222,10 @@ export function moveBody(p: Body, v: Velocity, dt: number) {
     v.y = 0;
     p.onGround = true;
   }
-}
+};
 
 /** Accelerates `v` toward direction (wx, wz), up to speed `cap` along it. */
-export function accelerate(v: Velocity, wx: number, wz: number, cap: number, rate: number, dt: number) {
+export const accelerate = (v: Velocity, wx: number, wz: number, cap: number, rate: number, dt: number) => {
   const add = cap - (v.x * wx + v.z * wz);
   if (add <= 0) {
     return;
@@ -233,10 +233,10 @@ export function accelerate(v: Velocity, wx: number, wz: number, cap: number, rat
   const a = Math.min(rate * dt, add);
   v.x += a * wx;
   v.z += a * wz;
-}
+};
 
 /** Dry, gentle ground with room to stand. */
-export function isFreeSpot(x: number, z: number) {
+export const isFreeSpot = (x: number, z: number) => {
   const T = terrain!;
   if (T.height(x, z) < WATER_LEVEL + 0.4 || T.slope(x, z) > 0.55) {
     return false;
@@ -244,10 +244,10 @@ export function isFreeSpot(x: number, z: number) {
 
   const y = floorY(x, z);
   return !boxesNear(x, z, PLAYER_RADIUS + 1).some(q => overlaps({ x, y, z, height: PLAYER_HEIGHT }, q));
-}
+};
 
 // the surface under a point: the terrain, or the top of a floor, roof or crate no higher than y0
-export function groundAt(x: number, z: number, y0: number) {
+export const groundAt = (x: number, z: number, y0: number) => {
   let g = floorY(x, z);
   for (const q of boxesNear(x, z, 0.5)) {
     if (!q.disabled && !q.glass && !q.door && x + 0.3 > q.min[0] && x - 0.3 < q.max[0] && z + 0.3 > q.min[2] && z - 0.3 < q.max[2] && q.max[1] <= y0 && q.max[1] > g) {
@@ -255,14 +255,14 @@ export function groundAt(x: number, z: number, y0: number) {
     }
   }
   return g;
-}
+};
 
 /** Point inside (or touching) a box. */
-export function insideBox(x: number, y: number, z: number) {
+export const insideBox = (x: number, y: number, z: number) => {
   return boxesNear(x, z, 1).some(b => !b.disabled && x > b.min[0] - 0.06 && x < b.max[0] + 0.06 && y > b.min[1] - 0.06 && y < b.max[1] + 0.06 && z > b.min[2] - 0.06 && z < b.max[2] + 0.06);
-}
+};
 
-function segmentHitsSphere(o: Vec3, p: Vec3, s: Sphere) {
+const segmentHitsSphere = (o: Vec3, p: Vec3, s: Sphere) => {
   const dx = p[0] - o[0];
   const dy = p[1] - o[1];
   const dz = p[2] - o[2];
@@ -270,13 +270,13 @@ function segmentHitsSphere(o: Vec3, p: Vec3, s: Sphere) {
   let t = ((s.x - o[0]) * dx + (s.y - o[1]) * dy + (s.z - o[2]) * dz) / l2;
   t = Math.max(0, Math.min(1, t));
   return Math.hypot(o[0] + dx * t - s.x, o[1] + dy * t - s.y, o[2] + dz * t - s.z) < s.radius;
-}
+};
 
 /** Line of sight from `o` to `p`: no walls (glass is see-through) and no smoke. */
-export function lineOfSight(o: Vec3, p: Vec3) {
+export const lineOfSight = (o: Vec3, p: Vec3) => {
   const dx = p[0] - o[0];
   const dy = p[1] - o[1];
   const dz = p[2] - o[2];
   const l = Math.hypot(dx, dy, dz);
   return castRay(o, [dx / l, dy / l, dz / l], l, true) > l && !smokes.some(s => segmentHitsSphere(o, p, s));
-}
+};

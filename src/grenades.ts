@@ -59,12 +59,12 @@ export const grenadeCount: Record<GrenadeId, number> = { he: 0, fl: 0, sm: 0 };
 export const flyingGrenades: Grenade[] = [];
 export const smokes: Smoke[] = [];
 
-function fuseTime(t: GrenadeId) {
+const fuseTime = (t: GrenadeId) => {
   return t === 'sm' ? 1.3 : 1.6;
-}
+};
 
 /** Moves a grenade one step, bouncing off walls and the floor. Returns true if it touched something. */
-function stepGrenade(n: Omit<Grenade, 'type' | 'mesh' | 'fuseAt'>, dt: number) {
+const stepGrenade = (n: Omit<Grenade, 'type' | 'mesh' | 'fuseAt'>, dt: number) => {
   let fl = false;
   n.vy -= 18 * dt;
   let nx = n.x + n.vx * dt;
@@ -94,19 +94,19 @@ function stepGrenade(n: Omit<Grenade, 'type' | 'mesh' | 'fuseAt'>, dt: number) {
   }
   n.y = ny;
   return fl;
-}
+};
 
 // the throw starts at the hand (a little to the right and low, where the grenade is held) and does not depend on how you are moving, so the preview is steady while you strafe
-function throwStart() {
+const throwStart = () => {
   const sp = grenadeThrow.lob ? 8 : 15;
   const cp = Math.cos(player.pitch);
   const sy = Math.sin(player.yaw);
   const cy = Math.cos(player.yaw);
   const d = [-sy * cp, Math.sin(player.pitch) + 0.2, -cy * cp];
   return { x: playerBody.x - sy * cp * 0.35 + cy * 0.22, y: playerBody.y + player.eyeHeight - 0.17 + Math.sin(player.pitch) * 0.3, z: playerBody.z - cy * cp * 0.35 - sy * 0.22, vx: d[0] * sp, vy: d[1] * sp, vz: d[2] * sp };
-}
+};
 
-export function throwGrenade() {
+export const throwGrenade = () => {
   const t = loadout.grenade;
   if (!t || !grenadeCount[t]) {
     return;
@@ -120,10 +120,10 @@ export function throwGrenade() {
   flyingGrenades.push({ ...throwStart(), type: t, mesh: m, fuseAt: simTime + fuseTime(t) });
   noiseBurst(0.15, 0.05, 3000);
   screenFx.gunKick = -0.05;
-}
+};
 
 // the path the grenade will take: a line to where it will be when the fuse runs out, and a ring on the spot
-export function updateAimPath() {
+export const updateAimPath = () => {
   if (!loadout.grenade || player.dead || !grenadeCount[loadout.grenade] || !grenadeThrow.held) {
     aimMesh.visible = false;
     return;
@@ -197,9 +197,9 @@ export function updateAimPath() {
   aimAttr.needsUpdate = true;
   aimGeo.setDrawRange(0, Math.max(0, (k - 1) * 6));
   aimMesh.visible = k > 1;
-}
+};
 
-export function grenadesTick(dt: number) {
+export const grenadesTick = (dt: number) => {
   for (let i = flyingGrenades.length - 1; i >= 0; i--) {
     const n = flyingGrenades[i];
     stepGrenade(n, dt);
@@ -216,9 +216,9 @@ export function grenadesTick(dt: number) {
       smokes.splice(i, 1);
     }
   }
-}
+};
 
-function detonate(n: Grenade) {
+const detonate = (n: Grenade) => {
   const o: Vec3 = [n.x, n.y + 0.2, n.z];
   if (n.type === 'sm') {
     const y = Math.max(n.y, 0.1) + 1.6;
@@ -277,4 +277,4 @@ function detonate(n: Grenade) {
   if (!player.dead && pd < 9 && lineOfSight(o, [playerBody.x, playerBody.y + 1, playerBody.z])) {
     damagePlayer(Math.round(110 * (1 - pd / 9)));
   }
-}
+};

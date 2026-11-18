@@ -16,7 +16,7 @@ import type { OwnedWeapon, PickupKind, Vec3 } from './types';
 let sprayIndex = 0;
 
 /** Battle Royale: scatters a dead bot's gear around it. */
-function dropLoot(b: Bot) {
+const dropLoot = (b: Bot) => {
   const w = b.weaponId;
   const W = WEAPONS[w];
   const items: [PickupKind, string?, OwnedWeapon?][] = [];
@@ -51,10 +51,10 @@ function dropLoot(b: Bot) {
     }
     spawnPickup(x, z, it[0], it[1] ?? null, it[2], groundAt(x, z, b.y + 0.6));
   });
-}
+};
 
 // the body stays where it fell (lying down) with its gear dropped around it
-export function layBodyDown(b: Bot) {
+export const layBodyDown = (b: Bot) => {
   b.corpse = true;
   b.corpseUntil = simTime + 150;
   b.mesh.rotation.order = 'YXZ';
@@ -68,15 +68,15 @@ export function layBodyDown(b: Bot) {
   b.mesh.position.set(b.x, b.fallY + 0.2, b.z);
   b.labelSprite.visible = false;
   dropLoot(b);
-}
+};
 
 /** The player killed bot `b` (`hs`: with a headshot). */
-export function killBot(b: Bot, hs: boolean) {
+export const killBot = (b: Bot, hs: boolean) => {
   layBodyDown(b);
   feedMessage('You eliminated ' + b.name + ' [' + WEAPONS[b.weaponId].name + ']' + (hs ? ' (headshot)' : ''));
-}
+};
 
-function knifeAttack() {
+const knifeAttack = () => {
   loadout.nextShotAt = simTime + loadout.weapon.fireInterval;
   loadout.slashEnd = simTime + 0.3;
   stepNoise(0.22, 0.18, 1500, 0.03);
@@ -110,9 +110,9 @@ function knifeAttack() {
       killBot(tgt, false);
     }
   }
-}
+};
 
-export function fireWeapon() {
+export const fireWeapon = () => {
   if (loadout.weapon.melee) {
     knifeAttack();
     return;
@@ -189,13 +189,13 @@ export function fireWeapon() {
       bulletMark([e[0] - d[0] * 0.03, e[1] - d[1] * 0.03, e[2] - d[2] * 0.03]);
     }
   }
-}
+};
 
 /** Shot spread (radians) at movement speed `sp`. */
-export function shotSpread(sp: number) {
+export const shotSpread = (sp: number) => {
   if (loadout.weapon.sniper) {
     return loadout.scoped && sp < 1 && playerBody.onGround ? (loadout.weapon.boltAction ? 0.0004 : 0.0016) : 0.06;
   }
   const b = 0.0015 + sp * 0.0012 + (playerBody.onGround ? 0 : 0.035) + Math.min(sprayIndex, 10) * 0.0003;
   return loadout.scoped ? b * 0.6 : b;
-}
+};

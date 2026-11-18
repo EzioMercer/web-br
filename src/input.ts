@@ -24,7 +24,7 @@ let lastWheel = 0;
 
 // The game only runs while the mouse is locked (pointerlockchange -> setPlaying). If the browser refuses the lock
 // (e.g. re-clicking right after Esc), the pause overlay stays up and the next click retries.
-export function lockMouse() {
+export const lockMouse = () => {
   const fail = (e: unknown) => {
     console.warn('Pointer lock refused:', (e instanceof Error && e.message) || e);
     if (!input.inMenu) {
@@ -40,9 +40,9 @@ export function lockMouse() {
   } catch (e) {
     fail(e);
   }
-}
+};
 
-export function setPlaying(v: boolean) {
+export const setPlaying = (v: boolean) => {
   input.playing = v;
   if (!v) {
     grenadeThrow.held = false;
@@ -54,7 +54,7 @@ export function setPlaying(v: boolean) {
       keys[k] = false;
     }
   }
-}
+};
 
 byId('go').addEventListener('click', () => {
   unlockAudio();

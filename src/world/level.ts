@@ -16,10 +16,10 @@ let islandCache: GeneratedWorld | null = null;
 export let terrain: Terrain | null = null;
 
 /** The island, generated on first use. */
-export function getIsland() {
+export const getIsland = () => {
   islandCache ??= genWorld();
   return islandCache;
-}
+};
 
 /** Water meshes (animated by the render loop). */
 export const waterMeshes: THREE.Mesh[] = [];
@@ -30,14 +30,14 @@ scene.add(mapGroup);
 /** Boxes waiting to be drawn as one instanced mesh: x, y, z, w, h, d, color. */
 const pendingBoxes: number[][] = [];
 
-function queueBox(x: number, z: number, w: number, d: number, h: number, col: number, y = 0, nc?: boolean) {
+const queueBox = (x: number, z: number, w: number, d: number, h: number, col: number, y = 0, nc?: boolean) => {
   if (!nc) {
     boxes.push({ min: [x - w / 2, y, z - d / 2], max: [x + w / 2, y + h, z + d / 2] });
   }
   pendingBoxes.push([x, y + h / 2, z, w, h, d, col]);
-}
+};
 
-function flushBoxes() {
+const flushBoxes = () => {
   if (!pendingBoxes.length) {
     return;
   }
@@ -57,24 +57,24 @@ function flushBoxes() {
   im.frustumCulled = false;
   mapGroup.add(im);
   pendingBoxes.length = 0;
-}
+};
 
 /** Floor height: the terrain (0 before the island is loaded). */
-export function floorY(x: number, z: number) {
+export const floorY = (x: number, z: number) => {
   return terrain ? terrain.height(x, z) : 0;
-}
+};
 
 /** How deep in water a point is, 0 (dry) to 1. */
-export function waterDepth(_x: number, _z: number, y: number) {
+export const waterDepth = (_x: number, _z: number, y: number) => {
   const e = WATER_LEVEL - y;
   return e > 0 ? Math.min(1, e / 0.6) : 0;
-}
+};
 
 export const glassMat = new THREE.MeshPhongMaterial({ color: 0x9fd8ff, transparent: true, opacity: 0.3, shininess: 100, specular: 0xffffff, depthWrite: false });
 const doorMats: Record<string, THREE.MeshLambertMaterial> = {};
 export const unitGeo = new THREE.BoxGeometry(1, 1, 1);
 
-function addGlass(g: MapGlass) {
+const addGlass = (g: MapGlass) => {
   const [x, z, w, d, h, y] = g;
   const b: Box = { min: [x - w / 2, y, z - d / 2], max: [x + w / 2, y + h, z + d / 2], glass: true, glassIndex: panes.length };
   boxes.push(b);
@@ -83,9 +83,9 @@ function addGlass(g: MapGlass) {
   m.position.set(x, y + h / 2, z);
   mapGroup.add(m);
   panes.push({ box: b, mesh: m });
-}
+};
 
-function addDoor(o: MapDoor) {
+const addDoor = (o: MapDoor) => {
   const { axis: ax, wallAt: c, center: m, width: w, y, height: h } = o;
   const x = ax === 'x' ? m : c;
   const z = ax === 'x' ? c : m;
@@ -106,10 +106,10 @@ function addDoor(o: MapDoor) {
   grp.add(kn);
   mapGroup.add(grp);
   doors.push({ box: b, pivot: grp, baseAngle: th0, axis: ax, swingDir: 1, openAmount: 0, target: 0, x, z, y, reachSq: (w / 2 + 1.5) * (w / 2 + 1.5) });
-}
+};
 
 /** Builds the island's meshes, collision boxes, doors and glass (fresh for every match). */
-export function loadMap() {
+export const loadMap = () => {
   const m = getIsland();
   while (mapGroup.children.length) {
     mapGroup.remove(mapGroup.children[0]);
@@ -141,12 +141,12 @@ export function loadMap() {
   flushBoxes();
   buildGrid();
   buildMinimap(m);
-}
+};
 
 /** Footstep surface at a point. */
-export function surfaceAt(x: number, z: number, y: number): Surface {
+export const surfaceAt = (x: number, z: number, y: number): Surface => {
   if (waterDepth(x, z, y) > 0) {
     return 'water';
   }
   return terrain ? terrain.surface(x, z) : 'grass';
-}
+};

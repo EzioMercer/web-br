@@ -13,7 +13,7 @@ export const pickups: Pickup[] = [];
 /** The pickup E would swap for. */
 export const looting = { swapTarget: null as Pickup | null };
 
-function makeLabel(text: string, col: string) {
+const makeLabel = (text: string, col: string) => {
   const c = document.createElement('canvas');
   c.width = 256;
   c.height = 64;
@@ -28,12 +28,12 @@ function makeLabel(text: string, col: string) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: srgbTex(new THREE.CanvasTexture(c)), transparent: true }));
   sp.scale.set(2.4, 0.6, 1);
   return sp;
-}
+};
 
 const AMMO_NAMES: Partial<Record<AmmoType, string>> = { pst: 'Pistol ammo', smg: 'SMG ammo', rif: 'Rifle ammo', shl: 'Shotgun shells', snp: 'Sniper ammo' };
 
 /** Places a pickup of kind `t` (`id` is the weapon, ammo, grenade or optic id) at (x, z), on the floor unless `y0` is given. */
-export function spawnPickup(x: number, z: number, t: PickupKind, id: string | null, st?: OwnedWeapon, y0?: number) {
+export const spawnPickup = (x: number, z: number, t: PickupKind, id: string | null, st?: OwnedWeapon, y0?: number) => {
   const col = t === 'weapon' ? 0xf2a23a : t === 'armor' ? 0x4a8cff : t === 'ammo' ? 0xd9d046 : t === 'grenade' ? 0xe05a3a : t === 'optic' ? 0xb98cff : 0x4ad66a;
   const g = new THREE.Group();
   const it = new THREE.Group();
@@ -88,10 +88,10 @@ export function spawnPickup(x: number, z: number, t: PickupKind, id: string | nu
   g.position.set(x, gy, z);
   scene.add(g);
   pickups.push({ mesh: g, label: lab, x, z, y: gy, kind: t, itemId: id, name: n, weaponState: st });
-}
+};
 
 /** Swaps the held weapon (or optic) for pickup `k`, dropping the old one. */
-export function swapPickup(k: Pickup) {
+export const swapPickup = (k: Pickup) => {
   if (k.kind === 'optic') {
     swapOptic(k);
     return;
@@ -106,21 +106,21 @@ export function swapPickup(k: Pickup) {
   scene.remove(k.mesh);
   pickups.splice(pickups.indexOf(k), 1);
   looting.swapTarget = null;
-}
+};
 
 /** The n-th gun carried. */
-export function gunInSlot(n: number) {
+export const gunInSlot = (n: number) => {
   return carriedGuns()[n - 1];
-}
+};
 
-export function clearPickups() {
+export const clearPickups = () => {
   for (const k of pickups) {
     scene.remove(k.mesh);
   }
   pickups.length = 0;
-}
+};
 
-export function takePickup(k: Pickup) {
+export const takePickup = (k: Pickup) => {
   if (k.kind === 'weapon') {
     giveWeapon(k.itemId!, k.weaponState);
   } else if (k.kind === 'armor') {
@@ -153,4 +153,4 @@ export function takePickup(k: Pickup) {
     player.health = Math.min(100, player.health + 50);
   }
   feedMessage('Picked up ' + k.name);
-}
+};

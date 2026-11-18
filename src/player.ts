@@ -29,7 +29,7 @@ export const playerBody: Required<Body> = { x: 0, y: 0, z: 26, onGround: true, h
 export const playerVel: Velocity = { x: 0, y: 0, z: 0 };
 
 /** Damages the player by `d` (armor absorbs half, unless `raw`), from bot `by` if any. */
-export function damagePlayer(d: number, by?: Bot | null, raw?: boolean) {
+export const damagePlayer = (d: number, by?: Bot | null, raw?: boolean) => {
   if (player.dead) {
     return;
   }
@@ -47,10 +47,10 @@ export function damagePlayer(d: number, by?: Bot | null, raw?: boolean) {
     input.fireHeld = false;
     byId('msg').textContent = 'You were eliminated';
   }
-}
+};
 
 /** Puts the player at landing spot `at` with full health. */
-export function spawnPlayer(at: Vec2) {
+export const spawnPlayer = (at: Vec2) => {
   playerBody.x = at[0] + (Math.random() - 0.5) * 5;
   playerBody.z = at[1];
   playerBody.y = floorY(playerBody.x, playerBody.z);
@@ -64,9 +64,9 @@ export function spawnPlayer(at: Vec2) {
   loadout.reloading = false;
   player.dead = false;
   byId('msg').textContent = '';
-}
+};
 
-export function reload() {
+export const reload = () => {
   if (loadout.reloading || loadout.ammo === loadout.weapon.magSize || loadout.reserve <= 0) {
     return;
   }
@@ -74,9 +74,9 @@ export function reload() {
   loadout.scoped = false;
   loadout.reloadEnd = simTime + loadout.weapon.reloadTime;
   playReloadCues(reloadCues());
-}
+};
 
-export function switchWeapon(id: string) {
+export const switchWeapon = (id: string) => {
   if (!loadout.owned[id] || id === loadout.weaponId || player.dead) {
     return;
   }
@@ -88,4 +88,4 @@ export function switchWeapon(id: string) {
   loadout.reloading = false;
   loadout.scoped = false;
   loadout.nextShotAt = Math.max(simTime + 0.4, WEAPONS[id].boltAction ? loadout.boltCycleEnd : 0);
-}
+};

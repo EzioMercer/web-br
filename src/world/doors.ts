@@ -18,7 +18,7 @@ let doorTimer = 0;
 export let focusedDoor: Door | null = null;
 
 // the door you are facing (or standing right next to), for the E key and the on-screen prompt
-function findDoor() {
+const findDoor = () => {
   if (player.dead) {
     return null;
   }
@@ -46,19 +46,19 @@ function findDoor() {
     }
   }
   return best;
-}
+};
 
 // a door will not shut on somebody standing in the doorway
-function doorBlocked(d: Door) {
+const doorBlocked = (d: Door) => {
   const k = d.box;
   const m = 0.45;
 
   const hit = (a: Body) => Math.abs(a.y - d.y) < 2.8 && a.x > k.min[0] - m && a.x < k.max[0] + m && a.z > k.min[2] - m && a.z < k.max[2] + m;
 
   return hit(playerBody) || bots.some(b => b.health > 0 && hit(b));
-}
+};
 
-export function useDoor() {
+export const useDoor = () => {
   const d = findDoor();
   if (!d) {
     return;
@@ -78,10 +78,10 @@ export function useDoor() {
     d.closedByPlayer = false;
   }
   doorSound();
-}
+};
 
 /** Opens doors for anyone walking up to them and animates them (every 50 ms). */
-export function doorsTick(dt: number) {
+export const doorsTick = (dt: number) => {
   if (!doors.length) {
     focusedDoor = null;
     return;
@@ -133,24 +133,24 @@ export function doorsTick(dt: number) {
       d.box.disabled = d.openAmount > 0.5;
     }
   }
-}
+};
 
 /** Close enough to the player to hear. */
-function inEarshot(d: Door) {
+const inEarshot = (d: Door) => {
   return Math.hypot(d.x - playerBody.x, d.z - playerBody.z) < 30;
-}
+};
 
-function doorSound() {
+const doorSound = () => {
   stepThump(110, 70, 0.12, 0.12 * settings.footstepVolume);
-}
+};
 
-function glassSound() {
+const glassSound = () => {
   stepNoise(0.26 * Math.max(0.3, settings.footstepVolume + 0.4), 0.22, 3200, 0.003);
   stepNoise(0.16, 0.18, 2200, 0.005, 0.04);
   stepThump(900, 500, 0.06, 0.04);
-}
+};
 
-export function breakGlass(b: Box) {
+export const breakGlass = (b: Box) => {
   if (b.disabled) {
     return;
   }
@@ -168,10 +168,10 @@ export function breakGlass(b: Box) {
     scene.add(m);
     shards.push({ mesh: m, vx: (Math.random() - 0.5) * 3, vy: Math.random() * 2, vz: (Math.random() - 0.5) * 3, life: 1.1 });
   }
-}
+};
 
 /** Breaks up to four panes of glass along a shot. */
-export function shatter(o: Vec3, d: Vec3, len: number) {
+export const shatter = (o: Vec3, d: Vec3, len: number) => {
   let gb = 0;
   for (let i = 0; i < 4; i++) {
     const q: Vec3 = [o[0] + d[0] * gb, o[1] + d[1] * gb, o[2] + d[2] * gb];
@@ -183,4 +183,4 @@ export function shatter(o: Vec3, d: Vec3, len: number) {
       break;
     }
   }
-}
+};

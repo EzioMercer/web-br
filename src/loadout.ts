@@ -44,7 +44,7 @@ export const canAim = () => !!(loadout.weapon.sniper || !loadout.weapon.melee);
 export const aimFov = (): number => loadout.weapon.sniper ? loadout.weapon.scopeFov! : currentOptic()?.fov ?? (loadout.weapon.slot === 2 ? 66 : 62);
 
 /** The gun a new optic would go on: the current one if free, else another free one, else the current or first one. */
-export function opticTarget() {
+export const opticTarget = () => {
   const ks = carriedGuns().filter(takesOptic);
   if (!ks.length) {
     return null;
@@ -52,9 +52,9 @@ export function opticTarget() {
   const cur = ks.includes(loadout.weaponId) ? loadout.weaponId : null;
   const free = ks.filter(k => !loadout.owned[k].optic);
   return cur && !loadout.owned[cur].optic ? cur : free[0] || cur || ks[0];
-}
+};
 
-export function swapOptic(k: Pickup) {
+export const swapOptic = (k: Pickup) => {
   const tg = opticTarget();
   if (!tg) {
     return;
@@ -68,10 +68,10 @@ export function swapOptic(k: Pickup) {
   pickups.splice(pickups.indexOf(k), 1);
   looting.swapTarget = null;
   feedMessage('Attached ' + OPTICS[k.itemId as OpticId].name + ' to ' + WEAPONS[tg].name);
-}
+};
 
 /** Gives weapon `id` (with ammo and optic `st` if dropped by someone) and switches to it, dropping `drop` if both slots are full. */
-export function giveWeapon(id: string, st?: OwnedWeapon, drop?: string) {
+export const giveWeapon = (id: string, st?: OwnedWeapon, drop?: string) => {
   const w = WEAPONS[id];
   loadout.owned[loadout.weaponId] = Object.assign(loadout.owned[loadout.weaponId] || {}, { ammo: loadout.ammo, reserve: loadout.reserve } satisfies Partial<OwnedWeapon>);
   if (loadout.owned[id]) {
@@ -92,4 +92,4 @@ export function giveWeapon(id: string, st?: OwnedWeapon, drop?: string) {
   loadout.reloading = false;
   loadout.scoped = false;
   loadout.grenade = null;
-}
+};
