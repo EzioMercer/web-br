@@ -1,36 +1,38 @@
 import * as THREE from 'three';
 import { stepNoise, stepThump } from '../audio';
 import { bots } from '../bots';
-import { wallT } from '../physics';
-import { P } from '../player';
+import { lastHit, castRay } from '../physics';
+import { playerBody, player } from '../player';
 import { scene } from '../render/renderer';
 import { glassMat, unitGeo } from './level';
-import { state } from '../state';
+import { settings } from '../settings';
 import type { Body, Box, Door, Vec3 } from '../types';
 
-export const DR: Door[] = [];
+export const doors: Door[] = [];
 /** Glass panes: collision box and mesh. */
-export const GL: { b: Box; m: THREE.Mesh }[] = [];
+export const panes: { box: Box; mesh: THREE.Mesh }[] = [];
 /** Flying glass shards. */
-export const shards: { m: THREE.Mesh; vx: number; vy: number; vz: number; t: number }[] = [];
-let dTick = 0;
+export const shards: { mesh: THREE.Mesh; vx: number; vy: number; vz: number; life: number }[] = [];
+let doorTimer = 0;
+/** The door the E key would toggle. */
+export let focusedDoor: Door | null = null;
 
 // the door you are facing (or standing right next to), for the E key and the on-screen prompt
 function findDoor() {
-  if (state.dead) {
+  if (player.dead) {
     return null;
   }
   let best: Door | null = null;
   let bs = 0;
-  const cp = Math.cos(state.pitch);
-  const fx = -Math.sin(state.yaw) * cp;
-  const fz = -Math.cos(state.yaw) * cp;
+  const cp = Math.cos(player.pitch);
+  const fx = -Math.sin(player.yaw) * cp;
+  const fz = -Math.cos(player.yaw) * cp;
   const fl = Math.hypot(fx, fz) || 1;
-  for (const d of DR) {
-    const dx = d.x - P.x;
-    const dz = d.z - P.z;
+  for (const d of doors) {
+    const dx = d.x - playerBody.x;
+    const dz = d.z - playerBody.z;
     const dist = Math.hypot(dx, dz);
-    if (dist > 2.6 || Math.abs(P.y - d.y) > 2.4) {
+    if (dist > 2.6 || Math.abs(playerBody.y - d.y) > 2.4) {
       continue;
     }
     const dot = dist > 0.01 ? (dx * fx + dz * fz) / (dist * fl) : 1;
@@ -48,12 +50,12 @@ function findDoor() {
 
 // a door will not shut on somebody standing in the doorway
 function doorBlocked(d: Door) {
-  const k = d.b;
+  const k = d.box;
   const m = 0.45;
 
   const hit = (a: Body) => Math.abs(a.y - d.y) < 2.8 && a.x > k.min[0] - m && a.x < k.max[0] + m && a.z > k.min[2] - m && a.z < k.max[2] + m;
 
-  return hit(P) || bots.some(b => b.hp > 0 && hit(b));
+  return hit(playerBody) || bots.some(b => b.health > 0 && hit(b));
 }
 
 export function useDoor() {
@@ -61,49 +63,49 @@ export function useDoor() {
   if (!d) {
     return;
   }
-  if (d.tgt) {
+  if (d.target) {
     if (doorBlocked(d)) {
       return;
     }
-    d.tgt = 0;
-    d.lockP = true;
+    d.target = 0;
+    d.closedByPlayer = true;
   } else {
-    if (d.a < 0.02) {
-      const side = d.ax === 'x' ? Math.sign(P.z - d.z) || 1 : Math.sign(P.x - d.x) || 1;
-      d.sgn = d.ax === 'x' ? side : -side;
+    if (d.openAmount < 0.02) {
+      const side = d.axis === 'x' ? Math.sign(playerBody.z - d.z) || 1 : Math.sign(playerBody.x - d.x) || 1;
+      d.swingDir = d.axis === 'x' ? side : -side;
     }
-    d.tgt = 1;
-    d.lockP = false;
+    d.target = 1;
+    d.closedByPlayer = false;
   }
-  doorSnd();
+  doorSound();
 }
 
 /** Opens doors for anyone walking up to them and animates them (every 50 ms). */
 export function doorsTick(dt: number) {
-  if (!DR.length) {
-    state.doorFocus = null;
+  if (!doors.length) {
+    focusedDoor = null;
     return;
   }
-  dTick += dt;
-  if (dTick < 0.05) {
+  doorTimer += dt;
+  if (doorTimer < 0.05) {
     return;
   }
-  const st = dTick;
-  dTick = 0;
-  const acts: Body[] = bots.filter(b => b.hp > 0);
-  if (!state.dead) {
-    acts.push(P);
+  const st = doorTimer;
+  doorTimer = 0;
+  const acts: Body[] = bots.filter(b => b.health > 0);
+  if (!player.dead) {
+    acts.push(playerBody);
   }
-  state.doorFocus = findDoor();
-  for (const d of DR) {
-    if (d.lockP && Math.hypot(P.x - d.x, P.z - d.z) > Math.sqrt(d.r2) + 0.8) {
-      d.lockP = false;
+  focusedDoor = findDoor();
+  for (const d of doors) {
+    if (d.closedByPlayer && Math.hypot(playerBody.x - d.x, playerBody.z - d.z) > Math.sqrt(d.reachSq) + 0.8) {
+      d.closedByPlayer = false;
     }
-    if (d.tgt === 0) {
+    if (d.target === 0) {
       let who: Body | null = null;
-      let bd = d.r2;
+      let bd = d.reachSq;
       for (const a of acts) {
-        if (a === P && d.lockP) {
+        if (a === playerBody && d.closedByPlayer) {
           continue;
         }
         const dx = a.x - d.x;
@@ -115,47 +117,47 @@ export function doorsTick(dt: number) {
         }
       }
       if (who) {
-        if (d.a < 0.02) {
-          const side = d.ax === 'x' ? Math.sign(who.z - d.z) || 1 : Math.sign(who.x - d.x) || 1;
-          d.sgn = d.ax === 'x' ? side : -side;
+        if (d.openAmount < 0.02) {
+          const side = d.axis === 'x' ? Math.sign(who.z - d.z) || 1 : Math.sign(who.x - d.x) || 1;
+          d.swingDir = d.axis === 'x' ? side : -side;
         }
-        d.tgt = 1;
-        if (dx2(d)) {
-          doorSnd();
+        d.target = 1;
+        if (inEarshot(d)) {
+          doorSound();
         }
       }
     }
-    if (d.a !== d.tgt) {
-      d.a += Math.sign(d.tgt - d.a) * Math.min(Math.abs(d.tgt - d.a), st * 3.2);
-      d.g.rotation.y = d.th0 + d.sgn * d.a * 1.5708;
-      d.b.off = d.a > 0.5;
+    if (d.openAmount !== d.target) {
+      d.openAmount += Math.sign(d.target - d.openAmount) * Math.min(Math.abs(d.target - d.openAmount), st * 3.2);
+      d.pivot.rotation.y = d.baseAngle + d.swingDir * d.openAmount * 1.5708;
+      d.box.disabled = d.openAmount > 0.5;
     }
   }
 }
 
 /** Close enough to the player to hear. */
-function dx2(d: Door) {
-  return Math.hypot(d.x - P.x, d.z - P.z) < 30;
+function inEarshot(d: Door) {
+  return Math.hypot(d.x - playerBody.x, d.z - playerBody.z) < 30;
 }
 
-function doorSnd() {
-  stepThump(110, 70, 0.12, 0.12 * state.stepVol);
+function doorSound() {
+  stepThump(110, 70, 0.12, 0.12 * settings.footstepVolume);
 }
 
-function glassSnd() {
-  stepNoise(0.26 * Math.max(0.3, state.stepVol + 0.4), 0.22, 3200, 0.003);
+function glassSound() {
+  stepNoise(0.26 * Math.max(0.3, settings.footstepVolume + 0.4), 0.22, 3200, 0.003);
   stepNoise(0.16, 0.18, 2200, 0.005, 0.04);
   stepThump(900, 500, 0.06, 0.04);
 }
 
 export function breakGlass(b: Box) {
-  if (b.off) {
+  if (b.disabled) {
     return;
   }
-  b.off = true;
-  const g = GL[b.gi!];
-  g.m.visible = false;
-  glassSnd();
+  b.disabled = true;
+  const g = panes[b.glassIndex!];
+  g.mesh.visible = false;
+  glassSound();
   const cx = (b.min[0] + b.max[0]) / 2;
   const cy = (b.min[1] + b.max[1]) / 2;
   const cz = (b.min[2] + b.max[2]) / 2;
@@ -164,7 +166,7 @@ export function breakGlass(b: Box) {
     m.scale.set(0.14, 0.14, 0.02);
     m.position.set(cx + (Math.random() - 0.5) * (b.max[0] - b.min[0]), cy + (Math.random() - 0.5) * (b.max[1] - b.min[1]), cz + (Math.random() - 0.5) * (b.max[2] - b.min[2]));
     scene.add(m);
-    shards.push({ m, vx: (Math.random() - 0.5) * 3, vy: Math.random() * 2, vz: (Math.random() - 0.5) * 3, t: 1.1 });
+    shards.push({ mesh: m, vx: (Math.random() - 0.5) * 3, vy: Math.random() * 2, vz: (Math.random() - 0.5) * 3, life: 1.1 });
   }
 }
 
@@ -173,9 +175,9 @@ export function shatter(o: Vec3, d: Vec3, len: number) {
   let gb = 0;
   for (let i = 0; i < 4; i++) {
     const q: Vec3 = [o[0] + d[0] * gb, o[1] + d[1] * gb, o[2] + d[2] * gb];
-    const t = wallT(q, d, len - gb);
-    if (state.HB && state.HB.glass && t < len - gb) {
-      breakGlass(state.HB);
+    const t = castRay(q, d, len - gb);
+    if (lastHit && lastHit.glass && t < len - gb) {
+      breakGlass(lastHit);
       gb += t + 0.06;
     } else {
       break;

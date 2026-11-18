@@ -1,91 +1,98 @@
-import { state } from './state';
+import { loadout } from './loadout';
+import { settings } from './settings';
+
+let ctx: AudioContext | undefined;
 
 /** Ground surface, for footstep sounds. */
 export type Surface = 'dust' | 'grass' | 'snow' | 'water';
 
-export function initAudio() {
-  if (!state.AC) {
+/** Creates the audio context on first use and resumes it (browsers start it suspended until a click). */
+export function unlockAudio() {
+  if (!ctx) {
     try {
-      state.AC = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     } catch { /* No Web Audio: the game runs silently. */ }
+  }
+  if (ctx && ctx.state === 'suspended') {
+    ctx.resume();
   }
 }
 
 /** Filtered noise burst. */
-export function snd(vol: number, dur: number, freq: number) {
-  if (!state.AC) {
+export function noiseBurst(vol: number, dur: number, freq: number) {
+  if (!ctx) {
     return;
   }
-  const n = state.AC.sampleRate * dur | 0;
-  const b = state.AC.createBuffer(1, n, state.AC.sampleRate);
+  const n = ctx.sampleRate * dur | 0;
+  const b = ctx.createBuffer(1, n, ctx.sampleRate);
   const d = b.getChannelData(0);
   for (let i = 0; i < n; i++) {
     d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
   }
-  const s = state.AC.createBufferSource();
-  const f = state.AC.createBiquadFilter();
-  const g = state.AC.createGain();
+  const s = ctx.createBufferSource();
+  const f = ctx.createBiquadFilter();
+  const g = ctx.createGain();
   s.buffer = b;
   f.type = 'lowpass';
   f.frequency.value = freq;
   g.gain.value = vol;
   s.connect(f);
   f.connect(g);
-  g.connect(state.AC.destination);
+  g.connect(ctx.destination);
   s.start();
 }
 
 /** Pitch sweep from `f0` to `f1` Hz. */
 export function tone(f0: number, f1: number, dur: number, vol: number, type?: OscillatorType) {
-  if (!state.AC) {
+  if (!ctx) {
     return;
   }
-  const o = state.AC.createOscillator();
-  const g = state.AC.createGain();
-  const t = state.AC.currentTime;
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  const t = ctx.currentTime;
   o.type = type || 'sine';
   o.frequency.setValueAtTime(f0, t);
   o.frequency.exponentialRampToValueAtTime(f1, t + dur);
   g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.001, t + dur);
   o.connect(g);
-  g.connect(state.AC.destination);
+  g.connect(ctx.destination);
   o.start(t);
   o.stop(t + dur);
 }
 
-export function fireSnd() {
-  if (state.WP.snp) {
-    const big = state.cw === 'm82';
-    snd(big ? 1 : 0.8, big ? 0.7 : 0.55, big ? 800 : 1100);
-    snd(0.5, 0.08, 6000);
+export function fireSound() {
+  if (loadout.weapon.sniper) {
+    const big = loadout.weaponId === 'm82';
+    noiseBurst(big ? 1 : 0.8, big ? 0.7 : 0.55, big ? 800 : 1100);
+    noiseBurst(0.5, 0.08, 6000);
     tone(big ? 52 : 70, 28, 0.5, 0.9, 'sine');
-    if (state.WP.bolt) {
+    if (loadout.weapon.boltAction) {
       for (const [ms, f] of [[350, 700], [650, 450], [1050, 1000], [1300, 300]]) {
         setTimeout(() => tone(f, f * 0.5, 0.05, 0.3, 'square'), ms);
       }
     }
-  } else if (state.WP.pel) {
-    snd(0.9, 0.3, 1500);
+  } else if (loadout.weapon.pellets) {
+    noiseBurst(0.9, 0.3, 1500);
     tone(90, 35, 0.3, 0.8, 'sine');
     setTimeout(() => {
       tone(400, 200, 0.05, 0.3, 'square');
       tone(300, 150, 0.06, 0.3, 'square');
     }, 450);
-  } else if (state.WP.sl === 2) {
-    if (state.cw === 'deagle') {
-      snd(0.7, 0.22, 2500);
+  } else if (loadout.weapon.slot === 2) {
+    if (loadout.weaponId === 'deagle') {
+      noiseBurst(0.7, 0.22, 2500);
       tone(160, 40, 0.2, 0.8, 'triangle');
     } else {
-      snd(0.4, 0.09, 4200);
+      noiseBurst(0.4, 0.09, 4200);
       tone(260, 70, 0.1, 0.35, 'triangle');
     }
-  } else if (state.WP.rate < 0.1) {
-    snd(0.4, 0.07, 5000);
+  } else if (loadout.weapon.fireInterval < 0.1) {
+    noiseBurst(0.4, 0.07, 5000);
     tone(300, 120, 0.07, 0.3, 'square');
   } else {
-    snd(0.5, 0.16, state.cw === 'm4' ? 2800 : 2200);
-    tone(state.cw === 'm4' ? 160 : 130, 45, 0.16, 0.5, 'triangle');
+    noiseBurst(0.5, 0.16, loadout.weaponId === 'm4' ? 2800 : 2200);
+    tone(loadout.weaponId === 'm4' ? 160 : 130, 45, 0.16, 0.5, 'triangle');
   }
 }
 
@@ -93,7 +100,7 @@ let stepBus: GainNode | null = null;
 let stepBusFor: AudioContext | null = null;
 
 /** Footstep output bus (through a compressor), rebuilt when the audio context changes. */
-function stepOut(ac: AudioContext) {
+function footstepBus(ac: AudioContext) {
   if (!stepBus || stepBusFor !== ac) {
     stepBusFor = ac;
     stepBus = ac.createGain();
@@ -115,20 +122,20 @@ function stepOut(ac: AudioContext) {
 }
 
 export function stepNoise(vol: number, dur: number, f: number, att: number, at?: number) {
-  if (!state.AC || vol <= 0) {
+  if (!ctx || vol <= 0) {
     return;
   }
-  const t = state.AC.currentTime + (at || 0);
-  const n = Math.max(8, state.AC.sampleRate * dur | 0);
-  const b = state.AC.createBuffer(1, n, state.AC.sampleRate);
+  const t = ctx.currentTime + (at || 0);
+  const n = Math.max(8, ctx.sampleRate * dur | 0);
+  const b = ctx.createBuffer(1, n, ctx.sampleRate);
   const d = b.getChannelData(0);
   for (let i = 0; i < n; i++) {
     d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
   }
-  const src = state.AC.createBufferSource();
-  const f1 = state.AC.createBiquadFilter();
-  const f2 = state.AC.createBiquadFilter();
-  const g = state.AC.createGain();
+  const src = ctx.createBufferSource();
+  const f1 = ctx.createBiquadFilter();
+  const f2 = ctx.createBiquadFilter();
+  const g = ctx.createGain();
   src.buffer = b;
   f1.type = f2.type = 'lowpass';
   f1.frequency.value = f2.frequency.value = f;
@@ -141,17 +148,17 @@ export function stepNoise(vol: number, dur: number, f: number, att: number, at?:
   src.connect(f1);
   f1.connect(f2);
   f2.connect(g);
-  g.connect(stepOut(state.AC));
+  g.connect(footstepBus(ctx));
   src.start(t);
 }
 
 export function stepThump(f0: number, f1: number, dur: number, vol: number, at?: number) {
-  if (!state.AC || vol <= 0) {
+  if (!ctx || vol <= 0) {
     return;
   }
-  const t = state.AC.currentTime + (at || 0);
-  const o = state.AC.createOscillator();
-  const g = state.AC.createGain();
+  const t = ctx.currentTime + (at || 0);
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
   o.type = 'sine';
   o.frequency.setValueAtTime(f0, t);
   o.frequency.exponentialRampToValueAtTime(f1, t + dur);
@@ -159,16 +166,16 @@ export function stepThump(f0: number, f1: number, dur: number, vol: number, at?:
   g.gain.linearRampToValueAtTime(vol, t + 0.008);
   g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
   o.connect(g);
-  g.connect(stepOut(state.AC));
+  g.connect(footstepBus(ctx));
   o.start(t);
   o.stop(t + dur + 0.02);
 }
 
-export function stepSnd(s: Surface, v: number) {
-  if (!state.AC || v <= 0) {
+export function footstep(s: Surface, v: number) {
+  if (!ctx || v <= 0) {
     return;
   }
-  v = Math.min(v, 1.2) * state.stepVol;
+  v = Math.min(v, 1.2) * settings.footstepVolume;
   const r = 0.85 + Math.random() * 0.3;
   if (s === 'dust') {
     stepNoise(0.30 * v, 0.10, 1100 * r, 0.006);
@@ -189,41 +196,41 @@ export function stepSnd(s: Surface, v: number) {
 
 type ReloadClick = 'out' | 'in' | 'slap' | 'bolt' | 'shell' | 'pump';
 
-function rclick(k: ReloadClick) {
+function reloadClick(k: ReloadClick) {
   if (k === 'out') {
-    snd(0.5, 0.07, 1800);
+    noiseBurst(0.5, 0.07, 1800);
     tone(220, 90, 0.07, 0.5, 'triangle');
   } else if (k === 'in') {
-    snd(0.7, 0.06, 3000);
+    noiseBurst(0.7, 0.06, 3000);
     tone(420, 160, 0.08, 0.6, 'square');
   } else if (k === 'slap') {
-    snd(0.6, 0.05, 4500);
+    noiseBurst(0.6, 0.05, 4500);
     tone(700, 300, 0.05, 0.4, 'square');
   } else if (k === 'bolt') {
     tone(300, 120, 0.09, 0.5, 'sawtooth');
-    snd(0.5, 0.1, 2500);
+    noiseBurst(0.5, 0.1, 2500);
   } else if (k === 'shell') {
-    snd(0.4, 0.04, 3500);
+    noiseBurst(0.4, 0.04, 3500);
     tone(900, 500, 0.04, 0.4, 'square');
   } else if (k === 'pump') {
-    snd(0.7, 0.12, 1500);
+    noiseBurst(0.7, 0.12, 1500);
     tone(180, 70, 0.12, 0.6, 'triangle');
   }
 }
 
 /** Reload sound cues: [delay in ms, click], scaled to the weapon's reload time. */
-export function reloadSeq(): [number, ReloadClick][] {
-  const k = state.WP.rt / 2.4;
-  const a: [number, ReloadClick][] = state.WP.bolt ? [[500, 'bolt'], [1000, 'in'], [1500, 'in'], [2000, 'in'], [2800, 'bolt']] : state.WP.pel ? [[500, 'shell'], [900, 'shell'], [1300, 'shell'], [1700, 'shell'], [2100, 'shell'], [2400, 'pump']] : state.WP.sl === 2 ? [[600, 'out'], [1250, 'in'], [1600, 'slap']] : [[600, 'out'], [1400, 'in'], [1750, 'slap'], [2050, 'bolt']];
+export function reloadCues(): [number, ReloadClick][] {
+  const k = loadout.weapon.reloadTime / 2.4;
+  const a: [number, ReloadClick][] = loadout.weapon.boltAction ? [[500, 'bolt'], [1000, 'in'], [1500, 'in'], [2000, 'in'], [2800, 'bolt']] : loadout.weapon.pellets ? [[500, 'shell'], [900, 'shell'], [1300, 'shell'], [1700, 'shell'], [2100, 'shell'], [2400, 'pump']] : loadout.weapon.slot === 2 ? [[600, 'out'], [1250, 'in'], [1600, 'slap']] : [[600, 'out'], [1400, 'in'], [1750, 'slap'], [2050, 'bolt']];
   return a.map(([ms, t]) => [ms * k, t]);
 }
 
-export function rsnd(list: [number, ReloadClick][]) {
-  const w = state.cw;
+export function playReloadCues(list: [number, ReloadClick][]) {
+  const w = loadout.weaponId;
   for (const [ms, t] of list) {
     setTimeout(() => {
-      if (state.reloading && state.cw === w) {
-        rclick(t);
+      if (loadout.reloading && loadout.weaponId === w) {
+        reloadClick(t);
       }
     }, ms);
   }

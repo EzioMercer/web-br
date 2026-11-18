@@ -1,17 +1,19 @@
 import * as THREE from 'three';
-import { nade } from '../grenades';
-import { feed } from '../hud/hud';
-import { giveW, gunKeys, optTarget, swapOpt } from '../loadout';
+import { grenadeCount } from '../grenades';
+import { feedMessage } from '../hud/hud';
+import { giveWeapon, carriedGuns, loadout, opticTarget, swapOptic } from '../loadout';
 import { scene, srgbTex } from '../render/renderer';
-import { VM, bx, cy, mkOptic, mt } from '../viewmodel';
-import { NC, OPT, WPN } from '../weapons';
+import { viewModels, boxMesh, cylinderMesh, makeOptic, lambert } from '../viewmodel';
+import { GRENADE_COLORS, GRENADE_NAMES, OPTICS, WEAPONS } from '../weapons';
 import { floorY } from '../world/level';
-import { state } from '../state';
+import { player } from '../player';
 import type { AmmoType, GrenadeId, OpticId, OwnedWeapon, Pickup, PickupKind } from '../types';
 
 export const pickups: Pickup[] = [];
+/** The pickup E would swap for. */
+export const looting = { swapTarget: null as Pickup | null };
 
-function mkLabel(text: string, col: string) {
+function makeLabel(text: string, col: string) {
   const c = document.createElement('canvas');
   c.width = 256;
   c.height = 64;
@@ -28,128 +30,127 @@ function mkLabel(text: string, col: string) {
   return sp;
 }
 
-const AMN: Partial<Record<AmmoType, string>> = { pst: 'Pistol ammo', smg: 'SMG ammo', rif: 'Rifle ammo', shl: 'Shotgun shells', snp: 'Sniper ammo' };
-const GN: Record<GrenadeId, string> = { he: 'HE grenade', fl: 'Flashbang', sm: 'Smoke grenade' };
+const AMMO_NAMES: Partial<Record<AmmoType, string>> = { pst: 'Pistol ammo', smg: 'SMG ammo', rif: 'Rifle ammo', shl: 'Shotgun shells', snp: 'Sniper ammo' };
 
 /** Places a pickup of kind `t` (`id` is the weapon, ammo, grenade or optic id) at (x, z), on the floor unless `y0` is given. */
-export function mkPick(x: number, z: number, t: PickupKind, id: string | null, st?: OwnedWeapon, y0?: number) {
-  const col = t === 'w' ? 0xf2a23a : t === 'a' ? 0x4a8cff : t === 'm' ? 0xd9d046 : t === 'g' ? 0xe05a3a : t === 'o' ? 0xb98cff : 0x4ad66a;
+export function spawnPickup(x: number, z: number, t: PickupKind, id: string | null, st?: OwnedWeapon, y0?: number) {
+  const col = t === 'weapon' ? 0xf2a23a : t === 'armor' ? 0x4a8cff : t === 'ammo' ? 0xd9d046 : t === 'grenade' ? 0xe05a3a : t === 'optic' ? 0xb98cff : 0x4ad66a;
   const g = new THREE.Group();
   const it = new THREE.Group();
   const k = id!;
-  const n = t === 'w' ? WPN[k].name + (st && st.opt ? ' + ' + OPT[st.opt].s : '') : t === 'a' ? 'Kevlar vest' : t === 'm' ? AMN[k as AmmoType]! : t === 'g' ? GN[k as GrenadeId] : t === 'o' ? OPT[k as OpticId].n : 'Medkit';
-  if (t === 'w') {
-    const m = VM[k].clone(true);
+  const n = t === 'weapon' ? WEAPONS[k].name + (st && st.optic ? ' + ' + OPTICS[st.optic].shortName : '') : t === 'armor' ? 'Kevlar vest' : t === 'ammo' ? AMMO_NAMES[k as AmmoType]! : t === 'grenade' ? GRENADE_NAMES[k as GrenadeId] : t === 'optic' ? OPTICS[k as OpticId].name : 'Medkit';
+  if (t === 'weapon') {
+    const m = viewModels[k].clone(true);
     m.visible = true;
     m.position.set(0, 0, 0);
     m.rotation.set(0, 0, 0);
-    m.scale.setScalar(WPN[k].sl === 2 ? 2.4 : 1.4);
+    m.scale.setScalar(WEAPONS[k].slot === 2 ? 2.4 : 1.4);
     it.add(m);
     it.position.y = 0.95;
-  } else if (t === 'a') {
-    const b = mt(0x2f5fb8);
-    bx(it, 0.5, 0.6, 0.3, 0, 0, 0, b);
-    bx(it, 0.38, 0.4, 0.05, 0, 0, 0.17, mt(0x1c2a44));
-    bx(it, 0.12, 0.2, 0.32, -0.17, 0.38, 0, b);
-    bx(it, 0.12, 0.2, 0.32, 0.17, 0.38, 0, b);
+  } else if (t === 'armor') {
+    const b = lambert(0x2f5fb8);
+    boxMesh(it, 0.5, 0.6, 0.3, 0, 0, 0, b);
+    boxMesh(it, 0.38, 0.4, 0.05, 0, 0, 0.17, lambert(0x1c2a44));
+    boxMesh(it, 0.12, 0.2, 0.32, -0.17, 0.38, 0, b);
+    boxMesh(it, 0.12, 0.2, 0.32, 0.17, 0.38, 0, b);
     it.position.y = 0.7;
-  } else if (t === 'm') {
-    bx(it, 0.55, 0.28, 0.36, 0, 0, 0, mt(0x55603a));
+  } else if (t === 'ammo') {
+    boxMesh(it, 0.55, 0.28, 0.36, 0, 0, 0, lambert(0x55603a));
     for (const i of [-1, 0, 1]) {
-      cy(it, 0.05, 0.22, i * 0.14, 0.2, 0, mt(0xc9a227));
+      cylinderMesh(it, 0.05, 0.22, i * 0.14, 0.2, 0, lambert(0xc9a227));
     }
     it.position.y = 0.45;
-  } else if (t === 'o') {
-    const m = mkOptic(k as OpticId);
+  } else if (t === 'optic') {
+    const m = makeOptic(k as OpticId);
     m.scale.setScalar(4.2);
     m.visible = true;
     it.add(m);
     it.position.y = 0.5;
-  } else if (t === 'g') {
-    it.add(new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 10), new THREE.MeshLambertMaterial({ color: NC[k as GrenadeId] })));
-    cy(it, 0.05, 0.12, 0, 0.17, 0, mt(0x444));
+  } else if (t === 'grenade') {
+    it.add(new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 10), new THREE.MeshLambertMaterial({ color: GRENADE_COLORS[k as GrenadeId] })));
+    cylinderMesh(it, 0.05, 0.12, 0, 0.17, 0, lambert(0x444));
     it.position.y = 0.55;
   } else {
-    bx(it, 0.55, 0.36, 0.38, 0, 0, 0, mt(0xeeeeee));
-    bx(it, 0.3, 0.03, 0.08, 0, 0.19, 0, mt(0xd22222));
-    bx(it, 0.08, 0.03, 0.3, 0, 0.19, 0, mt(0xd22222));
+    boxMesh(it, 0.55, 0.36, 0.38, 0, 0, 0, lambert(0xeeeeee));
+    boxMesh(it, 0.3, 0.03, 0.08, 0, 0.19, 0, lambert(0xd22222));
+    boxMesh(it, 0.08, 0.03, 0.3, 0, 0.19, 0, lambert(0xd22222));
     it.position.y = 0.55;
   }
   g.add(it);
   const bm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 12, 6), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.35 }));
   bm.position.y = 6;
   g.add(bm);
-  const lab = mkLabel(n, t === 'w' ? '#ffcf5a' : t === 'a' ? '#8fb8ff' : t === 'm' ? '#ffe27a' : t === 'g' ? '#ff9a7a' : t === 'o' ? '#d3b2ff' : '#8fffa8');
+  const lab = makeLabel(n, t === 'weapon' ? '#ffcf5a' : t === 'armor' ? '#8fb8ff' : t === 'ammo' ? '#ffe27a' : t === 'grenade' ? '#ff9a7a' : t === 'optic' ? '#d3b2ff' : '#8fffa8');
   lab.position.y = 2.1;
   lab.visible = false;
   g.add(lab);
   const gy = y0 === undefined ? floorY(x, z) : y0;
   g.position.set(x, gy, z);
   scene.add(g);
-  pickups.push({ m: g, lab, x, z, y: gy, t, id, n, st });
+  pickups.push({ mesh: g, label: lab, x, z, y: gy, kind: t, itemId: id, name: n, weaponState: st });
 }
 
 /** Swaps the held weapon (or optic) for pickup `k`, dropping the old one. */
-export function swapPick(k: Pickup) {
-  if (k.t === 'o') {
-    swapOpt(k);
+export function swapPickup(k: Pickup) {
+  if (k.kind === 'optic') {
+    swapOptic(k);
     return;
   }
-  if (gunKeys().length < 2 || state.owned[k.id!]) {
+  if (carriedGuns().length < 2 || loadout.owned[k.itemId!]) {
     return;
   }
-  const drop = state.cw !== 'knife' ? state.cw : gunKeys()[1];
-  const st: OwnedWeapon = drop === state.cw ? { mag: state.mag, res: state.res, opt: state.owned[state.cw] && state.owned[state.cw].opt } : { mag: state.owned[drop].mag, res: state.owned[drop].res, opt: state.owned[drop].opt };
-  mkPick(k.x, k.z, 'w', drop, st, k.y);
-  giveW(k.id!, k.st, drop);
-  scene.remove(k.m);
+  const drop = loadout.weaponId !== 'knife' ? loadout.weaponId : carriedGuns()[1];
+  const st: OwnedWeapon = drop === loadout.weaponId ? { ammo: loadout.ammo, reserve: loadout.reserve, optic: loadout.owned[loadout.weaponId] && loadout.owned[loadout.weaponId].optic } : { ammo: loadout.owned[drop].ammo, reserve: loadout.owned[drop].reserve, optic: loadout.owned[drop].optic };
+  spawnPickup(k.x, k.z, 'weapon', drop, st, k.y);
+  giveWeapon(k.itemId!, k.weaponState, drop);
+  scene.remove(k.mesh);
   pickups.splice(pickups.indexOf(k), 1);
-  state.brNear = null;
+  looting.swapTarget = null;
 }
 
 /** The n-th gun carried. */
-export function wslot(n: number) {
-  return gunKeys()[n - 1];
+export function gunInSlot(n: number) {
+  return carriedGuns()[n - 1];
 }
 
-export function clearPicks() {
+export function clearPickups() {
   for (const k of pickups) {
-    scene.remove(k.m);
+    scene.remove(k.mesh);
   }
   pickups.length = 0;
 }
 
-export function take(k: Pickup) {
-  if (k.t === 'w') {
-    giveW(k.id!, k.st);
-  } else if (k.t === 'a') {
-    state.armor = 100;
-  } else if (k.t === 'g') {
-    nade[k.id as GrenadeId]++;
-  } else if (k.t === 'o') {
-    const tg = optTarget();
+export function takePickup(k: Pickup) {
+  if (k.kind === 'weapon') {
+    giveWeapon(k.itemId!, k.weaponState);
+  } else if (k.kind === 'armor') {
+    player.armor = 100;
+  } else if (k.kind === 'grenade') {
+    grenadeCount[k.itemId as GrenadeId]++;
+  } else if (k.kind === 'optic') {
+    const tg = opticTarget();
     if (tg) {
-      state.owned[tg].opt = k.id as OpticId;
+      loadout.owned[tg].optic = k.itemId as OpticId;
 
-      feed('Attached ' + k.n + ' to ' + WPN[tg].name);
+      feedMessage('Attached ' + k.name + ' to ' + WEAPONS[tg].name);
     }
     return;
-  } else if (k.t === 'm') {
+  } else if (k.kind === 'ammo') {
     let add = 0;
-    for (const q in state.owned) {
-      if (WPN[q].at === k.id) {
-        add = WPN[q].mag * 2;
-        if (q === state.cw) {
-          state.res += add;
+    for (const q in loadout.owned) {
+      if (WEAPONS[q].ammoType === k.itemId) {
+        add = WEAPONS[q].magSize * 2;
+        if (q === loadout.weaponId) {
+          loadout.reserve += add;
         } else {
-          state.owned[q].res += add;
+          loadout.owned[q].reserve += add;
         }
       }
     }
-    feed('Picked up ' + k.n + ' (+' + add + ' rounds)');
+    feedMessage('Picked up ' + k.name + ' (+' + add + ' rounds)');
     return;
   } else {
-    state.hp = Math.min(100, state.hp + 50);
+    player.health = Math.min(100, player.health + 50);
   }
-  feed('Picked up ' + k.n);
+  feedMessage('Picked up ' + k.name);
 }

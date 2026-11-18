@@ -1,75 +1,95 @@
-import { mkPick, pickups } from './br/pickups';
-import { feed } from './hud/hud';
+import { looting, spawnPickup, pickups } from './br/pickups';
+import { feedMessage } from './hud/hud';
 import { scene } from './render/renderer';
-import { OPT, WPN } from './weapons';
-import { state } from './state';
-import type { OpticId, OwnedWeapon, Pickup } from './types';
+import { OPTICS, WEAPONS } from './weapons';
+import type { GrenadeId, OpticId, OwnedWeapon, Pickup, Weapon } from './types';
+
+/** The weapons the player carries and the state of the one in hand. */
+export const loadout = {
+  weaponId: 'pistol',
+  weapon: WEAPONS.pistol as Weapon,
+  owned: { pistol: { ammo: 12, reserve: 36 }, knife: { ammo: 1, reserve: 0 } } as Record<string, OwnedWeapon>,
+  /** Rounds in the magazine and in reserve for the weapon in hand. */
+  ammo: 12,
+  reserve: 36,
+  scoped: false,
+  reloading: false,
+  reloadEnd: 0,
+  nextShotAt: 0,
+  lastShotAt: -9,
+  /** Selected grenade, if any. */
+  grenade: null as GrenadeId | null,
+  /** End of the bolt-cycle animation. */
+  boltCycleEnd: 0,
+  /** End of the knife-slash animation. */
+  slashEnd: 0,
+};
 
 /** Weapons carried, except the knife. */
-export const gunKeys = () => Object.keys(state.owned).filter(k => k !== 'knife');
+export const carriedGuns = () => Object.keys(loadout.owned).filter(k => k !== 'knife');
 
 /** Optics fit SMGs, rifles and shotguns. */
-export const canOpt = (id: string) => {
-  const a = WPN[id].at;
+export const takesOptic = (id: string) => {
+  const a = WEAPONS[id].ammoType;
   return a === 'smg' || a === 'rif' || a === 'shl';
 };
 
-export const curOpt = () => {
-  const o = state.owned[state.cw];
-  return o && o.opt && canOpt(state.cw) ? OPT[o.opt] : null;
+export const currentOptic = () => {
+  const o = loadout.owned[loadout.weaponId];
+  return o && o.optic && takesOptic(loadout.weaponId) ? OPTICS[o.optic] : null;
 };
 
-export const canScope = () => !!(state.WP.snp || !state.WP.melee);
+export const canAim = () => !!(loadout.weapon.sniper || !loadout.weapon.melee);
 
-export const scopeFov = (): number => state.WP.snp ? state.WP.zoom! : curOpt()?.fov ?? (state.WP.sl === 2 ? 66 : 62);
+export const aimFov = (): number => loadout.weapon.sniper ? loadout.weapon.scopeFov! : currentOptic()?.fov ?? (loadout.weapon.slot === 2 ? 66 : 62);
 
 /** The gun a new optic would go on: the current one if free, else another free one, else the current or first one. */
-export function optTarget() {
-  const ks = gunKeys().filter(canOpt);
+export function opticTarget() {
+  const ks = carriedGuns().filter(takesOptic);
   if (!ks.length) {
     return null;
   }
-  const cur = ks.includes(state.cw) ? state.cw : null;
-  const free = ks.filter(k => !state.owned[k].opt);
-  return cur && !state.owned[cur].opt ? cur : free[0] || cur || ks[0];
+  const cur = ks.includes(loadout.weaponId) ? loadout.weaponId : null;
+  const free = ks.filter(k => !loadout.owned[k].optic);
+  return cur && !loadout.owned[cur].optic ? cur : free[0] || cur || ks[0];
 }
 
-export function swapOpt(k: Pickup) {
-  const tg = optTarget();
+export function swapOptic(k: Pickup) {
+  const tg = opticTarget();
   if (!tg) {
     return;
   }
-  const old = state.owned[tg].opt;
-  state.owned[tg].opt = k.id as OpticId;
+  const old = loadout.owned[tg].optic;
+  loadout.owned[tg].optic = k.itemId as OpticId;
   if (old) {
-    mkPick(k.x, k.z, 'o', old, undefined, k.y);
+    spawnPickup(k.x, k.z, 'optic', old, undefined, k.y);
   }
-  scene.remove(k.m);
+  scene.remove(k.mesh);
   pickups.splice(pickups.indexOf(k), 1);
-  state.brNear = null;
-  feed('Attached ' + OPT[k.id as OpticId].n + ' to ' + WPN[tg].name);
+  looting.swapTarget = null;
+  feedMessage('Attached ' + OPTICS[k.itemId as OpticId].name + ' to ' + WEAPONS[tg].name);
 }
 
 /** Gives weapon `id` (with ammo and optic `st` if dropped by someone) and switches to it, dropping `drop` if both slots are full. */
-export function giveW(id: string, st?: OwnedWeapon, drop?: string) {
-  const w = WPN[id];
-  state.owned[state.cw] = Object.assign(state.owned[state.cw] || {}, { mag: state.mag, res: state.res });
-  if (state.owned[id]) {
-    state.owned[id].res += w.mag;
-    if (st && st.opt && !state.owned[id].opt) {
-      state.owned[id].opt = st.opt;
+export function giveWeapon(id: string, st?: OwnedWeapon, drop?: string) {
+  const w = WEAPONS[id];
+  loadout.owned[loadout.weaponId] = Object.assign(loadout.owned[loadout.weaponId] || {}, { ammo: loadout.ammo, reserve: loadout.reserve } satisfies Partial<OwnedWeapon>);
+  if (loadout.owned[id]) {
+    loadout.owned[id].reserve += w.magSize;
+    if (st && st.optic && !loadout.owned[id].optic) {
+      loadout.owned[id].optic = st.optic;
     }
   } else {
-    if (gunKeys().length >= 2) {
-      delete state.owned[drop || (state.cw !== 'knife' ? state.cw : gunKeys()[1])];
+    if (carriedGuns().length >= 2) {
+      delete loadout.owned[drop || (loadout.weaponId !== 'knife' ? loadout.weaponId : carriedGuns()[1])];
     }
-    state.owned[id] = st ? { mag: st.mag, res: st.res, opt: st.opt } : { mag: w.mag, res: w.mag };
+    loadout.owned[id] = st ? { ammo: st.ammo, reserve: st.reserve, optic: st.optic } : { ammo: w.magSize, reserve: w.magSize };
   }
 
-  state.cw = id;
-  state.WP = w;
-  ({ mag: state.mag, res: state.res } = state.owned[id]);
-  state.reloading = false;
-  state.scoped = false;
-  state.cg = null;
+  loadout.weaponId = id;
+  loadout.weapon = w;
+  ({ ammo: loadout.ammo, reserve: loadout.reserve } = loadout.owned[id]);
+  loadout.reloading = false;
+  loadout.scoped = false;
+  loadout.grenade = null;
 }

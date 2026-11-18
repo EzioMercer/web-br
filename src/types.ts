@@ -12,45 +12,44 @@ export type AmmoType = 'pst' | 'smg' | 'rif' | 'shl' | 'snp' | 'none';
 
 export interface Weapon {
   name: string;
-  mag: number;
-  res: number;
+  magSize: number;
   /** Seconds between shots. */
-  rate: number;
-  dmg: number;
+  fireInterval: number;
+  damage: number;
   /** Recoil strength. */
-  rec: number;
+  recoil: number;
   auto: boolean;
   /** Reload time (s). */
-  rt: number;
+  reloadTime: number;
   /** Slot: 1 primary, 2 secondary, 3 melee. */
-  sl: number;
-  at?: AmmoType;
+  slot: number;
+  ammoType?: AmmoType;
   /** Pellets per shot (shotguns). */
-  pel?: number;
-  bolt?: boolean;
+  pellets?: number;
+  boltAction?: boolean;
   /** Scoped field of view (degrees). */
-  zoom?: number;
-  snp?: boolean;
+  scopeFov?: number;
+  sniper?: boolean;
   melee?: boolean;
 }
 
 export interface Difficulty {
-  n: string;
-  acc: number;
-  react: number;
-  dmg: number;
-  spd: number;
-  hp: number;
-  cool: number;
-  fov: number;
-  mem: number;
+  name: string;
+  accuracy: number;
+  reactionTime: number;
+  damage: number;
+  speed: number;
+  health: number;
+  fireDelay: number;
+  viewAngle: number;
+  memory: number;
 }
 
 /** Ammo (and optic) the player holds for one weapon. */
 export interface OwnedWeapon {
-  mag: number;
-  res: number;
-  opt?: OpticId;
+  ammo: number;
+  reserve: number;
+  optic?: OpticId;
 }
 
 /** Axis-aligned collision box. */
@@ -58,53 +57,52 @@ export interface Box {
   min: Vec3;
   max: Vec3;
   /** Query stamp, so a ray tests each box once. */
-  s?: number;
+  rayStamp?: number;
   /** Disabled: broken glass or an open door. */
-  off?: boolean;
+  disabled?: boolean;
   glass?: boolean;
   /** Index into the glass list. */
-  gi?: number;
+  glassIndex?: number;
   door?: boolean;
 }
 
 export interface Door {
-  b: Box;
-  g: THREE.Group;
-  th0: number;
-  ax: 'x' | 'z';
-  sgn: number;
+  box: Box;
+  pivot: THREE.Group;
+  baseAngle: number;
+  axis: 'x' | 'z';
+  swingDir: number;
   /** Current open amount, 0..1. */
-  a: number;
+  openAmount: number;
   /** Target open amount, 0 or 1. */
-  tgt: number;
-  t: number;
+  target: number;
   x: number;
   z: number;
   y: number;
-  r2: number;
+  reachSq: number;
   /** The player closed it: don't auto-open for them until they walk away. */
-  lockP?: boolean;
+  closedByPlayer?: boolean;
 }
 
 /** Pickup kinds: weapon, armor, ammo, grenade, optic, health. */
-export type PickupKind = 'w' | 'a' | 'm' | 'g' | 'o' | 'h';
+export type PickupKind = 'weapon' | 'armor' | 'ammo' | 'grenade' | 'optic' | 'health';
 
 export interface Pickup {
-  m: THREE.Group;
-  lab: THREE.Sprite;
+  mesh: THREE.Group;
+  label: THREE.Sprite;
   x: number;
   z: number;
   y: number;
-  t: PickupKind;
-  id: string | null;
-  n: string;
-  st?: OwnedWeapon;
+  kind: PickupKind;
+  itemId: string | null;
+  name: string;
+  weaponState?: OwnedWeapon;
 }
 
 export interface Circle {
   cx: number;
   cz: number;
-  r: number;
+  radius: number;
 }
 
 export interface ZoneStage {
@@ -118,33 +116,33 @@ export interface ZoneStage {
 
 /** A pre-rendered map background. */
 export interface MapBg {
-  c: HTMLCanvasElement;
+  canvas: HTMLCanvasElement;
   /** Pixels per metre. */
-  k: number;
-  o: number;
-  S: number;
+  pxPerMetre: number;
+  offset: number;
+  size: number;
 }
 
 // ---- map data
 
 /** Map box: centre x and z, width (along x), depth (along z), height, color, base y (default 0), no collision. */
-export type MapBox = [x: number, z: number, w: number, d: number, h: number, col: number, y?: number, nc?: boolean];
+export type MapBox = [x: number, z: number, width: number, depth: number, height: number, color: number, y?: number, noCollision?: boolean];
 /** Glass pane: centre x and z, width, depth, height, base y. */
-export type MapGlass = [x: number, z: number, w: number, d: number, h: number, y: number];
-/** Hinged door in a wall along `ax` at coordinate `c`, centred at `m` along the wall. */
+export type MapGlass = [x: number, z: number, width: number, depth: number, height: number, y: number];
+/** Hinged door in a wall along `axis` at coordinate `wallAt`, centred at `center` along the wall. */
 export interface MapDoor {
-  ax: 'x' | 'z';
-  c: number;
-  m: number;
-  w: number;
+  axis: 'x' | 'z';
+  wallAt: number;
+  center: number;
+  width: number;
   y: number;
-  h: number;
-  col: number;
+  height: number;
+  color: number;
 }
 /** Loot spawn: x, z, floor y, tier (1 common, 2 better). */
 export type MapLoot = [x: number, z: number, y: number, tier: number];
 /** Building footprint (for the minimap and placement checks): centre x and z, width, depth, kind. */
-export type Footprint = [x: number, z: number, w: number, d: number, kind: string];
+export type Footprint = [x: number, z: number, width: number, depth: number, kind: string];
 /** Side a structure's door faces: south, north, east, west, or none. */
 export type Face = 's' | 'n' | 'e' | 'w' | '-';
 
@@ -152,12 +150,12 @@ export type Face = 's' | 'n' | 'e' | 'w' | '-';
 export interface Stairwell {
   cx: number;
   cz: number;
-  Y: number;
+  baseY: number;
   /** Lookout floor height above Y. */
-  hf: number;
+  floorHeight: number;
   face: Face;
   /** Tread positions, bottom to top. */
-  tr: Vec3[];
+  treads: Vec3[];
   /** Door position [x, z]. */
   door?: number[];
 }
@@ -168,12 +166,12 @@ export interface Body {
   y: number;
   z: number;
   /** Height (default: standing height). */
-  h?: number;
+  height?: number;
   /** On the ground. */
-  g?: boolean;
+  onGround?: boolean;
 }
 
-export interface Vel {
+export interface Velocity {
   x: number;
   y: number;
   z: number;
@@ -183,5 +181,5 @@ export interface Sphere {
   x: number;
   y: number;
   z: number;
-  r: number;
+  radius: number;
 }

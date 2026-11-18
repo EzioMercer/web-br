@@ -1,9 +1,9 @@
-import { initAudio } from './audio';
-import { $ } from './dom';
-import { lockMouse, setPlay } from './input';
+import { unlockAudio } from './audio';
+import { byId } from './dom';
+import { input, lockMouse, setPlaying } from './input';
 import { startMatch } from './match';
-import { DIFF } from './weapons';
-import { state } from './state';
+import { DIFFICULTIES } from './weapons';
+import { loadSettings, saveSettings, settings } from './settings';
 
 /** Read-only key bindings shown in Settings → Controls. */
 const CONTROLS: [string, string[]][] = [
@@ -27,50 +27,23 @@ const CONTROLS: [string, string[]][] = [
   ['Pause', ['Esc']],
 ];
 
-const SAVE_KEY = 'web-br.settings';
-
-function loadSettings() {
-  try {
-    const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') as { sens?: number; vol?: number; diff?: string };
-    if (typeof s.sens === 'number') {
-      state.sensMul = s.sens;
-    }
-    if (typeof s.vol === 'number') {
-      state.stepVol = s.vol;
-    }
-    if (s.diff && DIFF[s.diff]) {
-      state.D = DIFF[s.diff];
-    }
-  } catch { /* Storage unavailable: keep the defaults. */ }
-}
-
-function saveSettings() {
-  try {
-    const diff = Object.keys(DIFF).find(k => DIFF[k] === state.D);
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ sens: state.sensMul, vol: state.stepVol, diff }));
-  } catch { /* Storage unavailable: settings last for this page only. */ }
-}
-
 export function showMenu() {
-  state.inMenu = true;
-  setPlay(false);
-  $('menu').style.display = 'flex';
+  input.inMenu = true;
+  setPlaying(false);
+  byId('menu').style.display = 'flex';
 }
 
 function startGame() {
   openSettings(false);
   startMatch();
-  state.inMenu = false;
-  $('menu').style.display = 'none';
-  initAudio();
-  if (state.AC && state.AC.state === 'suspended') {
-    state.AC.resume();
-  }
+  input.inMenu = false;
+  byId('menu').style.display = 'none';
+  unlockAudio();
   lockMouse();
 }
 
 function openSettings(v: boolean) {
-  $('settings').classList.toggle('on', v);
+  byId('settings').classList.toggle('on', v);
 }
 
 function selectTab(id: string) {
@@ -80,8 +53,8 @@ function selectTab(id: string) {
 
 loadSettings();
 
-$('play').onclick = () => startGame();
-$('tomenu').onclick = (e) => {
+byId('play').onclick = () => startGame();
+byId('tomenu').onclick = (e) => {
   e.stopPropagation();
   if (document.pointerLockElement) {
     document.exitPointerLock();
@@ -89,15 +62,15 @@ $('tomenu').onclick = (e) => {
   showMenu();
 };
 
-$('setbtn').onclick = () => openSettings(true);
-$('setclose').onclick = () => openSettings(false);
-$('settings').onclick = (e) => {
+byId('setbtn').onclick = () => openSettings(true);
+byId('setclose').onclick = () => openSettings(false);
+byId('settings').onclick = (e) => {
   if (e.target === e.currentTarget) {
     openSettings(false);
   }
 };
 addEventListener('keydown', (e) => {
-  if (e.code === 'Escape' && state.inMenu) {
+  if (e.code === 'Escape' && input.inMenu) {
     openSettings(false);
   }
 });
@@ -106,13 +79,13 @@ document.querySelectorAll<HTMLElement>('#settings .tab').forEach((t) => {
 });
 
 {
-  const dd = $('mdiff');
-  for (const k in DIFF) {
+  const dd = byId('mdiff');
+  for (const k in DIFFICULTIES) {
     const b = document.createElement('button');
-    b.textContent = DIFF[k].n;
-    b.className = 'dbtn' + (DIFF[k] === state.D ? ' on' : '');
+    b.textContent = DIFFICULTIES[k].name;
+    b.className = 'dbtn' + (DIFFICULTIES[k] === settings.difficulty ? ' on' : '');
     b.onclick = () => {
-      state.D = DIFF[k];
+      settings.difficulty = DIFFICULTIES[k];
       [...dd.children].forEach(c => c.classList.toggle('on', c === b));
       saveSettings();
     };
@@ -121,7 +94,7 @@ document.querySelectorAll<HTMLElement>('#settings .tab').forEach((t) => {
 }
 
 {
-  const body = $('ctlbody');
+  const body = byId('ctlbody');
   for (const [action, keys] of CONTROLS) {
     const tr = document.createElement('tr');
     const a = document.createElement('td');
@@ -138,24 +111,24 @@ document.querySelectorAll<HTMLElement>('#settings .tab').forEach((t) => {
 }
 
 {
-  const sens = $<HTMLInputElement>('sens');
-  const fvol = $<HTMLInputElement>('fvol');
+  const sens = byId<HTMLInputElement>('sens');
+  const fvol = byId<HTMLInputElement>('fvol');
 
   const show = () => {
-    $('sensv').textContent = state.sensMul.toFixed(1);
-    $('fvolv').textContent = Math.round(state.stepVol * 100) + '%';
+    byId('sensv').textContent = settings.sensitivity.toFixed(1);
+    byId('fvolv').textContent = Math.round(settings.footstepVolume * 100) + '%';
   };
 
-  sens.value = String(state.sensMul);
-  fvol.value = String(Math.round(state.stepVol * 100));
+  sens.value = String(settings.sensitivity);
+  fvol.value = String(Math.round(settings.footstepVolume * 100));
   show();
   sens.oninput = () => {
-    state.sensMul = +sens.value;
+    settings.sensitivity = +sens.value;
     show();
     saveSettings();
   };
   fvol.oninput = () => {
-    state.stepVol = +fvol.value / 100;
+    settings.footstepVolume = +fvol.value / 100;
     show();
     saveSettings();
   };

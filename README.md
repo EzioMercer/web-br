@@ -31,7 +31,7 @@ In the repo settings, **Pages → Build and deployment → Source** must be set 
 src/
   main.ts          entry: starts the render loop and shows the menu
   match.ts         match flow: start, countdown, victory or elimination, next match
-  state.ts         shared mutable game state (typed)
+  settings.ts      user settings (difficulty, sensitivity, volume), saved in localStorage
   types.ts         shared types
   config.ts        constants (player size, sim step, FOV...)
   dom.ts           HUD element lookup
@@ -51,14 +51,6 @@ src/
 - [x] **Battle Royale only.** The prototype's arena maps (Blockout, Mansion, Dust 2), their modes (Casual, Only Sniper, Arms Race), the buy menu and money are removed. A seeded match produced identical state before and after.
 - [x] **Split the original monolith into modules** (see *Code layout*). Behavior is unchanged: a seeded simulation of casual, Arms Race and Battle Royale matches produced identical state before and after the split.
 - [x] **Type the modules.** Every module type-checks under `strict`, and ESLint runs its full rule set on all of them. A seeded simulation produced identical state before and after.
-- [ ] **Rename the prototype's short identifiers** (`P`, `wb`, `cg`, `ZN`...) to descriptive names.
-
-- [ ] **Narrow `state`.** Shared mutable values now live in `src/state.ts`. Many could move to the module that owns them (for example the player or the Battle Royale zone) once those modules are typed.
+- [x] **Rename the prototype's short identifiers** (`P`, `wb`, `cg`, `ZN`...) to descriptive names (`playerBody`, `addBox`, `loadout.grenade`, `zone`...). Short names remain only for temporaries inside functions (`x`, `dt`, `wf`...). A seeded simulation produced identical state before and after.
+- [x] **Narrow `state`.** The shared `state` object is gone. Each value lives in the module that owns it: `player` (health, view), `loadout` (weapons, ammo), `input`, `screenFx`, `settings`, the zone and pickups. Values with a single writer are exported live bindings (`simTime`, `phase`, `terrain`). A seeded simulation produced identical state before and after.
 - [x] **three.js upgraded** to the latest version (0.187), with matching `@types/three`. Upgrade both together. Rendering uses the modern color pipeline: color management on, sRGB output, physical light units. Hex colors and canvas textures are sRGB, and terrain vertex colors are converted to linear. The hemisphere and sun light values were fitted against renders of the original r128 lighting (about 4.7/255 RMSE), so the look stays close to the prototype.
-- [ ] **State management.** Decide whether to use Zustand or a plain typed state module (see notes below).
-- [ ] **Keep dependency versions mutually compatible.** Use the newest versions whose peer ranges agree. For example, `typescript` is held at `~6.0` because `typescript-eslint` supports `typescript <6.1`, even though TypeScript 7 is out. Re-check peer ranges (`npm view <pkg> peerDependencies`) before bumping.
-
-### State management notes
-
-Most game state (player position, bots, bullets, timers) changes every frame. A plain mutable typed object fits it best. Redux's immutable updates and dispatching would add allocation and overhead on every frame for no benefit. Zustand is a reasonable option only for low-frequency UI state (menus, settings, match results)
-, using `zustand/vanilla` since there's no React. It's worth adding only if the UI grows enough to need subscriptions.

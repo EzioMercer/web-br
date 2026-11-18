@@ -1,53 +1,73 @@
 import { addBot, bots, respawnBot } from './bots';
-import { brStart, zoneM } from './br/zone';
-import { BOTS } from './config';
-import { $ } from './dom';
-import { nade, nades, smokes } from './grenades';
-import { spawn } from './player';
+import { startZone, zoneTick, zoneMesh } from './br/zone';
+import { BOT_COUNT } from './config';
+import { byId } from './dom';
+import { grenadeCount, flyingGrenades, smokes } from './grenades';
+import { player, spawnPlayer } from './player';
 import { scene } from './render/renderer';
-import { WPN } from './weapons';
+import { WEAPONS } from './weapons';
 import { loadMap } from './world/level';
-import { state } from './state';
+import { simTime } from './sim';
+import { input } from './input';
+import { loadout } from './loadout';
+import { screenFx } from './effects';
+import type { Phase } from './types';
+
+/** Match phase and when it ends (the start countdown, or the pause before the next match). */
+export let phase: Phase = 'start';
+export let phaseEnd = 0;
 
 /** Starts a new match from the menu: builds the island (fresh doors and glass) and drops everyone in. */
 export function startMatch() {
-  while (bots.length < BOTS) {
+  while (bots.length < BOT_COUNT) {
     addBot(bots.length);
   }
-  zoneM.visible = true;
+  zoneMesh.visible = true;
   loadMap();
   newMatch();
 }
 
+/** Advances the match: zone while live, the countdown before it, and the next match after it ends. */
+export function matchTick(dt: number) {
+  if (phase === 'live') {
+    zoneTick(dt);
+  } else if (phase === 'start') {
+    if (simTime >= phaseEnd) {
+      phase = 'live';
+    }
+  } else if (simTime >= phaseEnd) {
+    newMatch();
+  }
+}
+
 export function endMatch(win: boolean) {
-  state.phase = 'over';
-  state.phaseEnd = state.T + 4;
-  state.mouse = false;
-  const m = $('msg');
+  phase = 'over';
+  phaseEnd = simTime + 4;
+  input.fireHeld = false;
+  const m = byId('msg');
   m.style.color = win ? 'var(--xh)' : 'var(--hp)';
   m.textContent = win ? 'VICTORY ROYALE!' : 'Eliminated';
 }
 
 /** Resets the loadout, the zone and everyone's position, then counts down to the start. */
 export function newMatch() {
-  state.owned = { pistol: { mag: 12, res: 12 }, knife: { mag: 1, res: 0 } };
-  state.cw = 'pistol';
-  state.WP = WPN.pistol;
-  state.scoped = false;
-  state.armor = 0;
-  nade.he = nade.fl = nade.sm = 0;
-  state.cg = null;
-  nades.forEach(n => scene.remove(n.m));
-  nades.length = 0;
-  smokes.forEach(q => scene.remove(q.m));
+  loadout.owned = { pistol: { ammo: 12, reserve: 12 }, knife: { ammo: 1, reserve: 0 } };
+  loadout.weaponId = 'pistol';
+  loadout.weapon = WEAPONS.pistol;
+  loadout.scoped = false;
+  player.armor = 0;
+  grenadeCount.he = grenadeCount.fl = grenadeCount.sm = 0;
+  loadout.grenade = null;
+  flyingGrenades.forEach(n => scene.remove(n.mesh));
+  flyingGrenades.length = 0;
+  smokes.forEach(q => scene.remove(q.mesh));
   smokes.length = 0;
-  state.fbang = 0;
-  brStart();
-  spawn();
+  screenFx.flashbang = 0;
+  spawnPlayer(startZone());
   for (const b of bots) {
     respawnBot(b);
-    b.blind = 0;
+    b.blindUntil = 0;
   }
-  state.phase = 'start';
-  state.phaseEnd = state.T + 5;
+  phase = 'start';
+  phaseEnd = simTime + 5;
 }

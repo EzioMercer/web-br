@@ -1,104 +1,104 @@
 import { bots } from '../bots';
-import { BRS, ZN } from '../br/zone';
-import { $, ctx2d } from '../dom';
-import { nade } from '../grenades';
-import { MMS, drawMapOn } from './minimap';
-import { curOpt, gunKeys } from '../loadout';
-import { P } from '../player';
-import { WPN } from '../weapons';
-import { BOTS } from '../config';
-import { state } from '../state';
+import { ZONE_STAGES, pickupPrompt, zone } from '../br/zone';
+import { byId, ctx2d } from '../dom';
+import { grenadeThrow, grenadeCount } from '../grenades';
+import { bigBg, bigMapOpen, drawMap, miniBg, MINIMAP_SIZE } from './minimap';
+import { currentOptic, carriedGuns, loadout } from '../loadout';
+import { playerBody, player } from '../player';
+import { GRENADE_NAMES, WEAPONS } from '../weapons';
+import { BOT_COUNT } from '../config';
+import { simTime } from '../sim';
+import { terrain } from '../world/level';
+import { phase, phaseEnd } from '../match';
 import type { GrenadeId } from '../types';
 
 /** Grenade selected, or the pickup and door prompt (HTML). */
 export function promptText() {
-  if (state.dead) {
+  if (player.dead) {
     return '';
   }
-  if (state.cg) {
-    return GN[state.cg] + ' ready – hold click to aim, release to throw · Right-click: ' + (state.lob ? 'far throw' : 'short toss');
+  if (loadout.grenade) {
+    return GRENADE_NAMES[loadout.grenade] + ' ready – hold click to aim, release to throw · Right-click: ' + (grenadeThrow.lob ? 'far throw' : 'short toss');
   }
-  return state.brPrompt;
+  return pickupPrompt;
 }
-
-const GN: Record<GrenadeId, string> = { he: 'HE grenade', fl: 'Flashbang', sm: 'Smoke grenade' };
 
 /** Adds a line to the kill feed for 4 s. */
 
-export function feed(t: string) {
+export function feedMessage(t: string) {
   const d = document.createElement('div');
   d.textContent = t;
-  $('kf').appendChild(d);
+  byId('kf').appendChild(d);
   setTimeout(() => d.remove(), 4000);
 }
 
-const PIC = '<svg width="22" height="22" viewBox="0 0 20 20"><circle cx="10" cy="6" r="4" fill="currentColor"/><path d="M2 19c0-5 3-8 8-8s8 3 8 8z" fill="currentColor"/></svg>';
-let mmx: CanvasRenderingContext2D | null = null;
+const PLAYER_ICON = '<svg width="22" height="22" viewBox="0 0 20 20"><circle cx="10" cy="6" r="4" fill="currentColor"/><path d="M2 19c0-5 3-8 8-8s8 3 8 8z" fill="currentColor"/></svg>';
+let miniCtx: CanvasRenderingContext2D | null = null;
 
 /** Seconds as m:ss. */
-function fmtT(s: number) {
+function formatTime(s: number) {
   const v = Math.max(0, Math.ceil(s));
   return Math.floor(v / 60) + ':' + ('0' + v % 60).slice(-2);
 }
 
 /** Weapon class icons (SVG paths): pistol, SMG, rifle, shotgun, sniper, knife. */
-const ICO: Record<string, string> = { p: 'M10 12h62v9H60l-3 14H46l3-14H34l-3 5H10z', s: 'M6 14h74v8H66l-2 14h-9l2-14H44l-2 12h-8l2-12H6z M80 16h30v4H80z', r: 'M4 16h40l6-4h30l4 3h30v5H84l-4 3H58l-2 12h-9l1-12H20l-6 7H4z', g: 'M4 18h100v5H60v4H40v-4H4z M50 23h14v8H50z', n: 'M2 20h104v4H70l-6 4H44l-4 10h-8l3-10H18l-4 3H2z M40 12h30v4H40z', k: 'M18 29L76 13l8 2-6 7-58 9z M12 29h10v6H12z' };
-const WCLS: Record<string, string> = { pistol: 'p', glock: 'p', deagle: 'p', mp5: 's', p90: 's', rifle: 'r', m4: 'r', m3: 'g', awp: 'n', scout: 'n', svd: 'n', g3: 'n', kar: 'n', m82: 'n', knife: 'k' };
-let lastW: string | null = null;
+const CLASS_ICONS: Record<string, string> = { p: 'M10 12h62v9H60l-3 14H46l3-14H34l-3 5H10z', s: 'M6 14h74v8H66l-2 14h-9l2-14H44l-2 12h-8l2-12H6z M80 16h30v4H80z', r: 'M4 16h40l6-4h30l4 3h30v5H84l-4 3H58l-2 12h-9l1-12H20l-6 7H4z', g: 'M4 18h100v5H60v4H40v-4H4z M50 23h14v8H50z', n: 'M2 20h104v4H70l-6 4H44l-4 10h-8l3-10H18l-4 3H2z M40 12h30v4H40z', k: 'M18 29L76 13l8 2-6 7-58 9z M12 29h10v6H12z' };
+const WEAPON_CLASS: Record<string, string> = { pistol: 'p', glock: 'p', deagle: 'p', mp5: 's', p90: 's', rifle: 'r', m4: 'r', m3: 'g', awp: 'n', scout: 'n', svd: 'n', g3: 'n', kar: 'n', m82: 'n', knife: 'k' };
+let lastWeaponKey: string | null = null;
 let lastChips = '';
-let cmx: CanvasRenderingContext2D | null = null;
+let compassCtx: CanvasRenderingContext2D | null = null;
 
-export function hudUpdate() {
-  $('hpf').style.width = Math.max(0, Math.min(100, state.hp)) + '%';
-  $('hpn').textContent = String(Math.ceil(state.hp));
-  $('arf').style.width = Math.max(0, Math.min(100, state.armor)) + '%';
-  $('arn').textContent = String(Math.ceil(state.armor));
-  $('hp').classList.toggle('low', state.hp < 30 && !state.dead);
-  const wk = state.cw + (curOpt() ? state.owned[state.cw].opt : '');
-  if (lastW !== wk) {
-    lastW = wk;
-    $('wname').textContent = state.WP.name + (curOpt() ? ' · ' + curOpt()!.s : '');
-    $('wicop').setAttribute('d', ICO[WCLS[state.cw] || 'r']);
+export function updateHud() {
+  byId('hpf').style.width = Math.max(0, Math.min(100, player.health)) + '%';
+  byId('hpn').textContent = String(Math.ceil(player.health));
+  byId('arf').style.width = Math.max(0, Math.min(100, player.armor)) + '%';
+  byId('arn').textContent = String(Math.ceil(player.armor));
+  byId('hp').classList.toggle('low', player.health < 30 && !player.dead);
+  const wk = loadout.weaponId + (currentOptic() ? loadout.owned[loadout.weaponId].optic : '');
+  if (lastWeaponKey !== wk) {
+    lastWeaponKey = wk;
+    byId('wname').textContent = loadout.weapon.name + (currentOptic() ? ' · ' + currentOptic()!.shortName : '');
+    byId('wicop').setAttribute('d', CLASS_ICONS[WEAPON_CLASS[loadout.weaponId] || 'r']);
   }
-  const mel = !!state.WP.melee;
-  $('mag').textContent = mel ? '—' : String(state.mag);
-  $('rsv').textContent = mel ? '' : '/ ' + state.res;
-  $('rlt').textContent = state.reloading ? 'RELOADING' : (state.WP.bolt && state.T < state.cycEnd ? 'CHAMBERING' : '');
-  const gk = gunKeys();
+  const mel = !!loadout.weapon.melee;
+  byId('mag').textContent = mel ? '—' : String(loadout.ammo);
+  byId('rsv').textContent = mel ? '' : '/ ' + loadout.reserve;
+  byId('rlt').textContent = loadout.reloading ? 'RELOADING' : (loadout.weapon.boltAction && simTime < loadout.boltCycleEnd ? 'CHAMBERING' : '');
+  const gk = carriedGuns();
   let h = '';
   for (const k of gk) {
-    h += '<span class="chip' + (k === state.cw && !state.cg ? ' on' : '') + '"><i>' + (gk.indexOf(k) + 1) + '</i>' + WPN[k].name + '</span>';
+    h += '<span class="chip' + (k === loadout.weaponId && !loadout.grenade ? ' on' : '') + '"><i>' + (gk.indexOf(k) + 1) + '</i>' + WEAPONS[k].name + '</span>';
   }
-  if (state.owned.knife) {
-    h += '<span class="chip' + (state.cw === 'knife' && !state.cg ? ' on' : '') + '"><i>3</i>Knife</span>';
+  if (loadout.owned.knife) {
+    h += '<span class="chip' + (loadout.weaponId === 'knife' && !loadout.grenade ? ' on' : '') + '"><i>3</i>Knife</span>';
   }
   ([['he', 'HE', 4], ['fl', 'FL', 5], ['sm', 'SM', 6]] as [GrenadeId, string, number][]).forEach(([k, n, i]) => {
-    if (nade[k] > 0) {
-      h += '<span class="chip' + (state.cg === k ? ' on' : '') + '"><i>' + i + '</i>' + n + ' ×' + nade[k] + '</span>';
+    if (grenadeCount[k] > 0) {
+      h += '<span class="chip' + (loadout.grenade === k ? ' on' : '') + '"><i>' + i + '</i>' + n + ' ×' + grenadeCount[k] + '</span>';
     }
   });
   if (h !== lastChips) {
-    $('chips').innerHTML = h;
+    byId('chips').innerHTML = h;
     lastChips = h;
   }
 }
 
 export function drawCompass() {
-  const c = $<HTMLCanvasElement>('cmp');
+  const c = byId<HTMLCanvasElement>('cmp');
   const dpr = Math.min(devicePixelRatio || 1, 2);
   const W = 460;
   const Hh = 34;
-  if (!cmx || c.width !== W * dpr) {
+  if (!compassCtx || c.width !== W * dpr) {
     c.width = W * dpr;
     c.height = Hh * dpr;
-    cmx = ctx2d(c);
+    compassCtx = ctx2d(c);
   }
-  const x = cmx;
+  const x = compassCtx;
   x.setTransform(dpr, 0, 0, dpr, 0, 0);
   x.clearRect(0, 0, W, Hh);
   x.fillStyle = 'rgba(12,16,20,.7)';
   x.fillRect(0, 0, W, Hh);
-  const hdg = ((-state.yaw * 180 / Math.PI) % 360 + 360) % 360;
+  const hdg = ((-player.yaw * 180 / Math.PI) % 360 + 360) % 360;
   const span = 100;
   const ppd = W / span;
   const NAMES: Record<number, string> = { 0: 'N', 45: 'NE', 90: 'E', 135: 'SE', 180: 'S', 225: 'SW', 270: 'W', 315: 'NW' };
@@ -121,12 +121,12 @@ export function drawCompass() {
       x.fillRect(px - 0.5, 25, 1, 4);
     }
   }
-  if (state.TERR && ZN.r < 900) {
-    const bz = Math.atan2(ZN.cx - P.x, -(ZN.cz - P.z)) * 180 / Math.PI;
+  if (terrain && zone.radius < 900) {
+    const bz = Math.atan2(zone.cx - playerBody.x, -(zone.cz - playerBody.z)) * 180 / Math.PI;
     const rel = ((bz - hdg + 540) % 360) - 180;
     const mx = W / 2 + Math.max(-span / 2 + 2, Math.min(span / 2 - 2, rel)) * ppd;
     const edge = Math.abs(rel) > span / 2 - 2;
-    x.fillStyle = Math.hypot(ZN.cx - P.x, ZN.cz - P.z) > ZN.r ? '#ff7a6a' : '#ffd24a';
+    x.fillStyle = Math.hypot(zone.cx - playerBody.x, zone.cz - playerBody.z) > zone.radius ? '#ff7a6a' : '#ffd24a';
     x.beginPath();
     x.moveTo(mx, edge ? 17 : 21);
     x.lineTo(mx + 6, edge ? 23 : 27);
@@ -151,30 +151,30 @@ export function drawCompass() {
 }
 
 /** Battle Royale HUD: player count, minimap, big map and zone strip (shown once the island is loaded). */
-export function brHud() {
-  document.body.classList.toggle('br', !!state.TERR);
-  if (!state.TERR) {
+export function mapHud() {
+  document.body.classList.toggle('br', !!terrain);
+  if (!terrain) {
     return;
   }
-  const alive = bots.filter(b => b.hp > 0).length + (state.dead ? 0 : 1);
-  $('pcount').innerHTML = PIC + alive + ' / ' + (BOTS + 1);
-  const hdr = state.phase === 'start' ? 'Match starts in ' + Math.max(0, Math.ceil(state.phaseEnd - state.T)) + ' s' : ZN.ph === 'hold' ? 'Zone ' + ZN.stage + '/' + BRS.length + ' · shrinks in ' + fmtT(ZN.left) : ZN.ph === 'shrink' ? 'Zone ' + ZN.stage + '/' + BRS.length + ' · shrinking, ' + fmtT(ZN.left) + ' left' : 'Final zone';
-  $('mmh').textContent = hdr;
+  const alive = bots.filter(b => b.health > 0).length + (player.dead ? 0 : 1);
+  byId('pcount').innerHTML = PLAYER_ICON + alive + ' / ' + (BOT_COUNT + 1);
+  const hdr = phase === 'start' ? 'Match starts in ' + Math.max(0, Math.ceil(phaseEnd - simTime)) + ' s' : zone.phase === 'hold' ? 'Zone ' + zone.stage + '/' + ZONE_STAGES.length + ' · shrinks in ' + formatTime(zone.timeLeft) : zone.phase === 'shrink' ? 'Zone ' + zone.stage + '/' + ZONE_STAGES.length + ' · shrinking, ' + formatTime(zone.timeLeft) + ' left' : 'Final zone';
+  byId('mmh').textContent = hdr;
   // ----- mini map
-  const c = $<HTMLCanvasElement>('mmc');
+  const c = byId<HTMLCanvasElement>('mmc');
   const dpr = Math.min(devicePixelRatio || 1, 2);
-  if (!mmx || c.width !== MMS * dpr) {
-    c.width = c.height = MMS * dpr;
-    mmx = ctx2d(c);
+  if (!miniCtx || c.width !== MINIMAP_SIZE * dpr) {
+    c.width = c.height = MINIMAP_SIZE * dpr;
+    miniCtx = ctx2d(c);
   }
-  mmx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  mmx.clearRect(0, 0, MMS, MMS);
-  drawMapOn(mmx, MMS, state.MM);
-  const T = state.TERR!;
-  const rg = T.reg(P.x, P.z);
-  if (state.bigOpen && state.MMB) {
-    const bc = $<HTMLCanvasElement>('bmc');
-    const S = state.MMB.S;
+  miniCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  miniCtx.clearRect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE);
+  drawMap(miniCtx, MINIMAP_SIZE, miniBg);
+  const T = terrain!;
+  const rg = T.region(playerBody.x, playerBody.z);
+  if (bigMapOpen && bigBg) {
+    const bc = byId<HTMLCanvasElement>('bmc');
+    const S = bigBg.size;
     if (bc.width !== S) {
       bc.width = S;
       bc.height = S;
@@ -182,25 +182,25 @@ export function brHud() {
     const bx = ctx2d(bc);
     bx.setTransform(1, 0, 0, 1, 0, 0);
     bx.clearRect(0, 0, S, S);
-    drawMapOn(bx, S, state.MMB);
-    $('bmt').textContent = hdr + '   ·   You are in: ' + (rg === 255 ? 'open sea' : T.regs[rg].n) + '   ·   M to close';
+    drawMap(bx, S, bigBg);
+    byId('bmt').textContent = hdr + '   ·   You are in: ' + (rg === 255 ? 'open sea' : T.regions[rg].name) + '   ·   M to close';
   }
   // ----- zone strip (one line): time left, the safe area along the line from you to its centre, and the distance to its edge
   {
-    const ph = state.phase === 'start' ? 'start' : ZN.ph;
-    const tl = ph === 'start' ? Math.max(0, state.phaseEnd - state.T) : ZN.left;
+    const ph = phase === 'start' ? 'start' : zone.phase;
+    const tl = ph === 'start' ? Math.max(0, phaseEnd - simTime) : zone.timeLeft;
     const ti = Math.max(0, Math.ceil(tl));
 
     const p2 = (n: number) => ('0' + n).slice(-2);
 
-    $('ztv').textContent = ph === 'final' ? '--:--' : p2(Math.floor(ti / 60)) + ':' + p2(ti % 60);
-    $('ztv').style.color = ph === 'shrink' ? '#ff7a6a' : '#fff';
+    byId('ztv').textContent = ph === 'final' ? '--:--' : p2(Math.floor(ti / 60)) + ':' + p2(ti % 60);
+    byId('ztv').style.color = ph === 'shrink' ? '#ff7a6a' : '#fff';
   }
-  const dx = ZN.cx - P.x;
-  const dz = ZN.cz - P.z;
+  const dx = zone.cx - playerBody.x;
+  const dz = zone.cz - playerBody.z;
   const dC = Math.hypot(dx, dz);
-  const lo = dC - ZN.r;
-  const hi = dC + ZN.r;
+  const lo = dC - zone.radius;
+  const hi = dC + zone.radius;
   const pad = Math.max(25, (hi - Math.min(lo, 0)) * 0.12);
   const a = Math.min(0, lo) - pad;
   const b = Math.max(0, hi) + pad;
@@ -218,13 +218,13 @@ export function brHud() {
     sl = Math.max(0, Math.min(100 - mw, sl + sw / 2 - mw / 2));
     sw = mw;
   }
-  $('zsafe').style.left = sl + '%';
-  $('zsafe').style.width = sw + '%';
-  $('zrun').style.left = pc(0) + '%';
+  byId('zsafe').style.left = sl + '%';
+  byId('zsafe').style.width = sw + '%';
+  byId('zrun').style.left = pc(0) + '%';
   {
-    const out = dC > ZN.r;
-    const d = Math.round(Math.abs(dC - ZN.r));
-    const zd = $('zdist');
+    const out = dC > zone.radius;
+    const d = Math.round(Math.abs(dC - zone.radius));
+    const zd = byId('zdist');
     zd.textContent = d + 'm';
     zd.style.color = out ? '#ff8a7a' : '#fff';
   }
