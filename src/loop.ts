@@ -167,5 +167,8 @@ export function frame(now: number) {
 
   brHud();
   $('prompt').innerHTML = promptText();
-  ren.render(scene, cam);
+  // The main menu covers the screen with its own backdrop, so the 3D scene is not drawn behind it.
+  if (!state.inMenu) {
+    ren.render(scene, cam);
+  }
 }

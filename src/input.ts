@@ -47,7 +47,7 @@ export function setPlay(v: boolean) {
   }
 }
 
-$('start').addEventListener('click', () => {
+$('go').addEventListener('click', () => {
   initAudio();
   if (state.AC && state.AC.state === 'suspended') {
     state.AC.resume();
