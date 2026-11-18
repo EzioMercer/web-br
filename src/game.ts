@@ -7,10 +7,13 @@ const R=.4,H=1.8,EYE=1.62,STEP=1/120,SENS=.0021,FOV=75;
 const scene=new THREE.Scene();scene.background=new THREE.Color(0xc3d6e2);scene.fog=new THREE.Fog(0xc3d6e2,25,95);
 const cam=new THREE.PerspectiveCamera(FOV,1,.05,200);cam.rotation.order='YXZ';scene.add(cam);
 const ren=new THREE.WebGLRenderer({canvas:cv,antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));
+// Canvas-drawn textures hold sRGB colors.
+function srgbTex(t){t.colorSpace=THREE.SRGBColorSpace;return t}
 function rs(){ren.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
 addEventListener('resize',rs);rs();
-scene.add(new THREE.HemisphereLight(0xffffff,0x9a8460,.95));
-const sun=new THREE.DirectionalLight(0xfff0d0,.75);sun.position.set(30,50,20);scene.add(sun);
+// Physically based light values, fitted against renders of the original r128 (gamma-space) lighting.
+scene.add(new THREE.HemisphereLight(0xffffff,0x2c2418,3.7));
+const sun=new THREE.DirectionalLight(0xfff0d0,5.7);sun.position.set(30,50,20);scene.add(sun);
 
 /* ---------- Map ---------- */
 let WPTS=[],SPAWN=[0,26],TSP=[[0,-26]],WATERS=[],SURF=[],DSURF='dust',MM=null,TERR=null;const WLV=0,GC=16,EMPTY=[],DR=[],GL=[],shards=[];let GR=new Map(),qid=0,HB=null;const MMS=190;const waterMs=[];
@@ -146,10 +149,12 @@ function genTerrain(){const {n2,fbm}=mkNoise(777),N=BRN,ST=BRST,HF=new Float32Ar
     h(x,z){let fx=(x+BRH)/ST,fz=(z+BRH)/ST;if(fx<0)fx=0;if(fz<0)fz=0;if(fx>N-1.001)fx=N-1.001;if(fz>N-1.001)fz=N-1.001;const i=fx|0,j=fz|0,u=fx-i,v=fz-j,a=HF[j*N+i],b=HF[j*N+i+1],c=HF[(j+1)*N+i],d=HF[(j+1)*N+i+1];return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v},
     slope:(x,z)=>SL[idx(x,z)],kind:(x,z)=>KD[idx(x,z)],reg:(x,z)=>RG[idx(x,z)],surf:(x,z)=>SURFK[KD[idx(x,z)]]};
   return T}
+// Terrain colors are authored in sRGB (the minimap canvas uses them as-is); vertex colors must be linear.
+function srgbToLinear(a){const o=new Float32Array(a.length);for(let i=0;i<a.length;i++){const c=a[i];o[i]=c<.04045?c*.0773993808:Math.pow(c*.9478672986+.0521327014,2.4)};return o}
 function terrMesh(T){const N=T.N,ST=T.ST,pos=new Float32Array(N*N*3),idx=new Uint16Array((N-1)*(N-1)*6);
   for(let j=0;j<N;j++)for(let i=0;i<N;i++){const k=j*N+i;pos[k*3]=-T.half+i*ST;pos[k*3+1]=T.HF[k];pos[k*3+2]=-T.half+j*ST}
   let q=0;for(let j=0;j<N-1;j++)for(let i=0;i<N-1;i++){const a=j*N+i,b=a+1,c=a+N,d=c+1;idx[q++]=a;idx[q++]=c;idx[q++]=b;idx[q++]=b;idx[q++]=c;idx[q++]=d}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(T.COL,3));g.setIndex(new THREE.BufferAttribute(idx,1));g.computeVertexNormals();
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(srgbToLinear(T.COL),3));g.setIndex(new THREE.BufferAttribute(idx,1));g.computeVertexNormals();
   return new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}))}
 function terrT(o,d,maxT){if(!TERR)return Infinity;const lim=Math.min(maxT,1500);if(d[1]>=0&&o[1]>TERR.maxH+2)return Infinity;let t=0,step=1.2;
   if(o[1]-TERR.h(o[0],o[2])<-.6)return 0;
@@ -577,7 +582,7 @@ Object.assign(WPN,{scout:{name:'Scout',cost:2750,mag:10,res:30,rate:1.25,dmg:80,
 Object.assign(WPN.awp,{bolt:true,zoom:20});Object.assign(WPN.scout,{bolt:true,zoom:28});Object.assign(WPN.svd,{zoom:24});Object.assign(WPN.g3,{zoom:22});Object.assign(WPN.kar,{bolt:true,zoom:26});Object.assign(WPN.m82,{zoom:14});
 for(const k of ['awp','scout','svd','g3','kar','m82']){WPN[k].snp=true;WPN[k].at='snp'}
 WPN.knife={name:'Knife',cost:0,mag:1,res:0,rate:.5,dmg:55,rec:0,auto:true,rt:0,sl:3,melee:true,at:'none'};
-let armor=0,eye=1.62,shop=null,cg=null,fbang=0;let mode='casual',botN=5,lastMap='blockout',plv=0,brT0=0,sensMul=1,mxPos=500;const nade={he:0,fl:0,sm:0},nades=[],smokes=[];
+let armor=0,eye=1.62,shop=null,cg=null,fbang=0;let mode='casual',botN=5,lastMap='blockout',plv=0,brT0=0,sensMul=1;const nade={he:0,fl:0,sm:0},nades=[],smokes=[];
 let cw='pistol',WP=WPN.pistol,owned={pistol:{mag:12,res:36},knife:{mag:1,res:0}},scoped=false,phase='buy',phaseEnd=10,round=1,money=800,rw=0,rl=0;
 let yaw=0,pitch=0,punchP=0,punchY=0,hp=100,mag=12,res=36,reloading=false,reloadEnd=0;
 let T=0,nextFire=0,lastShot=-9,shotIdx=0,dead=false,respawnAt=0,kills=0,deaths=0;
@@ -599,7 +604,7 @@ function mkBot(b){
     const A=new THREE.Group();A.position.set(s*.32,1.4,0);A.rotation.set(-1.15,0,-s*.25);U.add(A);add(A,.13,.3,.15,0,-.15,0,c);
     const F=new THREE.Group();F.position.y=-.3;F.rotation.x=-.3;A.add(F);add(F,.11,.28,.13,0,-.14,0,c);add(F,.11,.09,.11,0,-.31,0,dk)}
   b.gunG=new THREE.Group();b.gunG.position.set(0,1.18,.3);U.add(b.gunG);
-  b.cv=document.createElement('canvas');b.cv.width=256;b.cv.height=64;b.tex=new THREE.CanvasTexture(b.cv);
+  b.cv=document.createElement('canvas');b.cv.width=256;b.cv.height=64;b.tex=srgbTex(new THREE.CanvasTexture(b.cv));
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:b.tex,transparent:true}));sp.scale.set(1.6,.4,1);sp.position.set(0,2.15,0);b.sp=sp;sp.visible=false;U.add(sp)}
 function botGun(b){const G=b.gunG;while(G.children.length)G.remove(G.children[0]);const w=b.w,W=WPN[w];
   const add=(sx,sy,sz,z,y,c)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),new THREE.MeshLambertMaterial({color:c}));m.position.set(0,y,z);G.add(m)};
@@ -674,7 +679,7 @@ function bumpBot(b){b.lv=(b.lv|0)+1;if(b.lv>=LADDER.length){b.lv=LADDER.length-1
 function respawnArms(){setLoad(LADDER[plv]);spawn()}
 function freeSpot(x,z){if(TERR){if(TERR.h(x,z)<WLV+.4||TERR.slope(x,z)>.55)return false}else if(floorY(x,z)!==0)return false;const y=floorY(x,z);return!near(x,z,R+1).some(q=>hitBox({x,y,z,h:H},q))}
 function mkLabel(text,col){const c=document.createElement('canvas');c.width=256;c.height=64;const x=c.getContext('2d');x.font='bold 30px sans-serif';x.textAlign='center';x.lineWidth=5;x.strokeStyle='#000';x.strokeText(text,128,40);x.fillStyle=col;x.fillText(text,128,40);
-  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true}));sp.scale.set(2.4,.6,1);return sp}
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:srgbTex(new THREE.CanvasTexture(c)),transparent:true}));sp.scale.set(2.4,.6,1);return sp}
 const AMN={pst:'Pistol ammo',smg:'SMG ammo',rif:'Rifle ammo',shl:'Shotgun shells',snp:'Sniper ammo'};
 const GN={he:'HE grenade',fl:'Flashbang',sm:'Smoke grenade'};
 function mkPick(x,z,t,id,st,y0){const col=t==='w'?0xf2a23a:t==='a'?0x4a8cff:t==='m'?0xd9d046:t==='g'?0xe05a3a:t==='o'?0xb98cff:0x4ad66a,g=new THREE.Group(),it=new THREE.Group(),n=t==='w'?WPN[id].name+(st&&st.opt?' + '+OPT[st.opt].s:''):t==='a'?'Kevlar vest':t==='m'?AMN[id]:t==='g'?GN[id]:t==='o'?OPT[id].n:'Medkit';
@@ -888,8 +893,7 @@ function tick(dt){
     if(cr&&!wasCr&&P.g&&K.ShiftLeft&&T>=slideCd&&P.h>=H&&Math.hypot(V.x,V.z)>4.6&&waterF(P.x,P.z,P.y)<.2){const s0=Math.hypot(V.x,V.z);slideT0=T;slideEnd=T+.95;slideCd=T+1.9;slideDir=[V.x/s0,V.z/s0];slideSp=Math.max(s0,6.6)*1.3;stepNoise(.3*Math.max(.3,stepVol),.7,800,.05)}
     wasCr=cr;if(!cr)slideEnd=0;
     if(cr)P.h=1.2;else if(P.h<H){P.h=H;if(near(P.x,P.z,1).some(b=>hitBox(P,b)))P.h=1.2}
-    {const tr=((K.ArrowLeft?1:0)-(K.ArrowRight?1:0))*2.2*dt,tp=((K.ArrowUp?1:0)-(K.ArrowDown?1:0))*1.6*dt;yaw+=tr;pitch=Math.max(-1.5,Math.min(1.5,pitch+tp));
-      if(document.pointerLockElement!==cv){const e1=80;if(mxPos<e1)yaw+=2.2*dt*(1-mxPos/e1);else if(mxPos>innerWidth-e1)yaw-=2.2*dt*(1-(innerWidth-mxPos)/e1)}}
+    {const tr=((K.ArrowLeft?1:0)-(K.ArrowRight?1:0))*2.2*dt,tp=((K.ArrowUp?1:0)-(K.ArrowDown?1:0))*1.6*dt;yaw+=tr;pitch=Math.max(-1.5,Math.min(1.5,pitch+tp))}
     const f=(K.KeyW|0)-(K.KeyS|0),s=(K.KeyD|0)-(K.KeyA|0),sy=Math.sin(yaw),cy=Math.cos(yaw);
     let wx=-sy*f+cy*s,wz=-cy*f-sy*s;const wl=Math.hypot(wx,wz);if(wl>0){wx/=wl;wz/=wl}
     const wf=waterF(P.x,P.z,P.y),ws=(wl>0?(P.h<H?2.4:K.ShiftLeft?6.6:3.9):0)*(1-.5*wf);
@@ -988,14 +992,16 @@ function frame(now){
 requestAnimationFrame(frame);
 
 /* ---------- Input ---------- */
+// The game only runs while the mouse is locked (pointerlockchange -> setPlay). If the browser refuses the lock
+// (e.g. re-clicking right after Esc), the pause overlay stays up and the next click retries.
+function lockMouse(){const fail=e=>{console.warn('Pointer lock refused:',e&&e.message||e);if(!inMenu)setPlay(false)};try{const p=cv.requestPointerLock();if(p&&p.catch)p.catch(fail)}catch(e){fail(e)}}
 function setPlay(v){playing=v;if(!v)grenHeld=false;$('start').style.display=(v||inMenu)?'none':'flex';if(!v){mouse=false;for(const k in K)K[k]=false}}
 $('start').addEventListener('click',()=>{
   initAudio();if(AC&&AC.state==='suspended')AC.resume();
-  try{const p=cv.requestPointerLock();if(p&&p.catch)p.catch(()=>{})}catch(e){}
-  setTimeout(()=>{if(!playing)setPlay(true)},400);
+  lockMouse();
 });
 document.addEventListener('pointerlockchange',()=>setPlay(document.pointerLockElement===cv));
-addEventListener('mousemove',e=>{mxPos=e.clientX;if(!playing||dead)return;const s=SENS*sensMul*(scoped?(WP.snp?.3:(curOpt()?curOpt().sens:.85)):1);yaw-=e.movementX*s;pitch=Math.max(-1.5,Math.min(1.5,pitch-e.movementY*s))});
+addEventListener('mousemove',e=>{if(!playing||dead||document.pointerLockElement!==cv)return;const s=SENS*sensMul*(scoped?(WP.snp?.3:(curOpt()?curOpt().sens:.85)):1);yaw-=e.movementX*s;pitch=Math.max(-1.5,Math.min(1.5,pitch-e.movementY*s))});
 addEventListener('mousedown',e=>{if(playing&&e.button===0){mouse=true;if(cg&&!dead)grenHeld=true}if(playing&&e.button===2&&cg&&!dead)lob=!lob;else if(playing&&e.button===2&&canScope()&&!dead&&(scoped||(T>=cycEnd&&!reloading)))scoped=!scoped});
 addEventListener('mouseup',e=>{if(e.button===0){mouse=false;if(grenHeld&&cg&&!dead&&playing)throwNade();grenHeld=false}});
 addEventListener('contextmenu',e=>e.preventDefault());
@@ -1022,8 +1028,7 @@ function card(t,d,f){const b=document.createElement('button');b.className='card'
 function showMenu(){inMenu=true;setPlay(false);$('menu').style.display='flex';$('cards').innerHTML='';$('mback').style.display='none';
   card('Drop in','900 m island with mountains, rivers, towns, a mall, a port and an airfield. Loot weapons, optics and armor, stay inside the shrinking zone, and be the last one alive.',()=>startGame('br','br'))}
 function startGame(m,k){lastMap=k;setMode(m);inMenu=false;$('menu').style.display='none';initAudio();if(AC&&AC.state==='suspended')AC.resume();
-  try{const q=cv.requestPointerLock();if(q&&q.catch)q.catch(()=>{})}catch(e){}
-  setTimeout(()=>{if(!playing&&!inMenu)setPlay(true)},400)}
+  lockMouse()}
 $('mback').onclick=()=>showMenu();
 $('tomenu').onclick=e=>{e.stopPropagation();if(document.pointerLockElement)document.exitPointerLock();showMenu()};
 {const dd=$('mdiff');for(const k in DIFF){const b=document.createElement('button');b.textContent=DIFF[k].n;b.className='dbtn'+(k==='normal'?' on':'');b.onclick=()=>{D=DIFF[k];[...dd.children].forEach(c=>c.classList.toggle('on',c===b))};dd.appendChild(b)}}

@@ -25,7 +25,7 @@ In the repo settings, **Pages → Build and deployment → Source** must be set 
 ## TODO
 
 - [ ] **Split `src/game.ts` into typed modules.** It's still the original single script, wrapped in `@ts-nocheck` / `eslint-disable`.
-- [ ] **Upgrade three.js.** It's pinned to `0.128.0` (r128, 2021), with matching `@types/three@0.128.0`. Newer versions change color management (`outputColorSpace`, sRGB textures) and light intensity units (physically correct lights became the default in r155), so lighting and colors need re-tuning after the upgrade. Upgrade `three` and `@types/three` together.
+- [x] **three.js upgraded** to the latest version (0.187), with matching `@types/three`. Upgrade both together. Rendering uses the modern color pipeline: color management on, sRGB output, physical light units. Hex colors and canvas textures are sRGB, and terrain vertex colors are converted to linear. The hemisphere and sun light values were fitted against renders of the original r128 lighting (about 4.7/255 RMSE), so the look stays close to the prototype.
 - [ ] **State management.** Decide whether to use Zustand or a plain typed state module (see notes below).
 - [ ] **Keep dependency versions mutually compatible.** Use the newest versions whose peer ranges agree. For example, `typescript` is held at `~6.0` because `typescript-eslint` supports `typescript <6.1`, even though TypeScript 7 is out. Re-check peer ranges (`npm view <pkg> peerDependencies`) before bumping.
 
