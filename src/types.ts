@@ -126,7 +126,16 @@ export interface MapBg {
 // ---- map data
 
 /** Map box: centre x and z, width (along x), depth (along z), height, color, base y (default 0), no collision. */
-export type MapBox = [x: number, z: number, width: number, depth: number, height: number, color: number, y?: number, noCollision?: boolean];
+export type MapBox = [
+x: number,
+z: number,
+width: number,
+depth: number,
+height: number,
+color: number,
+y?: number,
+noCollision?: boolean,
+];
 /** Glass pane: centre x and z, width, depth, height, base y. */
 export type MapGlass = [x: number, z: number, width: number, depth: number, height: number, y: number];
 /** Hinged door in a wall along `axis` at coordinate `wallAt`, centred at `center` along the wall. */

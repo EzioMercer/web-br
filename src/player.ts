@@ -33,14 +33,20 @@ export const damagePlayer = (d: number, by?: Bot | null, raw?: boolean) => {
   if (player.dead) {
     return;
   }
+
   const ab = raw ? 0 : Math.min(player.armor, d * 0.5);
+
   player.armor -= ab;
   player.health -= d - ab;
   screenFx.damageFlash = raw ? Math.max(screenFx.damageFlash, 0.3) : 1;
+
   if (by) {
     screenFx.damageDir = 1.4;
-    byId('dd').style.transform = 'translate(-50%,-50%) rotate(' + ((Math.atan2(by.x - playerBody.x, -(by.z - playerBody.z)) + player.yaw) * 57.2958) + 'deg)';
+    byId('dd').style.transform = 'translate(-50%,-50%) rotate('
+      + ((Math.atan2(by.x - playerBody.x, -(by.z - playerBody.z)) + player.yaw) * 57.2958)
+      + 'deg)';
   }
+
   if (player.health <= 0) {
     player.health = 0;
     player.dead = true;
@@ -70,6 +76,7 @@ export const reload = () => {
   if (loadout.reloading || loadout.ammo === loadout.weapon.magSize || loadout.reserve <= 0) {
     return;
   }
+
   loadout.reloading = true;
   loadout.scoped = false;
   loadout.reloadEnd = simTime + loadout.weapon.reloadTime;
@@ -80,7 +87,11 @@ export const switchWeapon = (id: string) => {
   if (!loadout.owned[id] || id === loadout.weaponId || player.dead) {
     return;
   }
-  loadout.owned[loadout.weaponId] = Object.assign(loadout.owned[loadout.weaponId] || {}, { ammo: loadout.ammo, reserve: loadout.reserve } satisfies Partial<OwnedWeapon>);
+
+  loadout.owned[loadout.weaponId] = Object.assign(
+    loadout.owned[loadout.weaponId] || {},
+    { ammo: loadout.ammo, reserve: loadout.reserve } satisfies Partial<OwnedWeapon>,
+  );
   loadout.weaponId = id;
   loadout.weapon = WEAPONS[id];
   ({ ammo: loadout.ammo, reserve: loadout.reserve } = loadout.owned[id]);

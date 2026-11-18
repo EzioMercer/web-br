@@ -31,51 +31,72 @@ export const carriedGuns = () => Object.keys(loadout.owned).filter(k => k !== 'k
 /** Optics fit SMGs, rifles and shotguns. */
 export const takesOptic = (id: string) => {
   const a = WEAPONS[id].ammoType;
+
   return a === 'smg' || a === 'rif' || a === 'shl';
 };
 
 export const currentOptic = () => {
   const o = loadout.owned[loadout.weaponId];
+
   return o && o.optic && takesOptic(loadout.weaponId) ? OPTICS[o.optic] : null;
 };
 
 export const canAim = () => !!(loadout.weapon.sniper || !loadout.weapon.melee);
 
-export const aimFov = (): number => loadout.weapon.sniper ? loadout.weapon.scopeFov! : currentOptic()?.fov ?? (loadout.weapon.slot === 2 ? 66 : 62);
+export const aimFov = (): number => loadout.weapon.sniper
+  ? loadout.weapon.scopeFov!
+  : currentOptic()?.fov ?? (loadout.weapon.slot === 2 ? 66 : 62);
 
 /** The gun a new optic would go on: the current one if free, else another free one, else the current or first one. */
 export const opticTarget = () => {
   const ks = carriedGuns().filter(takesOptic);
+
   if (!ks.length) {
     return null;
   }
+
   const cur = ks.includes(loadout.weaponId) ? loadout.weaponId : null;
   const free = ks.filter(k => !loadout.owned[k].optic);
+
   return cur && !loadout.owned[cur].optic ? cur : free[0] || cur || ks[0];
 };
 
 export const swapOptic = (k: Pickup) => {
   const tg = opticTarget();
+
   if (!tg) {
     return;
   }
+
   const old = loadout.owned[tg].optic;
+
   loadout.owned[tg].optic = k.itemId as OpticId;
+
   if (old) {
     spawnPickup(k.x, k.z, 'optic', old, undefined, k.y);
   }
+
   scene.remove(k.mesh);
   pickups.splice(pickups.indexOf(k), 1);
   looting.swapTarget = null;
   feedMessage('Attached ' + OPTICS[k.itemId as OpticId].name + ' to ' + WEAPONS[tg].name);
 };
 
-/** Gives weapon `id` (with ammo and optic `st` if dropped by someone) and switches to it, dropping `drop` if both slots are full. */
+/**
+ * Gives weapon `id` (with ammo and optic `st` if dropped by someone) and switches to it, dropping `drop` if both
+ * slots are full.
+ */
 export const giveWeapon = (id: string, st?: OwnedWeapon, drop?: string) => {
   const w = WEAPONS[id];
-  loadout.owned[loadout.weaponId] = Object.assign(loadout.owned[loadout.weaponId] || {}, { ammo: loadout.ammo, reserve: loadout.reserve } satisfies Partial<OwnedWeapon>);
+
+  loadout.owned[loadout.weaponId] = Object.assign(
+    loadout.owned[loadout.weaponId] || {},
+    { ammo: loadout.ammo, reserve: loadout.reserve } satisfies Partial<OwnedWeapon>,
+  );
+
   if (loadout.owned[id]) {
     loadout.owned[id].reserve += w.magSize;
+
     if (st && st.optic && !loadout.owned[id].optic) {
       loadout.owned[id].optic = st.optic;
     }
@@ -83,7 +104,10 @@ export const giveWeapon = (id: string, st?: OwnedWeapon, drop?: string) => {
     if (carriedGuns().length >= 2) {
       delete loadout.owned[drop || (loadout.weaponId !== 'knife' ? loadout.weaponId : carriedGuns()[1])];
     }
-    loadout.owned[id] = st ? { ammo: st.ammo, reserve: st.reserve, optic: st.optic } : { ammo: w.magSize, reserve: w.magSize };
+
+    loadout.owned[id] = st
+      ? { ammo: st.ammo, reserve: st.reserve, optic: st.optic }
+      : { ammo: w.magSize, reserve: w.magSize };
   }
 
   loadout.weaponId = id;

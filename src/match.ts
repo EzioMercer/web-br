@@ -22,6 +22,7 @@ export const startMatch = () => {
   while (bots.length < BOT_COUNT) {
     addBot(bots.length);
   }
+
   zoneMesh.visible = true;
   loadMap();
   newMatch();
@@ -44,7 +45,9 @@ export const endMatch = (win: boolean) => {
   phase = 'over';
   phaseEnd = simTime + 4;
   input.fireHeld = false;
+
   const m = byId('msg');
+
   m.style.color = win ? 'var(--xh)' : 'var(--hp)';
   m.textContent = win ? 'VICTORY ROYALE!' : 'Eliminated';
 };
@@ -64,10 +67,12 @@ export const newMatch = () => {
   smokes.length = 0;
   screenFx.flashbang = 0;
   spawnPlayer(startZone());
+
   for (const b of bots) {
     respawnBot(b);
     b.blindUntil = 0;
   }
+
   phase = 'start';
   phaseEnd = simTime + 5;
 };

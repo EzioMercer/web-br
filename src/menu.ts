@@ -56,9 +56,11 @@ loadSettings();
 byId('play').onclick = () => startGame();
 byId('tomenu').onclick = (e) => {
   e.stopPropagation();
+
   if (document.pointerLockElement) {
     document.exitPointerLock();
   }
+
   showMenu();
 };
 
@@ -80,8 +82,10 @@ document.querySelectorAll<HTMLElement>('#settings .tab').forEach((t) => {
 
 {
   const dd = byId('mdiff');
+
   for (const k in DIFFICULTIES) {
     const b = document.createElement('button');
+
     b.textContent = DIFFICULTIES[k].name;
     b.className = 'dbtn' + (DIFFICULTIES[k] === settings.difficulty ? ' on' : '');
     b.onclick = () => {
@@ -95,16 +99,22 @@ document.querySelectorAll<HTMLElement>('#settings .tab').forEach((t) => {
 
 {
   const body = byId('ctlbody');
+
   for (const [action, keys] of CONTROLS) {
     const tr = document.createElement('tr');
     const a = document.createElement('td');
+
     a.textContent = action;
+
     const k = document.createElement('td');
+
     for (const key of keys) {
       const kb = document.createElement('kbd');
+
       kb.textContent = key;
       k.appendChild(kb);
     }
+
     tr.append(a, k);
     body.appendChild(tr);
   }

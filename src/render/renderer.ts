@@ -27,6 +27,8 @@ addEventListener('resize', resize);
 resize();
 // Physically based light values, fitted against renders of the original r128 (gamma-space) lighting.
 scene.add(new THREE.HemisphereLight(0xffffff, 0x2c2418, 3.7));
+
 const sun = new THREE.DirectionalLight(0xfff0d0, 5.7);
+
 sun.position.set(30, 50, 20);
 scene.add(sun);

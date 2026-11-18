@@ -13,6 +13,9 @@ const functionStatements = [
   { selector: 'ExportDefaultDeclaration[declaration.type=/Function/]' },
 ];
 
+const loops = ['if', 'for', 'while', 'do', 'switch'];
+const vars = ['const', 'let', 'var'];
+
 export default tseslint.config(
   { ignores: ['dist', 'node_modules'] },
   js.configs.recommended,
@@ -31,9 +34,16 @@ export default tseslint.config(
       '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: false }],
       '@stylistic/curly-newline': ['error', { minElements: 1 }],
       '@stylistic/no-floating-decimal': 'error',
-      // One blank line before and after every function.
+      '@stylistic/max-len': ['error', { code: 120, ignoreUrls: true, ignoreRegExpLiterals: true }],
+      // Blank lines around ifs, loops and blocks of variable declarations, and around every function.
+      // (Later entries win, so the function entries come last.)
       '@stylistic/padding-line-between-statements': [
         'error',
+        { blankLine: 'always', prev: '*', next: loops },
+        { blankLine: 'always', prev: loops, next: '*' },
+        { blankLine: 'always', prev: '*', next: vars },
+        { blankLine: 'always', prev: vars, next: '*' },
+        { blankLine: 'any', prev: vars, next: vars },
         { blankLine: 'always', prev: functionStatements, next: '*' },
         { blankLine: 'always', prev: '*', next: functionStatements },
       ],
