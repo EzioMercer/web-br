@@ -1,0 +1,157 @@
+import { bots } from '../../bots/state';
+import { layBodyDown } from '../../combat/layBodyDown';
+import { OPTICS } from '../../data/optics';
+import { WEAPONS } from '../../data/weapons';
+import { grenadeCount } from '../../grenades/state';
+import { carriedGuns } from '../../loadout/carriedGuns';
+import { opticTarget } from '../../loadout/opticTarget';
+import { loadout } from '../../loadout/state';
+import { endMatch } from '../../match/endMatch';
+import { damagePlayer } from '../../player/damagePlayer';
+import { player, playerBody } from '../../player/state';
+import { clock } from '../../sim/state';
+import { doorFocus } from '../../world/doors/state';
+import { looting, pickups } from '../pickups/state';
+import { takePickup } from '../pickups/takePickup';
+import { applyZonePhase } from './applyZonePhase';
+import { schedule, zone } from './state';
+import { zoneMesh } from './zoneMesh';
+import type { Circle, GrenadeId } from '../../types';
+import { removePickup } from '../pickups/removePickup';
+
+export const zoneTick = (dt: number) => {
+  if (!schedule.startTime) {
+    schedule.startTime = clock.time;
+  }
+
+  const t = clock.time - schedule.startTime;
+  let acc = 0;
+  let z: Circle | null = null;
+  let st = 0;
+
+  for (let i = 0; i < schedule.stages.length; i++) {
+    const q = schedule.stages[i];
+
+    st = i;
+
+    if (t < acc + q.hold) {
+      z = q.from;
+      break;
+    }
+
+    if (t < acc + q.hold + q.shrink) {
+      const u = (t - acc - q.hold) / q.shrink;
+
+      z = {
+        cx: q.from.cx + (q.to.cx - q.from.cx) * u,
+        cz: q.from.cz + (q.to.cz - q.from.cz) * u,
+        radius: q.from.radius + (q.to.radius - q.from.radius) * u,
+      };
+      break;
+    }
+
+    acc += q.hold + q.shrink;
+  }
+
+  if (!z) {
+    z = schedule.stages[schedule.stages.length - 1].to;
+  }
+
+  zone.cx = z.cx;
+  zone.cz = z.cz;
+  zone.radius = z.radius;
+  applyZonePhase(t);
+  zoneMesh.position.set(z.cx, 150, z.cz);
+  zoneMesh.scale.set(z.radius, 1, z.radius);
+
+  const dps = 1.5 + st * 1.5;
+
+  if (!player.dead && Math.hypot(playerBody.x - z.cx, playerBody.z - z.cz) > z.radius) {
+    damagePlayer(dps * dt, null, true);
+  }
+
+  for (const b of bots) {
+    if (b.health > 0 && Math.hypot(b.x - z.cx, b.z - z.cz) > z.radius) {
+      b.health -= dps * dt * 0.5;
+
+      if (b.health <= 0 && !b.corpse) {
+        layBodyDown(b);
+      }
+    }
+  }
+
+  looting.prompt = '';
+  looting.swapTarget = null;
+
+  let nd = 2.2;
+  let hint = '';
+
+  for (let i = pickups.length - 1; i >= 0; i--) {
+    const k = pickups[i];
+
+    k.mesh.rotation.y += dt * 2;
+
+    const d = Math.hypot(playerBody.x - k.x, playerBody.z - k.z);
+
+    k.label.visible = d < 18;
+    k.mesh.visible = d < 170;
+
+    if (player.dead || d > 2.2 || Math.abs(playerBody.y - k.y) > 2) {
+      continue;
+    }
+
+    let ok = false;
+
+    if (k.kind === 'weapon') {
+      if (carriedGuns().length < 2 || loadout.owned[k.itemId!]) {
+        ok = true;
+      } else if (d < nd) {
+        looting.swapTarget = k;
+        nd = d;
+      }
+    } else if (k.kind === 'optic') {
+      const tg = opticTarget();
+
+      if (!tg) {
+        hint = 'Optics fit rifles, SMGs and shotguns – not pistols or snipers';
+      } else if (!loadout.owned[tg].optic) {
+        ok = true;
+      } else if (d < nd) {
+        looting.swapTarget = k;
+        nd = d;
+      }
+    } else if (k.kind === 'armor') {
+      ok = player.armor < 100;
+    } else if (k.kind === 'ammo') {
+      ok = Object.keys(loadout.owned).some(q => WEAPONS[q].ammoType === k.itemId);
+    } else if (k.kind === 'grenade') {
+      ok = grenadeCount[k.itemId as GrenadeId] < 2;
+    } else {
+      ok = player.health < 100;
+    }
+
+    if (ok) {
+      takePickup(k);
+      removePickup(k);
+    }
+  }
+
+  if (looting.swapTarget) {
+    looting.prompt = looting.swapTarget.kind === 'optic'
+      ? 'Press E to swap ' + OPTICS[loadout.owned[opticTarget()!].optic!].name + ' for ' + looting.swapTarget.name
+      : 'Press E to swap '
+        + WEAPONS[loadout.weaponId !== 'knife' ? loadout.weaponId : carriedGuns()[1]].name
+        + ' for '
+        + looting.swapTarget.name;
+  } else if (hint) {
+    looting.prompt = hint;
+  } else if (doorFocus.door && !loadout.grenade) {
+    looting.prompt = 'Press E to ' + (doorFocus.door.target ? 'close' : 'open') + ' the door';
+  }
+
+  if (player.dead) {
+    endMatch(false);
+  } else if (bots.every(b => b.health <= 0)) {
+    endMatch(true);
+  }
+};

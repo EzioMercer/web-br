@@ -1,0 +1,48 @@
+import type { Difficulty } from '../types';
+
+export const DIFFICULTIES: Record<string, Difficulty> = {
+  easy: {
+    name: 'Easy',
+    accuracy: 0.7,
+    reactionTime: 1.2,
+    damage: 0.7,
+    speed: 0.9,
+    health: 1,
+    fireDelay: 1.3,
+    viewAngle: 0.8,
+    memory: 1,
+  },
+  normal: {
+    name: 'Normal',
+    accuracy: 1.5,
+    reactionTime: 0.8,
+    damage: 1.1,
+    speed: 1.05,
+    health: 1,
+    fireDelay: 0.85,
+    viewAngle: 1.2,
+    memory: 1.5,
+  },
+  hard: {
+    name: 'Hard',
+    accuracy: 2.2,
+    reactionTime: 0.5,
+    damage: 1.4,
+    speed: 1.2,
+    health: 1.3,
+    fireDelay: 0.7,
+    viewAngle: 1.8,
+    memory: 2.2,
+  },
+  insane: {
+    name: 'Insane',
+    accuracy: 3,
+    reactionTime: 0.25,
+    damage: 1.8,
+    speed: 1.35,
+    health: 1.6,
+    fireDelay: 0.55,
+    viewAngle: 4,
+    memory: 3,
+  },
+};

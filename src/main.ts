@@ -1,6 +1,9 @@
 import './style.css';
-import { frame } from './loop';
-import { showMenu } from './menu';
+import './input/listeners';
+import './menu/setup';
+import { frame } from './loop/frame';
+import { showMenu } from './menu/showMenu';
 
 requestAnimationFrame(frame);
+
 showMenu();

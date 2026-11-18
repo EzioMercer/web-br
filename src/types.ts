@@ -1,12 +1,16 @@
-import type * as THREE from 'three';
+import * as THREE from 'three';
 
 export type Vec2 = [number, number];
+
 export type Vec3 = [number, number, number];
 
 /** Match phase: countdown before the drop, playing, or finished (a new match follows). */
 export type Phase = 'start' | 'live' | 'over';
+
 export type GrenadeId = 'he' | 'fl' | 'sm';
+
 export type OpticId = 'rd' | 'ho' | 'x2' | 'x4';
+
 /** Ammo type: pistol, SMG, rifle, shotgun, sniper, or none (knife). */
 export type AmmoType = 'pst' | 'smg' | 'rif' | 'shl' | 'snp' | 'none';
 
@@ -136,8 +140,10 @@ color: number,
 y?: number,
 noCollision?: boolean,
 ];
+
 /** Glass pane: centre x and z, width, depth, height, base y. */
 export type MapGlass = [x: number, z: number, width: number, depth: number, height: number, y: number];
+
 /** Hinged door in a wall along `axis` at coordinate `wallAt`, centred at `center` along the wall. */
 export interface MapDoor {
   axis: 'x' | 'z';
@@ -148,10 +154,13 @@ export interface MapDoor {
   height: number;
   color: number;
 }
+
 /** Loot spawn: x, z, floor y, tier (1 common, 2 better). */
 export type MapLoot = [x: number, z: number, y: number, tier: number];
+
 /** Building footprint (for the minimap and placement checks): centre x and z, width, depth, kind. */
 export type Footprint = [x: number, z: number, width: number, depth: number, kind: string];
+
 /** Side a structure's door faces: south, north, east, west, or none. */
 export type Face = 's' | 'n' | 'e' | 'w' | '-';
 

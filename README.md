@@ -27,23 +27,39 @@ In the repo settings, **Pages → Build and deployment → Source** must be set 
 
 ## Code layout
 
+Each file exports at most one function, named like the file (`physics/castRay.ts` exports `castRay`).
+Shared mutable values live in a `state.ts` per folder, types in `types.ts`, fixed tables in `constants.ts` or `data/`.
+
 ```
 src/
-  main.ts          entry: starts the render loop and shows the menu
-  match.ts         match flow: start, countdown, victory or elimination, next match
-  settings.ts      user settings (difficulty, sensitivity, volume), saved in localStorage
-  types.ts         shared types
-  config.ts        constants (player size, sim step, FOV...)
-  dom.ts           HUD element lookup
-  render/          renderer, scene, camera, lights
-  world/           terrain, island generator, level loading, doors and glass
-  br/              safe zone and pickups
-  hud/             HUD, compass, minimap and big map
-  physics.ts       collision grid, raycasts, movement
-  sim.ts           fixed-step simulation tick
-  loop.ts          render loop (camera, viewmodel and HUD per frame)
-  player.ts  bots.ts  combat.ts  grenades.ts  weapons.ts  loadout.ts
-  viewmodel.ts  effects.ts  audio.ts  input.ts  menu.ts
+  main.ts       entry: registers input and menu handlers, starts the render loop, shows the menu
+  config.ts     constants (player size, sim step, FOV...)
+  types.ts      shared types
+  data/         weapons, optics, grenades, bot difficulties, loot tables
+  utils/        shared helpers (smoothstep, pad2, label text, three.js box/cylinder meshes...)
+  render/       scene, camera, renderer, mesh clean-up
+  loop/         render loop (camera, viewmodel and HUD per frame)
+  sim/          fixed-step simulation tick
+  match/        match flow: start, countdown, victory or elimination, next match
+  input/        keyboard and mouse state, pointer lock, event listeners
+  menu/         main menu and settings dialog
+  settings/     user settings, saved in localStorage
+  player/       health, view, spawning, damage
+  loadout/      carried weapons, ammo, optics, reload and weapon switching
+  combat/       shooting, knife, kills, loot drops
+  grenades/     throwing, flight, aim preview, explosions, smoke
+  bots/         bot model, labels, spawning and AI
+  physics/      collision grid, raycasts, movement
+  effects/      tracers, bullet marks, water ripples, screen effects
+  audio/        Web Audio sound effects and footsteps
+  viewmodel/    first-person weapon models and their animation
+  hud/          HUD, compass, kill feed; minimap/ for the minimap and big map
+  br/           Battle Royale: zone/ (safe zone schedule) and pickups/ (loot)
+  world/
+    terrain/    height field, regions, terrain mesh and raycast
+    gen/        island generator: buildings/, sites/, wilderness/, parts/, place/, random/
+    level/      loading the island into the scene: boxes, glass, doors, water
+    doors/      doors and breakable glass
 ```
 
 ## TODO
