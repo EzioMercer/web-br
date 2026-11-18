@@ -1,16 +1,18 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import { reloadSeq, rsnd } from './audio';
 import { H } from './config';
 import { $ } from './dom';
-import { bumpBot } from './modes';
 import { WPN } from './weapons';
 import { floorY } from './world/level';
 import { state } from './state';
+import type { Bot } from './bots';
+import type { Body, Vel } from './types';
 
-export const P = { x: 0, y: 0, z: 26, g: true, h: 1.8 };
-export const V = { x: 0, y: 0, z: 0 };
+/** The player's body (feet position) and velocity. */
+export const P: Required<Body> = { x: 0, y: 0, z: 26, g: true, h: 1.8 };
+export const V: Vel = { x: 0, y: 0, z: 0 };
 
-export function hurt(d, by, raw) {
+/** Damages the player by `d` (armor absorbs half, unless `raw`), from bot `by` if any. */
+export function hurt(d: number, by?: Bot | null, raw?: boolean) {
   if (state.dead) {
     return;
   }
@@ -18,20 +20,15 @@ export function hurt(d, by, raw) {
   state.armor -= ab;
   state.hp -= d - ab;
   state.dmgFlash = raw ? Math.max(state.dmgFlash, 0.3) : 1;
-  if (by && by.x !== undefined) {
+  if (by) {
     state.ddT = 1.4;
     $('dd').style.transform = 'translate(-50%,-50%) rotate(' + ((Math.atan2(by.x - P.x, -(by.z - P.z)) + state.yaw) * 57.2958) + 'deg)';
   }
   if (state.hp <= 0) {
     state.hp = 0;
     state.dead = true;
-    state.deaths++;
-    state.respawnAt = state.T + 2.5;
     state.mouse = false;
     $('msg').textContent = 'You were eliminated';
-    if (by && state.mode === 'arms') {
-      bumpBot(by);
-    }
   }
 }
 
@@ -45,11 +42,6 @@ export function spawn() {
   state.pitch = 0;
   state.punchP = state.punchY = 0;
   state.hp = 100;
-  if (state.mode !== 'br') {
-    for (const k in state.owned) {
-      state.owned[k] = { mag: WPN[k].mag, res: WPN[k].res };
-    }
-  }
   ({ mag: state.mag, res: state.res } = state.owned[state.cw]);
   state.reloading = false;
   state.dead = false;
@@ -66,7 +58,7 @@ export function reload() {
   rsnd(reloadSeq());
 }
 
-export function switchW(id) {
+export function switchW(id: string) {
   if (!state.owned[id] || id === state.cw || state.dead) {
     return;
   }

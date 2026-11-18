@@ -1,19 +1,22 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import { ZN } from '../br/zone';
-import { $ } from '../dom';
+import { $, ctx2d } from '../dom';
 import { P } from '../player';
-import { MAPS } from '../world/maps';
+import { brWorld } from '../world/level';
 import { KCOL } from '../world/terrain';
 import { state } from '../state';
+import type { GeneratedWorld } from '../world/worldgen';
+import type { MapBg } from '../types';
 
+/** Minimap size (CSS pixels). */
 export const MMS = 190;
 
-function mapBg(m, S, labels) {
+/** Renders the terrain of map `m` (S x S pixels) with building footprints and, if `labels`, region names. */
+function mapBg(m: GeneratedWorld, S: number, labels: boolean): MapBg {
   const T = m.terrain;
   const half = T.half;
   const c = document.createElement('canvas');
   c.width = c.height = S;
-  const x = c.getContext('2d');
+  const x = ctx2d(c);
   const img = x.createImageData ? x.createImageData(S, S) : null;
   const out = { c, k: S / (2 * half), o: half, S };
   if (!img || !img.data) {
@@ -29,9 +32,9 @@ function mapBg(m, S, labels) {
       const wz = -half + (j + 0.5) * sc;
       const kd = T.kind(wx, wz);
       const h = T.h(wx, wz);
-      let r;
-      let g2;
-      let b2;
+      let r: number;
+      let g2: number;
+      let b2: number;
       if (kd === 0) {
         const dp = Math.max(0, Math.min(1, -h / 7));
         r = 0.32 - 0.22 * dp;
@@ -68,7 +71,7 @@ function mapBg(m, S, labels) {
   }
   x.putImageData(img, 0, 0);
 
-  const px = v => (v + half) / sc;
+  const px = (v: number) => (v + half) / sc;
 
   x.fillStyle = '#5b4a3a';
   for (const f of m.fp) {
@@ -110,15 +113,16 @@ function mapBg(m, S, labels) {
   return out;
 }
 
-export function buildMini(m) {
+export function buildMini(m: GeneratedWorld) {
   return mapBg(m, Math.round(MMS * Math.min(devicePixelRatio || 1, 2)), false);
 }
 
-export function drawMapOn(x, Sd, bg) {
-  const half = state.TERR.half;
+/** Draws the map background, the zone and the player's position and view cone. */
+export function drawMapOn(x: CanvasRenderingContext2D, Sd: number, bg: MapBg | null) {
+  const half = state.TERR!.half;
   const k = Sd / (2 * half);
 
-  const px = v => (v + half) * k;
+  const px = (v: number) => (v + half) * k;
 
   const sc = Sd / 190;
   if (bg) {
@@ -164,11 +168,11 @@ export function drawMapOn(x, Sd, bg) {
   x.stroke();
 }
 
-export function openBig(v) {
-  state.bigOpen = v && state.mode === 'br';
+export function openBig(v: boolean) {
+  state.bigOpen = v;
   $('bigmap').style.display = state.bigOpen ? 'block' : 'none';
   if (state.bigOpen && !state.MMB) {
     const S = Math.max(360, Math.min(780, Math.floor(Math.min(innerWidth, innerHeight) * 0.84)));
-    state.MMB = mapBg(MAPS.br, S, true);
+    state.MMB = mapBg(brWorld(), S, true);
   }
 }

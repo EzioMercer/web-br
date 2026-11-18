@@ -1,6 +1,47 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import { WLV } from '../config';
 import { BRG, SITES, genTerrain, mkNoise, terrMesh } from './terrain';
+import type { Bridge } from './terrain';
+import type { Face, Footprint, MapBox, MapDoor, MapGlass, MapLoot, Stairwell, Vec2 } from '../types';
+
+/** Wall opening centred at `m` along the wall, `w` wide: door, window or open gate. */
+interface Opening {
+  m: number;
+  w: number;
+  t: 'd' | 'w' | 'g';
+  /** Window sill height. */
+  s?: number;
+  /** Window top height. */
+  top?: number;
+  /** Door (or gate) height. */
+  dh?: number;
+  col?: number;
+}
+
+/** Window style for the walls of a shell. */
+interface ShellWindow {
+  w: number;
+  s: number;
+  top: number;
+}
+
+/** Optional building parameters. */
+interface BuildOpts {
+  col?: number;
+  roof?: number;
+  /** Loot tier. */
+  tier?: number;
+  h?: number;
+  /** Gate width and height. */
+  gate?: number;
+  gh?: number;
+  /** Outer size of a tower. */
+  out?: number;
+  face?: Face;
+  /** Footprint kind. */
+  fpn?: string;
+}
+
+export type GeneratedWorld = ReturnType<typeof genWorld>;
 
 export function genWorld() {
   const T = genTerrain();
@@ -11,34 +52,34 @@ export function genWorld() {
     return sd / 4294967296;
   };
 
-  const R = (a, b) => a + rnd() * (b - a);
+  const R = (a: number, b: number) => a + rnd() * (b - a);
 
-  const pick = a => a[(rnd() * a.length) | 0];
+  const pick = <T>(a: T[]) => a[(rnd() * a.length) | 0];
 
-  const RI = (a, b) => Math.floor(R(a, b + 1));
+  const RI = (a: number, b: number) => Math.floor(R(a, b + 1));
 
-  const B = [];
-  const G = [];
-  const D = [];
-  const LOOT = [];
-  const FP = [];
-  const ST = [];
-  const STR = [];
+  const B: MapBox[] = [];
+  const G: MapGlass[] = [];
+  const D: MapDoor[] = [];
+  const LOOT: MapLoot[] = [];
+  const FP: Footprint[] = [];
+  const STR: Stairwell[] = [];
 
-  const wb = (x, z, w, d, h, c, y, nc) => B.push([x, z, w, d, h, c, y, nc]);
+  const wb = (x: number, z: number, w: number, d: number, h: number, c: number, y?: number, nc?: boolean) => B.push([x, z, w, d, h, c, y, nc]);
 
-  const glass = (ax, c, m, w, y, h) => G.push(ax === 'x' ? [m, c, w, 0.1, h, y] : [c, m, 0.1, w, h, y]);
+  const glass = (ax: 'x' | 'z', c: number, m: number, w: number, y: number, h: number) => G.push(ax === 'x' ? [m, c, w, 0.1, h, y] : [c, m, 0.1, w, h, y]);
 
-  const door = (ax, c, m, w, y, h, col) => D.push({ ax, c, m, w, y, h, col: col || 0x6b4a2a });
+  const door = (ax: 'x' | 'z', c: number, m: number, w: number, y: number, h: number, col?: number) => D.push({ ax, c, m, w, y, h, col: col || 0x6b4a2a });
 
-  const loot = (x, z, y, t) => LOOT.push([x, z, y, t || 1]);
+  const loot = (x: number, z: number, y: number, t?: number) => LOOT.push([x, z, y, t || 1]);
 
-  const wall = (ax, c, a, b, Y, h, col, ops, th) => {
-    th = th || 0.4;
-    ops = (ops || []).slice().sort((p, q) => p.m - q.m);
+  /** Wall along `ax` at coordinate `c`, from `a` to `b`, with openings cut out of it. */
+  const wall = (ax: 'x' | 'z', c: number, a: number, b: number, Y: number, h: number, col: number, opsIn?: Opening[], thIn?: number) => {
+    const th = thIn || 0.4;
+    const ops = (opsIn || []).slice().sort((p, q) => p.m - q.m);
     let q = a;
 
-    const seg = (u, v, yy, hh) => {
+    const seg = (u: number, v: number, yy: number, hh: number) => {
       if (v - u < 0.06 || hh < 0.05) {
         return;
       }
@@ -73,24 +114,25 @@ export function genWorld() {
     seg(q, b, Y, h);
   };
 
-  const fp = (x, z, w, d, n) => FP.push([x, z, w, d, n || '']);
+  const fp = (x: number, z: number, w: number, d: number, n?: string) => FP.push([x, z, w, d, n || '']);
 
-  const insideFP = (x, z, m) => FP.some(f => Math.abs(x - f[0]) < f[2] / 2 + m && Math.abs(z - f[1]) < f[3] / 2 + m);
+  const insideFP = (x: number, z: number, m: number) => FP.some(f => Math.abs(x - f[0]) < f[2] / 2 + m && Math.abs(z - f[1]) < f[3] / 2 + m);
 
-  const gap = (a, c) => Math.abs(a - c);
+  const gap = (a: number, c: number) => Math.abs(a - c);
 
-  const clearOf = (ops, keep) => ops.filter(q => q.t === 'd' || keep || ops.every(o => o === q || o.t !== 'd' || gap(o.m, q.m) > (o.w + q.w) / 2 + 0.15));
+  /** Drops windows that would overlap a door. */
+  const clearOf = (ops: Opening[], keep?: boolean) => ops.filter(q => q.t === 'd' || keep || ops.every(o => o === q || o.t !== 'd' || gap(o.m, q.m) > (o.w + q.w) / 2 + 0.15));
 
-  const roof = (cx, cz, w, d, Y, rc) => {
+  const roof = (cx: number, cz: number, w: number, d: number, Y: number, rc: number) => {
     wb(cx, cz, w + 0.8, d + 0.8, 0.3, rc, Y);
     wb(cx, cz, w - 1.5, d + 0.8, 0.45, rc, Y + 0.3);
   };
 
-  const tbl = (x, z, Y, w, d) => {
+  const tbl = (x: number, z: number, Y: number, w?: number, d?: number) => {
     wb(x, z, w || 1.6, d || 1, 0.8, 0x6e4a2a, Y);
   };
 
-  const carAt = (x, z, Y, al) => {
+  const carAt = (x: number, z: number, Y: number, al: 'x' | 'z') => {
     const c = pick([0xb03a2e, 0x2e6db0, 0xd9d9d9, 0x2e2e2e, 0xc9a227, 0x3a8a4a]);
     const w = al === 'x' ? 4.4 : 1.9;
     const d = al === 'x' ? 1.9 : 4.4;
@@ -99,8 +141,7 @@ export function genWorld() {
   };
 
   /* ----- house (1 floor) ----- */
-  const house = (cx, cz, w, d, Y, o) => {
-    o = o || {};
+  const house = (cx: number, cz: number, w: number, d: number, Y: number, o: BuildOpts = {}) => {
     const h = 3.2;
     const col = o.col || pick([0xe4dac3, 0xd9c8a8, 0xcfd6c2, 0xe8c8a0, 0xc9d3d9]);
     const rc = o.roof || pick([0x8a4a3a, 0x6b6358, 0x4a5a6a, 0x7a5a3a]);
@@ -111,7 +152,7 @@ export function genWorld() {
     const dm = cx + R(-w / 6, w / 6);
     const pz = cz - d / 6;
     wall('x', z1, x0, x1, Y, h, col, clearOf([{ m: dm, w: 1.4, t: 'd' }, { m: cx - w / 2 + 1.6, w: 1.6, t: 'w' }, { m: cx + w / 2 - 1.6, w: 1.6, t: 'w' }]));
-    wall('x', z0, x0, x1, Y, h, col, clearOf([...(rnd() < 0.5 ? [{ m: cx, w: 1.3, t: 'd' }] : []), { m: cx - w / 3, w: 1.6, t: 'w' }, { m: cx + w / 3, w: 1.6, t: 'w' }]));
+    wall('x', z0, x0, x1, Y, h, col, clearOf([...(rnd() < 0.5 ? [{ m: cx, w: 1.3, t: 'd' } as Opening] : []), { m: cx - w / 3, w: 1.6, t: 'w' }, { m: cx + w / 3, w: 1.6, t: 'w' }]));
     wall('z', x0, z0, z1, Y, h, col, [{ m: cz, w: 1.6, t: 'w' }]);
     wall('z', x1, z0, z1, Y, h, col, [{ m: cz, w: 1.6, t: 'w' }]);
     wall('x', pz, x0, x1, Y, h, col, [{ m: cx + R(-w / 4, w / 4), w: 1.2, t: 'd' }]);
@@ -128,8 +169,7 @@ export function genWorld() {
   };
 
   /* ----- villa / apartment block (2 floors, stairs) ----- */
-  const villa = (cx, cz, w, d, Y, o) => {
-    o = o || {};
+  const villa = (cx: number, cz: number, w: number, d: number, Y: number, o: BuildOpts = {}) => {
     const h = 3.2;
     const col = o.col || pick([0xe8dcc0, 0xd8c9ad, 0xc9d3d9, 0xd7b9a4]);
     const rc = o.roof || 0x6b6358;
@@ -167,8 +207,7 @@ export function genWorld() {
   };
 
   /* ----- shop ----- */
-  const shop = (cx, cz, w, d, Y, o) => {
-    o = o || {};
+  const shop = (cx: number, cz: number, w: number, d: number, Y: number, o: BuildOpts = {}) => {
     const h = 3.8;
     const col = o.col || pick([0xd8c9ad, 0xc9a77a, 0xb9c9d3, 0xe0b9a4]);
     const sign = pick([0xd9342b, 0x2b7bd9, 0xe0b02b, 0x2bb36b, 0x9b3ad9]);
@@ -176,7 +215,7 @@ export function genWorld() {
     const x1 = cx + w / 2;
     const z0 = cz - d / 2;
     const z1 = cz + d / 2;
-    const ops = [{ m: cx, w: 1.8, t: 'd', col: 0x3a3a3a }];
+    const ops: Opening[] = [{ m: cx, w: 1.8, t: 'd', col: 0x3a3a3a }];
     for (let x = x0 + 2.4; x < x1 - 2; x += 4.2) {
       if (gap(x, cx) > 2.9) {
         ops.push({ m: x, w: 3.2, t: 'w', s: 0.35, top: 2.9 });
@@ -198,7 +237,7 @@ export function genWorld() {
   };
 
   /* ----- mall (landmark) ----- */
-  const mall = (cx, cz, Y) => {
+  const mall = (cx: number, cz: number, Y: number) => {
     const w = 56;
     const d = 34;
     const h = 5.5;
@@ -209,7 +248,7 @@ export function genWorld() {
     const col = 0xd8d2c4;
     const az0 = cz - 5;
     const az1 = cz + 5;
-    const fr = [];
+    const fr: Opening[] = [];
     for (const xx of [-24, -17, -3.5, 3.5, 17, 24]) {
       fr.push({ m: cx + xx, w: 4, t: 'w', s: 0.5, top: 4.4 });
     }
@@ -273,8 +312,7 @@ export function genWorld() {
   };
 
   /* ----- warehouse / hangar ----- */
-  const warehouse = (cx, cz, w, d, Y, o) => {
-    o = o || {};
+  const warehouse = (cx: number, cz: number, w: number, d: number, Y: number, o: BuildOpts = {}) => {
     const h = o.h || 6.5;
     const col = o.col || 0x9aa4ab;
     const x0 = cx - w / 2;
@@ -304,7 +342,7 @@ export function genWorld() {
     fp(cx, cz, w + 1, d + 1, 'warehouse');
   };
 
-  const hangar = (cx, cz, Y) => {
+  const hangar = (cx: number, cz: number, Y: number) => {
     const w = 22;
     const d = 30;
     const h = 9;
@@ -316,24 +354,25 @@ export function genWorld() {
   };
 
   /* ----- enterable structures: hollow shells with a door, stair towers with a glazed lookout, silos ----- */
-  const rot = (f, lx, lz) => f === 's' ? [lx, lz] : f === 'n' ? [-lx, -lz] : f === 'e' ? [lz, -lx] : [-lz, lx];
+  /** Local offset rotated so the local +z side faces `f`. */
+  const rot = (f: Face, lx: number, lz: number): Vec2 => f === 's' ? [lx, lz] : f === 'n' ? [-lx, -lz] : f === 'e' ? [lz, -lx] : [-lz, lx];
 
-  const rrect = (f, lx, lz, sx, sz) => {
+  const rrect = (f: Face, lx: number, lz: number, sx: number, sz: number) => {
     const [a, b] = rot(f, lx, lz);
     return f === 'e' || f === 'w' ? [a, b, sz, sx] : [a, b, sx, sz];
   };
 
-  const shell = (cx, cz, Y, out, h, col, face, win) => {
+  const shell = (cx: number, cz: number, Y: number, out: number, h: number, col: number, face: Face, win: ShellWindow | null) => {
     const x0 = cx - out / 2;
     const x1 = cx + out / 2;
     const z0 = cz - out / 2;
     const z1 = cz + out / 2;
 
-    const dd = m => [{ m, w: 1.4, t: 'd', col: 0x4a4036 }];
+    const dd = (m: number): Opening[] => [{ m, w: 1.4, t: 'd', col: 0x4a4036 }];
 
-    const ww = m => win && h >= 3.2 ? [{ m, w: win.w, t: 'w', s: win.s, top: win.top }] : [];
+    const ww = (m: number): Opening[] => win && h >= 3.2 ? [{ m, w: win.w, t: 'w', s: win.s, top: win.top }] : [];
 
-    const op = (sd, m) => face === sd ? dd(m) : ww(m);
+    const op = (sd: Face, m: number) => face === sd ? dd(m) : ww(m);
 
     wall('x', z1, x0 - 0.2, x1 + 0.2, Y, h, col, op('s', cx));
     wall('x', z0, x0 - 0.2, x1 + 0.2, Y, h, col, op('n', cx));
@@ -341,8 +380,7 @@ export function genWorld() {
     wall('z', x0, z0, z1, Y, h, col, op('w', cz));
   };
 
-  const stairTower = (cx, cz, Y, o) => {
-    o = o || {};
+  const stairTower = (cx: number, cz: number, Y: number, o: BuildOpts = {}) => {
     const out = o.out || 6.4;
     const f = o.face || 's';
     const col = o.col || 0xbfc4c8;
@@ -356,7 +394,8 @@ export function genWorld() {
     const n2 = Math.floor((inn - 2 * sw) / TD);
     const t1 = (inn - 1 - sw) / n1;
     const t2 = (inn - 2 * sw) / n2;
-    const C = [];
+    /** Stair cells: local centre x and z, size x and z. */
+    const C: [number, number, number, number][] = [];
     for (let j = 0; j < n1; j++) {
       C.push([-hi + sw / 2, hi - 1 - t1 * (j + 0.5), sw, t1]);
     }
@@ -374,8 +413,8 @@ export function genWorld() {
     }
     const N = Math.max(C.length, Math.round((o.h || 14) / RISE) - 1);
     const hf = (N + 1) * RISE;
-    const rec = { cx, cz, Y, hf, face: f, tr: [] };
-    const last = [];
+    const rec: Stairwell = { cx, cz, Y, hf, face: f, tr: [] };
+    const last: (typeof C)[number][] = [];
     for (let k = 1; k <= N; k++) {
       const c = C[(k - 1) % C.length];
       const [a, b, w, d] = rrect(f, c[0], c[1], c[2], c[3]);
@@ -435,8 +474,7 @@ export function genWorld() {
     return rec;
   };
 
-  const silo = (cx, cz, Y, out, h, col, o) => {
-    o = o || {};
+  const silo = (cx: number, cz: number, Y: number, out: number, h: number, col: number, o: BuildOpts = {}) => {
     const f = o.face || 's';
     const h1 = Math.min(h, 4.4);
     shell(cx, cz, Y, out, h1, col, f, { w: 1, s: 1, top: 2.4 });
@@ -449,9 +487,9 @@ export function genWorld() {
     loot(cx + a, cz + b, Y, o.tier || 1);
   };
 
-  const tower = (cx, cz, Y, h) => stairTower(cx, cz, Y, { out: h > 14 ? 7.2 : 6.4, h });
+  const tower = (cx: number, cz: number, Y: number, h: number) => stairTower(cx, cz, Y, { out: h > 14 ? 7.2 : 6.4, h });
 
-  const containers = (x, z, Y, nx, nz, hi) => {
+  const containers = (x: number, z: number, Y: number, nx: number, nz: number, hi: boolean) => {
     const cols = [0xb03a2e, 0x2e6db0, 0x3a8a4a, 0xd9822b, 0x7a7f85, 0xc9a227];
     for (let i = 0; i < nx; i++) {
       for (let j = 0; j < nz; j++) {
@@ -471,8 +509,8 @@ export function genWorld() {
   };
 
   /* ----- bridge: thin deck on pillars, so the river can still be waded underneath ----- */
-  const bridge = (b) => {
-    const Y = b.y + 0.2;
+  const bridge = (b: Bridge) => {
+    const Y = b.y! + 0.2;
     const z = b.ax === 'z';
     wb(b.x, b.z, z ? 6 : b.len, z ? b.len : 6, 0.4, 0x8a6a4a, Y - 0.4);
     wb(b.x + (z ? -2.8 : 0), b.z + (z ? 0 : -2.8), z ? 0.4 : b.len, z ? b.len : 0.4, 1.1, 0x6b4a2a, Y);
@@ -482,7 +520,11 @@ export function genWorld() {
     }
   };
 
-  const S = n => SITES.find(s => s.n === n);
+  /** Site by name, with its ground height (set by `genTerrain`). */
+  const S = (n: string) => {
+    const s = SITES.find(q => q.n === n)!;
+    return { ...s, h: s.h! };
+  };
 
   /* ===== landmarks ===== */
   {
@@ -706,9 +748,10 @@ export function genWorld() {
   }
 
   /* ===== wilderness: cabins, gas stations, forests, rocks ===== */
-  const nearSite = (x, z, m) => SITES.some(s => Math.hypot(x - s.x, z - s.z) < s.r + m) || BRG.some(b => Math.hypot(x - b.x, z - b.z) < b.len / 2 + 16);
+  const nearSite = (x: number, z: number, m: number) => SITES.some(s => Math.hypot(x - s.x, z - s.z) < s.r + m) || BRG.some(b => Math.hypot(x - b.x, z - b.z) < b.len / 2 + 16);
 
-  const flatAt = (x, z, w, d) => {
+  /** Lowest and highest ground under a rectangle. */
+  const flatAt = (x: number, z: number, w: number, d: number) => {
     let mn = 1e9;
     let mx = -1e9;
     for (let a = -1; a <= 1; a++) {
@@ -721,11 +764,12 @@ export function genWorld() {
     return [mn, mx];
   };
 
-  const roadNear = (x, z) => T.kind(x, z) === 6 || T.kind(x + 4, z) === 6 || T.kind(x - 4, z) === 6 || T.kind(x, z + 4) === 6 || T.kind(x, z - 4) === 6;
+  const roadNear = (x: number, z: number) => T.kind(x, z) === 6 || T.kind(x + 4, z) === 6 || T.kind(x - 4, z) === 6 || T.kind(x, z + 4) === 6 || T.kind(x, z - 4) === 6;
 
-  const siteNear2 = (x, z, k) => SITES.some(s => Math.hypot(x - s.x, z - s.z) < s.r * k) || (x < -270 && Math.abs(z + 30) < 110);
+  const siteNear2 = (x: number, z: number, k: number) => SITES.some(s => Math.hypot(x - s.x, z - s.z) < s.r * k) || (x < -270 && Math.abs(z + 30) < 110);
 
-  const cabins = [];
+  const cabins: Vec2[] = [];
+
   for (let n = 0; n < 1500 && cabins.length < 16; n++) {
     const x = R(-330, 330);
     const z = R(-330, 330);

@@ -1,21 +1,21 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import * as THREE from 'three';
 import { nade } from '../grenades';
 import { feed } from '../hud/hud';
 import { giveW, gunKeys, optTarget, swapOpt } from '../loadout';
 import { scene, srgbTex } from '../render/renderer';
-import { VM, bx, cy, mt } from '../viewmodel';
+import { VM, bx, cy, mkOptic, mt } from '../viewmodel';
 import { NC, OPT, WPN } from '../weapons';
 import { floorY } from '../world/level';
 import { state } from '../state';
+import type { AmmoType, GrenadeId, OpticId, OwnedWeapon, Pickup, PickupKind } from '../types';
 
-export const pickups = [];
+export const pickups: Pickup[] = [];
 
-function mkLabel(text, col) {
+function mkLabel(text: string, col: string) {
   const c = document.createElement('canvas');
   c.width = 256;
   c.height = 64;
-  const x = c.getContext('2d');
+  const x = c.getContext('2d')!;
   x.font = 'bold 30px sans-serif';
   x.textAlign = 'center';
   x.lineWidth = 5;
@@ -28,20 +28,22 @@ function mkLabel(text, col) {
   return sp;
 }
 
-const AMN = { pst: 'Pistol ammo', smg: 'SMG ammo', rif: 'Rifle ammo', shl: 'Shotgun shells', snp: 'Sniper ammo' };
-const GN = { he: 'HE grenade', fl: 'Flashbang', sm: 'Smoke grenade' };
+const AMN: Partial<Record<AmmoType, string>> = { pst: 'Pistol ammo', smg: 'SMG ammo', rif: 'Rifle ammo', shl: 'Shotgun shells', snp: 'Sniper ammo' };
+const GN: Record<GrenadeId, string> = { he: 'HE grenade', fl: 'Flashbang', sm: 'Smoke grenade' };
 
-export function mkPick(x, z, t, id, st, y0) {
+/** Places a pickup of kind `t` (`id` is the weapon, ammo, grenade or optic id) at (x, z), on the floor unless `y0` is given. */
+export function mkPick(x: number, z: number, t: PickupKind, id: string | null, st?: OwnedWeapon, y0?: number) {
   const col = t === 'w' ? 0xf2a23a : t === 'a' ? 0x4a8cff : t === 'm' ? 0xd9d046 : t === 'g' ? 0xe05a3a : t === 'o' ? 0xb98cff : 0x4ad66a;
   const g = new THREE.Group();
   const it = new THREE.Group();
-  const n = t === 'w' ? WPN[id].name + (st && st.opt ? ' + ' + OPT[st.opt].s : '') : t === 'a' ? 'Kevlar vest' : t === 'm' ? AMN[id] : t === 'g' ? GN[id] : t === 'o' ? OPT[id].n : 'Medkit';
+  const k = id!;
+  const n = t === 'w' ? WPN[k].name + (st && st.opt ? ' + ' + OPT[st.opt].s : '') : t === 'a' ? 'Kevlar vest' : t === 'm' ? AMN[k as AmmoType]! : t === 'g' ? GN[k as GrenadeId] : t === 'o' ? OPT[k as OpticId].n : 'Medkit';
   if (t === 'w') {
-    const m = VM[id].clone(true);
+    const m = VM[k].clone(true);
     m.visible = true;
     m.position.set(0, 0, 0);
     m.rotation.set(0, 0, 0);
-    m.scale.setScalar(WPN[id].sl === 2 ? 2.4 : 1.4);
+    m.scale.setScalar(WPN[k].sl === 2 ? 2.4 : 1.4);
     it.add(m);
     it.position.y = 0.95;
   } else if (t === 'a') {
@@ -58,13 +60,13 @@ export function mkPick(x, z, t, id, st, y0) {
     }
     it.position.y = 0.45;
   } else if (t === 'o') {
-    const m = window.mkOptic(id);
+    const m = mkOptic(k as OpticId);
     m.scale.setScalar(4.2);
     m.visible = true;
     it.add(m);
     it.position.y = 0.5;
   } else if (t === 'g') {
-    it.add(new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 10), new THREE.MeshLambertMaterial({ color: NC[id] })));
+    it.add(new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 10), new THREE.MeshLambertMaterial({ color: NC[k as GrenadeId] })));
     cy(it, 0.05, 0.12, 0, 0.17, 0, mt(0x444));
     it.position.y = 0.55;
   } else {
@@ -87,25 +89,27 @@ export function mkPick(x, z, t, id, st, y0) {
   pickups.push({ m: g, lab, x, z, y: gy, t, id, n, st });
 }
 
-export function swapPick(k) {
+/** Swaps the held weapon (or optic) for pickup `k`, dropping the old one. */
+export function swapPick(k: Pickup) {
   if (k.t === 'o') {
     swapOpt(k);
     return;
   }
-  if (gunKeys().length < 2 || state.owned[k.id]) {
+  if (gunKeys().length < 2 || state.owned[k.id!]) {
     return;
   }
   const drop = state.cw !== 'knife' ? state.cw : gunKeys()[1];
-  const st = drop === state.cw ? { mag: state.mag, res: state.res, opt: state.owned[state.cw] && state.owned[state.cw].opt } : { mag: state.owned[drop].mag, res: state.owned[drop].res, opt: state.owned[drop].opt };
+  const st: OwnedWeapon = drop === state.cw ? { mag: state.mag, res: state.res, opt: state.owned[state.cw] && state.owned[state.cw].opt } : { mag: state.owned[drop].mag, res: state.owned[drop].res, opt: state.owned[drop].opt };
   mkPick(k.x, k.z, 'w', drop, st, k.y);
-  giveW(k.id, k.st, drop);
+  giveW(k.id!, k.st, drop);
   scene.remove(k.m);
   pickups.splice(pickups.indexOf(k), 1);
   state.brNear = null;
 }
 
-export function wslot(n) {
-  return state.mode === 'br' ? gunKeys()[n - 1] : (Object.keys(state.owned).find(k => WPN[k].sl === n) || 'pistol');
+/** The n-th gun carried. */
+export function wslot(n: number) {
+  return gunKeys()[n - 1];
 }
 
 export function clearPicks() {
@@ -115,17 +119,18 @@ export function clearPicks() {
   pickups.length = 0;
 }
 
-export function take(k) {
+export function take(k: Pickup) {
   if (k.t === 'w') {
-    giveW(k.id, k.st);
+    giveW(k.id!, k.st);
   } else if (k.t === 'a') {
     state.armor = 100;
   } else if (k.t === 'g') {
-    nade[k.id]++;
+    nade[k.id as GrenadeId]++;
   } else if (k.t === 'o') {
     const tg = optTarget();
     if (tg) {
-      state.owned[tg].opt = k.id;
+      state.owned[tg].opt = k.id as OpticId;
+
       feed('Attached ' + k.n + ' to ' + WPN[tg].name);
     }
     return;

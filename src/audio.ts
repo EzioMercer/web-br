@@ -1,15 +1,18 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import { state } from './state';
+
+/** Ground surface, for footstep sounds. */
+export type Surface = 'dust' | 'grass' | 'snow' | 'water';
 
 export function initAudio() {
   if (!state.AC) {
     try {
-      state.AC = new (window.AudioContext || window.webkitAudioContext)();
-    } catch (e) {}
+      state.AC = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    } catch { /* No Web Audio: the game runs silently. */ }
   }
 }
 
-export function snd(vol, dur, freq) {
+/** Filtered noise burst. */
+export function snd(vol: number, dur: number, freq: number) {
   if (!state.AC) {
     return;
   }
@@ -32,7 +35,8 @@ export function snd(vol, dur, freq) {
   s.start();
 }
 
-export function tone(f0, f1, dur, vol, type) {
+/** Pitch sweep from `f0` to `f1` Hz. */
+export function tone(f0: number, f1: number, dur: number, vol: number, type?: OscillatorType) {
   if (!state.AC) {
     return;
   }
@@ -85,31 +89,32 @@ export function fireSnd() {
   }
 }
 
-let stepBus = null;
-let stepBusFor = null;
+let stepBus: GainNode | null = null;
+let stepBusFor: AudioContext | null = null;
 
-function stepOut() {
-  if (!stepBus || stepBusFor !== state.AC) {
-    stepBusFor = state.AC;
-    stepBus = state.AC.createGain();
+/** Footstep output bus (through a compressor), rebuilt when the audio context changes. */
+function stepOut(ac: AudioContext) {
+  if (!stepBus || stepBusFor !== ac) {
+    stepBusFor = ac;
+    stepBus = ac.createGain();
     stepBus.gain.value = 1;
-    if (state.AC.createDynamicsCompressor) {
-      const c = state.AC.createDynamicsCompressor();
+    if (ac.createDynamicsCompressor) {
+      const c = ac.createDynamicsCompressor();
       c.threshold.value = -26;
       c.knee.value = 12;
       c.ratio.value = 6;
       c.attack.value = 0.003;
       c.release.value = 0.15;
       stepBus.connect(c);
-      c.connect(state.AC.destination);
+      c.connect(ac.destination);
     } else {
-      stepBus.connect(state.AC.destination);
+      stepBus.connect(ac.destination);
     }
   }
   return stepBus;
 }
 
-export function stepNoise(vol, dur, f, att, at) {
+export function stepNoise(vol: number, dur: number, f: number, att: number, at?: number) {
   if (!state.AC || vol <= 0) {
     return;
   }
@@ -136,11 +141,11 @@ export function stepNoise(vol, dur, f, att, at) {
   src.connect(f1);
   f1.connect(f2);
   f2.connect(g);
-  g.connect(stepOut());
+  g.connect(stepOut(state.AC));
   src.start(t);
 }
 
-export function stepThump(f0, f1, dur, vol, at) {
+export function stepThump(f0: number, f1: number, dur: number, vol: number, at?: number) {
   if (!state.AC || vol <= 0) {
     return;
   }
@@ -154,12 +159,12 @@ export function stepThump(f0, f1, dur, vol, at) {
   g.gain.linearRampToValueAtTime(vol, t + 0.008);
   g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
   o.connect(g);
-  g.connect(stepOut());
+  g.connect(stepOut(state.AC));
   o.start(t);
   o.stop(t + dur + 0.02);
 }
 
-export function stepSnd(s, v) {
+export function stepSnd(s: Surface, v: number) {
   if (!state.AC || v <= 0) {
     return;
   }
@@ -182,7 +187,9 @@ export function stepSnd(s, v) {
   }
 }
 
-function rclick(k) {
+type ReloadClick = 'out' | 'in' | 'slap' | 'bolt' | 'shell' | 'pump';
+
+function rclick(k: ReloadClick) {
   if (k === 'out') {
     snd(0.5, 0.07, 1800);
     tone(220, 90, 0.07, 0.5, 'triangle');
@@ -204,13 +211,14 @@ function rclick(k) {
   }
 }
 
-export function reloadSeq() {
+/** Reload sound cues: [delay in ms, click], scaled to the weapon's reload time. */
+export function reloadSeq(): [number, ReloadClick][] {
   const k = state.WP.rt / 2.4;
-  const a = state.WP.bolt ? [[500, 'bolt'], [1000, 'in'], [1500, 'in'], [2000, 'in'], [2800, 'bolt']] : state.WP.pel ? [[500, 'shell'], [900, 'shell'], [1300, 'shell'], [1700, 'shell'], [2100, 'shell'], [2400, 'pump']] : state.WP.sl === 2 ? [[600, 'out'], [1250, 'in'], [1600, 'slap']] : [[600, 'out'], [1400, 'in'], [1750, 'slap'], [2050, 'bolt']];
+  const a: [number, ReloadClick][] = state.WP.bolt ? [[500, 'bolt'], [1000, 'in'], [1500, 'in'], [2000, 'in'], [2800, 'bolt']] : state.WP.pel ? [[500, 'shell'], [900, 'shell'], [1300, 'shell'], [1700, 'shell'], [2100, 'shell'], [2400, 'pump']] : state.WP.sl === 2 ? [[600, 'out'], [1250, 'in'], [1600, 'slap']] : [[600, 'out'], [1400, 'in'], [1750, 'slap'], [2050, 'bolt']];
   return a.map(([ms, t]) => [ms * k, t]);
 }
 
-export function rsnd(list) {
+export function rsnd(list: [number, ReloadClick][]) {
   const w = state.cw;
   for (const [ms, t] of list) {
     setTimeout(() => {

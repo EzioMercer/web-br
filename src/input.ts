@@ -1,4 +1,3 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import { initAudio } from './audio';
 import { swapPick, wslot } from './br/pickups';
 import { SENS } from './config';
@@ -7,18 +6,18 @@ import { nade, throwNade } from './grenades';
 import { openBig } from './hud/minimap';
 import { canScope, curOpt } from './loadout';
 import { reload, switchW } from './player';
-import { shopKey } from './shop';
-import { WPN } from './weapons';
 import { useDoor } from './world/doors';
 import { state } from './state';
+import type { GrenadeId } from './types';
 
-export const K = {};
+/** Keys held, by `KeyboardEvent.code`. */
+export const K: Record<string, boolean> = {};
 
 // The game only runs while the mouse is locked (pointerlockchange -> setPlay). If the browser refuses the lock
 // (e.g. re-clicking right after Esc), the pause overlay stays up and the next click retries.
 export function lockMouse() {
-  const fail = (e) => {
-    console.warn('Pointer lock refused:', (e && e.message) || e);
+  const fail = (e: unknown) => {
+    console.warn('Pointer lock refused:', (e instanceof Error && e.message) || e);
     if (!state.inMenu) {
       setPlay(false);
     }
@@ -34,7 +33,7 @@ export function lockMouse() {
   }
 }
 
-export function setPlay(v) {
+export function setPlay(v: boolean) {
   state.playing = v;
   if (!v) {
     state.grenHeld = false;
@@ -60,7 +59,7 @@ addEventListener('mousemove', (e) => {
   if (!state.playing || state.dead || document.pointerLockElement !== cv) {
     return;
   }
-  const s = SENS * state.sensMul * (state.scoped ? (state.WP.snp ? 0.3 : (curOpt() ? curOpt().sens : 0.85)) : 1);
+  const s = SENS * state.sensMul * (state.scoped ? (state.WP.snp ? 0.3 : (curOpt()?.sens ?? 0.85)) : 1);
   state.yaw -= e.movementX * s;
   state.pitch = Math.max(-1.5, Math.min(1.5, state.pitch - e.movementY * s));
 });
@@ -101,41 +100,36 @@ addEventListener('keydown', (e) => {
   if (e.code === 'Space' || e.ctrlKey || e.code.startsWith('Arrow')) {
     e.preventDefault();
   }
-  if (e.code === 'KeyM' && state.mode === 'br') {
+  if (e.code === 'KeyM') {
     openBig(!state.bigOpen);
     return;
   }
-  if (e.code === 'KeyB' && state.phase === 'buy' && !state.dead && state.mode === 'casual') {
-    state.shop = state.shop === null ? 'm' : null;
-  } else if (state.shop !== null && /^Digit\d$/.test(e.code)) {
-    shopKey(+e.code[5]);
-  } else {
-    if (e.code === 'KeyR') {
-      reload();
+  if (e.code === 'KeyR') {
+    reload();
+  }
+  if (e.code === 'Digit1') {
+    state.cg = null;
+    switchW(wslot(1));
+  }
+  if (e.code === 'Digit2') {
+    state.cg = null;
+    switchW(wslot(2));
+  }
+  if (e.code === 'KeyE' && !state.dead) {
+    if (state.brNear) {
+      swapPick(state.brNear);
+    } else {
+      useDoor();
     }
-    if (e.code === 'Digit1') {
-      state.cg = null;
-      switchW(wslot(1));
-    }
-    if (e.code === 'Digit2') {
-      state.cg = null;
-      switchW(wslot(2));
-    }
-    if (e.code === 'KeyE' && !state.dead) {
-      if (state.mode === 'br' && state.brNear) {
-        swapPick(state.brNear);
-      } else {
-        useDoor();
-      }
-    }
-    if (e.code === 'Digit3') {
-      state.cg = null;
-      switchW('knife');
-    }
-    const gk = { Digit4: 'he', Digit5: 'fl', Digit6: 'sm' }[e.code];
-    if (gk && nade[gk] > 0 && !state.dead && !state.reloading) {
-      state.cg = state.cg === gk ? null : gk;
-    }
+  }
+  if (e.code === 'Digit3') {
+    state.cg = null;
+    switchW('knife');
+  }
+  const gk = ({ Digit4: 'he', Digit5: 'fl', Digit6: 'sm' } as Record<string, GrenadeId>)[e.code];
+
+  if (gk && nade[gk] > 0 && !state.dead && !state.reloading) {
+    state.cg = state.cg === gk ? null : gk;
   }
 });
 addEventListener('keyup', (e) => {
@@ -162,9 +156,6 @@ addEventListener('wheel', (e) => {
     return;
   }
   const ks = Object.keys(state.owned);
-  if (state.mode !== 'br') {
-    ks.sort((a, b) => WPN[a].sl - WPN[b].sl);
-  }
   if (ks.length < 2) {
     return;
   }

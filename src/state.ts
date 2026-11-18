@@ -1,10 +1,9 @@
 import { DIFF, WPN } from './weapons';
-import type { genTerrain } from './world/terrain';
+import type { Terrain } from './world/terrain';
 import type {
   Box,
   Difficulty,
   Door,
-  GameMode,
   GrenadeId,
   MapBg,
   OwnedWeapon,
@@ -20,16 +19,13 @@ import type {
  * Plain mutable object on purpose: it changes every simulation step.
  */
 export const state = {
-  // ---- current map
-  /** Bot waypoints. */
-  WPTS: [] as Vec2[],
-  SPAWN: [0, 26] as Vec2,
-  /** Bot spawn points. */
-  TSP: [[0, -26]] as Vec2[],
-  /** Minimap background (Battle Royale only). */
+  // ---- island
+  /** Player landing spot. */
+  SPAWN: [0, 0] as Vec2,
+  /** Minimap background. */
   MM: null as MapBg | null,
-  /** Terrain of the Battle Royale island, null on arena maps. */
-  TERR: null as ReturnType<typeof genTerrain> | null,
+  /** Terrain of the island, null until the first match loads it. */
+  TERR: null as Terrain | null,
 
   // ---- physics
   /** Box hit by the last `wallT` ray. */
@@ -56,25 +52,14 @@ export const state = {
 
   // ---- match settings
   D: DIFF.normal as Difficulty,
-  mode: 'casual' as GameMode,
-  botN: 5,
-  lastMap: 'blockout',
-  /** Arms Race ladder level of the player. */
-  plv: 0,
-  /** Start time of the Battle Royale zone schedule. */
+  /** Start time of the zone schedule. */
   brT0: 0,
   sensMul: 1,
 
-  // ---- round
-  phase: 'buy' as Phase,
-  phaseEnd: 10,
-  round: 1,
-  money: 800,
-  /** Rounds won / lost. */
-  rw: 0,
-  rl: 0,
-  kills: 0,
-  deaths: 0,
+  // ---- match
+  phase: 'start' as Phase,
+  /** End of the start countdown, or when the next match begins after one ends. */
+  phaseEnd: 0,
 
   // ---- player
   hp: 100,
@@ -87,7 +72,6 @@ export const state = {
   punchP: 0,
   punchY: 0,
   dead: false,
-  respawnAt: 0,
 
   // ---- weapons
   cw: 'pistol',
@@ -104,8 +88,6 @@ export const state = {
   shotIdx: 0,
   /** Selected grenade, if any. */
   cg: null as GrenadeId | null,
-  /** Buy menu: closed (null), main menu ('m') or a category index. */
-  shop: null as null | 'm' | number,
 
   // ---- input
   /** Fire button held. */
@@ -145,7 +127,8 @@ export const state = {
   /** Damage direction indicator timer. */
   ddT: 0,
 
-  // ---- Battle Royale
+  // ---- zone and loot
+
   brZ: [] as ZoneStage[],
   /** Pickup that E would swap for. */
   brNear: null as Pickup | null,

@@ -1,19 +1,18 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import * as THREE from 'three';
 import { FOV } from '../config';
 import { cv } from '../dom';
 
 export const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xc3d6e2);
-scene.fog = new THREE.Fog(0xc3d6e2, 25, 95);
-export const cam = new THREE.PerspectiveCamera(FOV, 1, 0.05, 200);
+scene.background = new THREE.Color(0x9cc3e6);
+scene.fog = new THREE.Fog(0x9cc3e6, 160, 820);
+export const cam = new THREE.PerspectiveCamera(FOV, 1, 0.05, 1500);
 cam.rotation.order = 'YXZ';
 scene.add(cam);
 export const ren = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
 ren.setPixelRatio(Math.min(devicePixelRatio, 2));
 
 // Canvas-drawn textures hold sRGB colors.
-export function srgbTex(t) {
+export function srgbTex<T extends THREE.Texture>(t: T): T {
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }

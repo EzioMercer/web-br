@@ -1,15 +1,47 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import * as THREE from 'three';
 import { WLV } from '../config';
 import { state } from '../state';
+import type { Surface } from '../audio';
+import type { Vec2, Vec3 } from '../types';
+
+/** Kind of Battle Royale site, which decides what the world generator builds there. */
+export type SiteType = 'mall' | 'downtown' | 'suburb' | 'village' | 'lodge' | 'fort' | 'industrial' | 'port' | 'farm' | 'hamlet' | 'airfield' | 'lighthouse';
+
+export interface Site {
+  n: string;
+  x: number;
+  z: number;
+  r: number;
+  t: SiteType;
+  /** Ground height, set by `genTerrain`. */
+  h?: number;
+}
+
+export interface Bridge {
+  x: number;
+  z: number;
+  ax: 'x' | 'z';
+  len: number;
+  /** Deck height, set by `genTerrain`. */
+  y?: number;
+}
+
+/** Named map region (for labels): sites, mountains, lakes and extra areas. */
+export interface Region {
+  n: string;
+  x: number;
+  z: number;
+  /** Weight: larger regions claim more of the map. */
+  w: number;
+}
 
 export const BRH = 450;
 const BRST = 4;
 const BRN = Math.round(2 * BRH / BRST) + 1;
 const MTN = [{ x: -170, z: -200, R: 170, H: 84, n: 'Mount Karst' }, { x: 235, z: -135, R: 130, H: 60, n: 'Redback Ridge' }, { x: -265, z: 165, R: 120, H: 46, n: 'Grey Teeth' }, { x: 135, z: 245, R: 85, H: 28, n: 'Hogback' }];
 const LKS = [{ x: -135, z: 30, r: 44, n: 'Mirror Lake' }, { x: 62, z: -200, r: 28, n: 'Eagle Pond' }];
-const RIV = [[[-70, -125], [-10, -150], [50, -152], [110, -118], [150, -70], [165, -10], [185, 50], [235, 105], [275, 170], [290, 240], [300, 330]]];
-export const SITES = [
+const RIV: Vec2[][] = [[[-70, -125], [-10, -150], [50, -152], [110, -118], [150, -70], [165, -10], [185, 50], [235, 105], [275, 170], [290, 240], [300, 330]]];
+export const SITES: Site[] = [
   { n: 'Central Mall', x: 40, z: 75, r: 56, t: 'mall' },
   { n: 'Aurora', x: -25, z: -55, r: 50, t: 'downtown' },
   { n: 'Maple Heights', x: 138, z: 152, r: 44, t: 'suburb' },
@@ -23,22 +55,26 @@ export const SITES = [
   { n: 'Skyfield Airstrip', x: -300, z: -30, r: 28, t: 'airfield' },
   { n: 'Cape Light', x: 330, z: -95, r: 22, t: 'lighthouse' },
 ];
-export const BRG = [{ x: 20, z: -151, ax: 'z', len: 44 }, { x: 158, z: -40, ax: 'x', len: 44 }];
-const ROADS = [[[-55, -245], [0, -200], [20, -172], [20, -130], [-25, -55]], [[-25, -55], [20, 0], [40, 75]], [[40, 75], [85, 115], [138, 152]], [[138, 152], [215, 110], [300, 30]], [[138, 152], [195, 205], [240, 245]], [[40, 75], [-30, 150], [-105, 220]], [[-25, -55], [-110, -40], [-200, -30], [-300, -30]], [[-300, -30], [-250, 40], [-225, 80]], [[40, 75], [100, 20], [158, -40], [150, -130], [150, -225]], [[-25, -55], [-80, -100], [-118, -152]], [[300, 30], [320, -30], [330, -95]]];
-const REGX = [{ n: 'Whispering Pines', x: 60, z: -120, w: 1.3 }, { n: 'Golden Plains', x: 200, z: 20, w: 1.2 }, { n: 'Sunset Beach', x: -330, z: -170, w: 1.2 }, { n: 'Driftwood Cove', x: 0, z: 350, w: 1.2 }, { n: 'Salt Flats', x: -20, z: 200, w: 1.1 }];
-const SURFK = ['water', 'dust', 'grass', 'grass', 'dust', 'snow', 'dust', 'grass', 'grass', 'grass'];
-export const KCOL = [[0.52, 0.58, 0.55], [0.86, 0.79, 0.58], [0.40, 0.62, 0.31], [0.64, 0.63, 0.36], [0.52, 0.50, 0.47], [0.95, 0.96, 0.98], [0.47, 0.46, 0.44], [0.74, 0.64, 0.30], [0.33, 0.52, 0.24], [0.28, 0.42, 0.22]];
+export const BRG: Bridge[] = [{ x: 20, z: -151, ax: 'z', len: 44 }, { x: 158, z: -40, ax: 'x', len: 44 }];
+const ROADS: Vec2[][] = [[[-55, -245], [0, -200], [20, -172], [20, -130], [-25, -55]], [[-25, -55], [20, 0], [40, 75]], [[40, 75], [85, 115], [138, 152]], [[138, 152], [215, 110], [300, 30]], [[138, 152], [195, 205], [240, 245]], [[40, 75], [-30, 150], [-105, 220]], [[-25, -55], [-110, -40], [-200, -30], [-300, -30]], [[-300, -30], [-250, 40], [-225, 80]], [[40, 75], [100, 20], [158, -40], [150, -130], [150, -225]], [[-25, -55], [-80, -100], [-118, -152]], [[300, 30], [320, -30], [330, -95]]];
+const REGX: Region[] = [{ n: 'Whispering Pines', x: 60, z: -120, w: 1.3 }, { n: 'Golden Plains', x: 200, z: 20, w: 1.2 }, { n: 'Sunset Beach', x: -330, z: -170, w: 1.2 }, { n: 'Driftwood Cove', x: 0, z: 350, w: 1.2 }, { n: 'Salt Flats', x: -20, z: 200, w: 1.1 }];
+/** Footstep surface per terrain kind. */
+const SURFK: Surface[] = ['water', 'dust', 'grass', 'grass', 'dust', 'snow', 'dust', 'grass', 'grass', 'grass'];
+/**
+ * Color per terrain kind: 0 water, 1 sand, 2 grass, 3 dry grass, 4 rock, 5 snow, 6 road, 7-8 crop fields, 9 dark grass.
+ */
+export const KCOL: Vec3[] = [[0.52, 0.58, 0.55], [0.86, 0.79, 0.58], [0.40, 0.62, 0.31], [0.64, 0.63, 0.36], [0.52, 0.50, 0.47], [0.95, 0.96, 0.98], [0.47, 0.46, 0.44], [0.74, 0.64, 0.30], [0.33, 0.52, 0.24], [0.28, 0.42, 0.22]];
 
-export function mkNoise(seed) {
-  const hs = (i, j) => {
+export function mkNoise(seed: number) {
+  const hs = (i: number, j: number) => {
     let h = Math.imul(i, 374761393) ^ Math.imul(j, 668265263) ^ Math.imul(seed, 1274126177);
     h = Math.imul(h ^ (h >>> 13), 1274126177);
     return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
   };
 
-  const sm = t => t * t * (3 - 2 * t);
+  const sm = (t: number) => t * t * (3 - 2 * t);
 
-  const n2 = (x, y) => {
+  const n2 = (x: number, y: number) => {
     const i = Math.floor(x);
     const j = Math.floor(y);
     const u = sm(x - i);
@@ -50,7 +86,7 @@ export function mkNoise(seed) {
     return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
   };
 
-  const fbm = (x, y, o) => {
+  const fbm = (x: number, y: number, o: number) => {
     let s = 0;
     let a = 0.5;
     let f = 1;
@@ -67,8 +103,9 @@ export function mkNoise(seed) {
   return { n2, fbm };
 }
 
-function catmull(pts, seg) {
-  const o = [];
+/** Catmull-Rom spline through `pts`, with `seg` points per segment. */
+function catmull(pts: Vec2[], seg: number) {
+  const o: Vec2[] = [];
   for (let i = 0; i < pts.length - 1; i++) {
     const p0 = pts[Math.max(0, i - 1)];
     const p1 = pts[i];
@@ -95,12 +132,12 @@ export function genTerrain() {
   const RM = new Uint8Array(N * N);
   const COL = new Float32Array(N * N * 3);
 
-  const ss = (a, b, x) => {
+  const ss = (a: number, b: number, x: number) => {
     const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
     return t * t * (3 - 2 * t);
   };
 
-  const segd = (px, pz, ax, az, bx, bz) => {
+  const segd = (px: number, pz: number, ax: number, az: number, bx: number, bz: number) => {
     const dx = bx - ax;
     const dz = bz - az;
     const l2 = dx * dx + dz * dz || 1;
@@ -109,7 +146,7 @@ export function genTerrain() {
     return Math.hypot(px - ax - dx * t, pz - az - dz * t);
   };
 
-  const base = (x, z) => {
+  const base = (x: number, z: number) => {
     const r = Math.hypot(x, z) / BRH;
     const w = (fbm(x * 0.003 + 7, z * 0.003 + 3, 3) - 0.5) * 0.5;
     const rr = r + w * (0.35 + r);
@@ -129,7 +166,7 @@ export function genTerrain() {
 
   const rivs = RIV.map(r => catmull(r, 6));
 
-  const carve = (x, z, h) => {
+  const carve = (x: number, z: number, h: number) => {
     let k = 0;
     for (const rv of rivs) {
       for (let i = 0; i < rv.length - 1; i++) {
@@ -149,10 +186,11 @@ export function genTerrain() {
     return k > 0 ? h + ((WLV - 1.05) - h) * k : h;
   };
 
-  const flat = [];
+  const flat: { x: number; z: number; r: number; h: number }[] = [];
   for (const s of SITES) {
-    s.h = Math.max(WLV + 2.6, base(s.x, s.z));
-    flat.push({ x: s.x, z: s.z, r: s.r, h: s.h });
+    const h = Math.max(WLV + 2.6, base(s.x, s.z));
+    s.h = h;
+    flat.push({ x: s.x, z: s.z, r: s.r, h });
   }
   const ah = Math.max(WLV + 2.6, base(-300, -30));
   for (const z of [-120, -90, -60, 0, 30, 60]) {
@@ -161,7 +199,7 @@ export function genTerrain() {
   SITES[10].h = ah;
   const YB = WLV + 2;
   for (const b of BRG) {
-    const e = b.ax === 'z' ? [[b.x, b.z - b.len / 2], [b.x, b.z + b.len / 2]] : [[b.x - b.len / 2, b.z], [b.x + b.len / 2, b.z]];
+    const e: Vec2[] = b.ax === 'z' ? [[b.x, b.z - b.len / 2], [b.x, b.z + b.len / 2]] : [[b.x - b.len / 2, b.z], [b.x + b.len / 2, b.z]];
     for (const q of e) {
       flat.push({ x: q[0], z: q[1], r: 9, h: YB });
     }
@@ -228,9 +266,9 @@ export function genTerrain() {
     }
   }
   const farm = SITES[8];
-  const FR = [[farm.x + 62, farm.z - 18, 46, 34], [farm.x + 62, farm.z + 30, 46, 28], [farm.x - 60, farm.z + 52, 40, 30], [farm.x + 6, farm.z + 66, 50, 24]];
+  const FR: [number, number, number, number][] = [[farm.x + 62, farm.z - 18, 46, 34], [farm.x + 62, farm.z + 30, 46, 28], [farm.x - 60, farm.z + 52, 40, 30], [farm.x + 6, farm.z + 66, 50, 24]];
 
-  const fieldAt = (x, z) => {
+  const fieldAt = (x: number, z: number) => {
     for (const f of FR) {
       if (Math.abs(x - f[0]) < f[2] / 2 && Math.abs(z - f[1]) < f[3] / 2) {
         return (Math.floor((x + z) / 7) & 1) ? 7 : 8;
@@ -239,7 +277,7 @@ export function genTerrain() {
     return 0;
   };
 
-  const regs = [...SITES.map(s => ({ n: s.n, x: s.x, z: s.z, w: 1 })), ...MTN.map(m => ({ n: m.n, x: m.x, z: m.z, w: 1.7 })), ...LKS.map(l => ({ n: l.n, x: l.x, z: l.z, w: 1.3 })), ...REGX];
+  const regs: Region[] = [...SITES.map(s => ({ n: s.n, x: s.x, z: s.z, w: 1 })), ...MTN.map(m => ({ n: m.n, x: m.x, z: m.z, w: 1.7 })), ...LKS.map(l => ({ n: l.n, x: l.x, z: l.z, w: 1.3 })), ...REGX];
   const RG = new Uint8Array(N * N);
   for (let j = 0; j < N; j++) {
     for (let i = 0; i < N; i++) {
@@ -250,7 +288,7 @@ export function genTerrain() {
       const sl = SL[k];
       const bio = n2(x * 0.008 + 50, z * 0.008);
       const fd = n2(x * 0.011 + 9, z * 0.011 + 4);
-      let kd;
+      let kd: number;
       if (h < WLV - 0.25) {
         kd = 0;
       } else if (h < WLV + 1.1) {
@@ -291,7 +329,7 @@ export function genTerrain() {
     }
   }
 
-  const idx = (x, z) => {
+  const idx = (x: number, z: number) => {
     let i = Math.round((x + BRH) / ST);
     let j = Math.round((z + BRH) / ST);
     i = i < 0 ? 0 : i > N - 1 ? N - 1 : i;
@@ -299,7 +337,7 @@ export function genTerrain() {
     return j * N + i;
   };
 
-  const T = { half: BRH, N, ST, HF, SL, KD, COL, RG, regs, maxH, roads, rivs, h(x, z) {
+  const T = { half: BRH, N, ST, HF, SL, KD, COL, RG, regs, maxH, roads, rivs, h(x: number, z: number) {
     let fx = (x + BRH) / ST;
     let fz = (z + BRH) / ST;
     if (fx < 0) {
@@ -323,21 +361,23 @@ export function genTerrain() {
     const c = HF[(j + 1) * N + i];
     const d = HF[(j + 1) * N + i + 1];
     return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
-  }, slope: (x, z) => SL[idx(x, z)], kind: (x, z) => KD[idx(x, z)], reg: (x, z) => RG[idx(x, z)], surf: (x, z) => SURFK[KD[idx(x, z)]] };
+  }, slope: (x: number, z: number) => SL[idx(x, z)], kind: (x: number, z: number) => KD[idx(x, z)], reg: (x: number, z: number) => RG[idx(x, z)], surf: (x: number, z: number) => SURFK[KD[idx(x, z)]] };
   return T;
 }
 
 // Terrain colors are authored in sRGB (the minimap canvas uses them as-is); vertex colors must be linear.
-function srgbToLinear(a) {
+function srgbToLinear(a: Float32Array) {
   const o = new Float32Array(a.length);
   for (let i = 0; i < a.length; i++) {
     const c = a[i];
     o[i] = c < 0.04045 ? c * 0.0773993808 : Math.pow(c * 0.9478672986 + 0.0521327014, 2.4);
-  };
+  }
   return o;
 }
 
-export function terrMesh(T) {
+export type Terrain = ReturnType<typeof genTerrain>;
+
+export function terrMesh(T: Terrain) {
   const N = T.N;
   const ST = T.ST;
   const pos = new Float32Array(N * N * 3);
@@ -373,7 +413,8 @@ export function terrMesh(T) {
   return new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true }));
 }
 
-export function terrT(o, d, maxT) {
+/** Distance along the ray from `o` in direction `d` to the terrain, or Infinity. */
+export function terrT(o: Vec3, d: Vec3, maxT: number) {
   if (!state.TERR) {
     return Infinity;
   }

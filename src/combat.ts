@@ -1,26 +1,27 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import { fireSnd, stepNoise, stepThump } from './audio';
 import { bots } from './bots';
 import { mkPick } from './br/pickups';
 import { mark, tracer } from './effects';
 import { feed } from './hud/hud';
 import { canOpt } from './loadout';
-import { armsKill } from './modes';
 import { freeSpot, groundAt, rayBox, wallT } from './physics';
 import { P, V } from './player';
 import { OPTK, WPN } from './weapons';
 import { breakGlass } from './world/doors';
 import { state } from './state';
+import type { Bot } from './bots';
+import type { OwnedWeapon, PickupKind, Vec3 } from './types';
 
-function dropLoot(b) {
+/** Battle Royale: scatters a dead bot's gear around it. */
+function dropLoot(b: Bot) {
   const w = b.w;
   const W = WPN[w];
-  const items = [];
+  const items: [PickupKind, string?, OwnedWeapon?][] = [];
   if (!W.melee) {
     items.push(['w', w, { mag: Math.max(4, Math.round(W.mag * (0.35 + Math.random() * 0.65))), res: W.mag * (1 + Math.floor(Math.random() * 2)), opt: canOpt(w) && Math.random() < 0.3 ? OPTK[Math.random() * 3 | 0] : undefined }]);
   }
   if (!W.melee && Math.random() < 0.75) {
-    items.push(['m', W.at]);
+    items.push(['m', W.at!]);
   }
   if (Math.random() < 0.4) {
     items.push(['a']);
@@ -45,16 +46,12 @@ function dropLoot(b) {
       x = b.x;
       z = b.z;
     }
-    mkPick(x, z, it[0], it[1], it[2], groundAt(x, z, b.y + 0.6));
+    mkPick(x, z, it[0], it[1] ?? null, it[2], groundAt(x, z, b.y + 0.6));
   });
 }
 
 // the body stays where it fell (lying down) with its gear dropped around it
-export function bodyDown(b) {
-  if (state.mode !== 'br') {
-    b.mesh.visible = false;
-    return;
-  }
+export function bodyDown(b: Bot) {
   b.corpse = true;
   b.corpseT = state.T + 150;
   b.mesh.rotation.order = 'YXZ';
@@ -70,14 +67,9 @@ export function bodyDown(b) {
   dropLoot(b);
 }
 
-export function killBot(b, hs) {
+/** The player killed bot `b` (`hs`: with a headshot). */
+export function killBot(b: Bot, hs: boolean) {
   bodyDown(b);
-  b.respawn = state.T + 3;
-  state.kills++;
-  if (state.mode === 'arms') {
-    armsKill();
-  }
-  state.money = Math.min(16000, state.money + 300);
   feed('You eliminated ' + b.name + ' [' + WPN[b.w].name + ']' + (hs ? ' (headshot)' : ''));
 }
 
@@ -86,10 +78,10 @@ function knifeHit() {
   state.slashEnd = state.T + 0.3;
   stepNoise(0.22, 0.18, 1500, 0.03);
   const cp = Math.cos(state.pitch);
-  const d = [-Math.sin(state.yaw) * cp, Math.sin(state.pitch), -Math.cos(state.yaw) * cp];
-  const o = [P.x, P.y + state.eye, P.z];
+  const d: Vec3 = [-Math.sin(state.yaw) * cp, Math.sin(state.pitch), -Math.cos(state.yaw) * cp];
+  const o: Vec3 = [P.x, P.y + state.eye, P.z];
   let best = wallT(o, d, 2.6);
-  let tgt = null;
+  let tgt: Bot | null = null;
   if (state.HB && state.HB.glass && best < 2.6) {
     breakGlass(state.HB);
     best = 2.6;
@@ -146,18 +138,18 @@ export function fire() {
   const cY = Math.cos(Y);
   const sP = Math.sin(Pp);
   const cP = Math.cos(Pp);
-  const o = [P.x, P.y + state.eye, P.z];
+  const o: Vec3 = [P.x, P.y + state.eye, P.z];
   for (let n = 0; n < (state.WP.pel || 1); n++) {
     const spr = state.WP.pel ? 0.04 : spread(sp);
     const a = Math.random() * 6.283;
     const r = Math.sqrt(Math.random()) * spr;
     const sx = Math.cos(a) * r;
     const sy = Math.sin(a) * r;
-    let d = [-sY * cP + cY * sx + sY * sP * sy, sP + cP * sy, -cY * cP - sY * sx + cY * sP * sy];
-    const l = Math.hypot(...d);
-    d = d.map(v => v / l);
+    const d0: Vec3 = [-sY * cP + cY * sx + sY * sP * sy, sP + cP * sy, -cY * cP - sY * sx + cY * sP * sy];
+    const l = Math.hypot(...d0);
+    const d: Vec3 = [d0[0] / l, d0[1] / l, d0[2] / l];
     let best = wallT(o, d);
-    let tgt = null;
+    let tgt: Bot | null = null;
     let mult = 1;
     let gb = 0;
     for (let gi = 0; gi < 4 && state.HB && state.HB.glass && best < 1e8; gi++) {
@@ -180,7 +172,7 @@ export function fire() {
         mult = th < tb ? 4 : (y < b.y + 0.7 ? 0.75 : 1);
       }
     }
-    const e = [o[0] + d[0] * best, o[1] + d[1] * best, o[2] + d[2] * best];
+    const e: Vec3 = [o[0] + d[0] * best, o[1] + d[1] * best, o[2] + d[2] * best];
     tracer([o[0] + cY * 0.2 - sY * 0.6, o[1] - 0.15, o[2] - cY * 0.6 - sY * 0.2], e, 0xffe08a);
     if (tgt) {
       tgt.hp -= state.WP.dmg * mult;
@@ -196,7 +188,8 @@ export function fire() {
   }
 }
 
-export function spread(sp) {
+/** Shot spread (radians) at movement speed `sp`. */
+export function spread(sp: number) {
   if (state.WP.snp) {
     return state.scoped && sp < 1 && P.g ? (state.WP.bolt ? 0.0004 : 0.0016) : 0.06;
   }

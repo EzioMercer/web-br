@@ -1,4 +1,3 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import * as THREE from 'three';
 import { stepNoise, stepThump } from '../audio';
 import { bots } from '../bots';
@@ -7,10 +6,13 @@ import { P } from '../player';
 import { scene } from '../render/renderer';
 import { glassMat, unitGeo } from './level';
 import { state } from '../state';
+import type { Body, Box, Door, Vec3 } from '../types';
 
-export const DR = [];
-export const GL = [];
-export const shards = [];
+export const DR: Door[] = [];
+/** Glass panes: collision box and mesh. */
+export const GL: { b: Box; m: THREE.Mesh }[] = [];
+/** Flying glass shards. */
+export const shards: { m: THREE.Mesh; vx: number; vy: number; vz: number; t: number }[] = [];
 let dTick = 0;
 
 // the door you are facing (or standing right next to), for the E key and the on-screen prompt
@@ -18,7 +20,7 @@ function findDoor() {
   if (state.dead) {
     return null;
   }
-  let best = null;
+  let best: Door | null = null;
   let bs = 0;
   const cp = Math.cos(state.pitch);
   const fx = -Math.sin(state.yaw) * cp;
@@ -45,11 +47,11 @@ function findDoor() {
 }
 
 // a door will not shut on somebody standing in the doorway
-function doorBlocked(d) {
+function doorBlocked(d: Door) {
   const k = d.b;
   const m = 0.45;
 
-  const hit = a => (a === P || a.hp > 0) && Math.abs(a.y - d.y) < 2.8 && a.x > k.min[0] - m && a.x < k.max[0] + m && a.z > k.min[2] - m && a.z < k.max[2] + m;
+  const hit = (a: Body) => Math.abs(a.y - d.y) < 2.8 && a.x > k.min[0] - m && a.x < k.max[0] + m && a.z > k.min[2] - m && a.z < k.max[2] + m;
 
   return hit(P) || bots.some(b => b.hp > 0 && hit(b));
 }
@@ -76,7 +78,8 @@ export function useDoor() {
   doorSnd();
 }
 
-export function doorsTick(dt) {
+/** Opens doors for anyone walking up to them and animates them (every 50 ms). */
+export function doorsTick(dt: number) {
   if (!DR.length) {
     state.doorFocus = null;
     return;
@@ -87,7 +90,7 @@ export function doorsTick(dt) {
   }
   const st = dTick;
   dTick = 0;
-  const acts = bots.filter(b => b.hp > 0);
+  const acts: Body[] = bots.filter(b => b.hp > 0);
   if (!state.dead) {
     acts.push(P);
   }
@@ -97,7 +100,7 @@ export function doorsTick(dt) {
       d.lockP = false;
     }
     if (d.tgt === 0) {
-      let who = null;
+      let who: Body | null = null;
       let bd = d.r2;
       for (const a of acts) {
         if (a === P && d.lockP) {
@@ -130,7 +133,8 @@ export function doorsTick(dt) {
   }
 }
 
-function dx2(d) {
+/** Close enough to the player to hear. */
+function dx2(d: Door) {
   return Math.hypot(d.x - P.x, d.z - P.z) < 30;
 }
 
@@ -144,12 +148,12 @@ function glassSnd() {
   stepThump(900, 500, 0.06, 0.04);
 }
 
-export function breakGlass(b) {
+export function breakGlass(b: Box) {
   if (b.off) {
     return;
   }
   b.off = true;
-  const g = GL[b.gi];
+  const g = GL[b.gi!];
   g.m.visible = false;
   glassSnd();
   const cx = (b.min[0] + b.max[0]) / 2;
@@ -164,10 +168,11 @@ export function breakGlass(b) {
   }
 }
 
-export function shatter(o, d, len) {
+/** Breaks up to four panes of glass along a shot. */
+export function shatter(o: Vec3, d: Vec3, len: number) {
   let gb = 0;
   for (let i = 0; i < 4; i++) {
-    const q = [o[0] + d[0] * gb, o[1] + d[1] * gb, o[2] + d[2] * gb];
+    const q: Vec3 = [o[0] + d[0] * gb, o[1] + d[1] * gb, o[2] + d[2] * gb];
     const t = wallT(q, d, len - gb);
     if (state.HB && state.HB.glass && t < len - gb) {
       breakGlass(state.HB);

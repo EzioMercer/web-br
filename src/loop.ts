@@ -1,17 +1,14 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import { aimLabels } from './bots';
 import { spread } from './combat';
 import { FOV, H, STEP } from './config';
 import { $ } from './dom';
 import { fx, ripples } from './effects';
-import { aimUpdate, nade } from './grenades';
-import { brHud, drawCompass, hudUpdate } from './hud/hud';
+import { aimUpdate } from './grenades';
+import { brHud, drawCompass, hudUpdate, promptText } from './hud/hud';
 import { K } from './input';
 import { canScope, curOpt, scopeFov } from './loadout';
-import { modeInfo } from './modes';
 import { P, V } from './player';
 import { cam, ren, scene } from './render/renderer';
-import { shopText } from './shop';
 import { tick } from './sim';
 import { FZ, NV, TIP, VM, VMO, animVM, flash, gun } from './viewmodel';
 import { NC, OPTK } from './weapons';
@@ -22,7 +19,8 @@ import { state } from './state';
 let last = performance.now();
 let acc = 0;
 
-export function frame(now) {
+/** Render loop: runs the fixed-step simulation, then updates the camera, viewmodel, effects and HUD. */
+export function frame(now: number) {
   requestAnimationFrame(frame);
   const dt = Math.min((now - last) / 1000, 0.1);
   last = now;
@@ -138,7 +136,7 @@ export function frame(now) {
     }
   }
   waterMs.forEach((w, i) => {
-    w.position.y = (w.userData.y0 === undefined ? -0.12 : w.userData.y0) + Math.sin(state.T * 1.3 + i * 2) * 0.02;
+    w.position.y = -0.05 + Math.sin(state.T * 1.3 + i * 2) * 0.02;
   });
   for (let i = shards.length - 1; i >= 0; i--) {
     const q = shards[i];
@@ -155,19 +153,19 @@ export function frame(now) {
   }
   state.dmgFlash = Math.max(0, state.dmgFlash - dt * 1.6);
   state.hmT = Math.max(0, state.hmT - dt * 4);
-  $('vg').style.opacity = state.dmgFlash * 0.8;
+  $('vg').style.opacity = String(state.dmgFlash * 0.8);
   state.fbang = Math.max(0, state.fbang - dt * 0.3);
-  $('fb').style.opacity = Math.min(1, state.fbang * 1.4);
+  $('fb').style.opacity = String(Math.min(1, state.fbang * 1.4));
   $('hm').className = 'hud' + (state.hmT > 0.7 ? ' on' : '');
-  $('hm').style.opacity = state.hmT > 0.7 ? 1 : state.hmT;
+  $('hm').style.opacity = String(state.hmT > 0.7 ? 1 : state.hmT);
   const ppr = (innerHeight / 2) / Math.tan(cam.fov * Math.PI / 360);
   $('xh').style.setProperty('--g', (spread(sp) * ppr * 0.9 + 3).toFixed(1) + 'px');
   hudUpdate();
   drawCompass();
   state.ddT = Math.max(0, state.ddT - dt);
-  $('dd').style.opacity = Math.min(1, state.ddT * 1.4);
-  $('info').innerHTML = state.mode === 'br' ? '' : modeInfo() + ' &nbsp; Eliminations ' + state.kills + '<br>HE ' + nade.he + ' &nbsp; FL ' + nade.fl + ' &nbsp; SM ' + nade.sm + (state.cg ? ' &nbsp; ▶ ' + state.cg.toUpperCase() : '') + '<br>Speed ' + sp.toFixed(1) + ' m/s';
+  $('dd').style.opacity = String(Math.min(1, state.ddT * 1.4));
+
   brHud();
-  $('buy').innerHTML = shopText();
+  $('prompt').innerHTML = promptText();
   ren.render(scene, cam);
 }

@@ -1,4 +1,3 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import * as THREE from 'three';
 import { snd, stepSnd } from './audio';
 import { ZN, brSpot } from './br/zone';
@@ -7,28 +6,83 @@ import { ripple, tracer } from './effects';
 import { clear, move, rayBox, wallT } from './physics';
 import { P, V, hurt } from './player';
 import { scene, srgbTex } from './render/renderer';
-import { LADDER, WPN } from './weapons';
+import { WPN } from './weapons';
 import { shatter } from './world/doors';
 import { floorY, surfAt, waterF } from './world/level';
 import { state } from './state';
+import type { Vec3, Vel } from './types';
+
+export interface Bot {
+  id: number;
+  name: string;
+  mesh: THREE.Group;
+  /** Upper body, legs and knees, animated when walking and crouching. */
+  up: THREE.Group;
+  legs: THREE.Group[];
+  knees: THREE.Group[];
+  gunG: THREE.Group;
+  /** Name label: canvas, texture and sprite. */
+  cv: HTMLCanvasElement;
+  tex: THREE.CanvasTexture;
+  sp: THREE.Sprite;
+  /** Label visible until this time. */
+  lab: number;
+  x: number;
+  y: number;
+  z: number;
+  g: boolean;
+  h?: number;
+  v: Vel;
+  hp: number;
+  /** Weapon id. */
+  w: string;
+  /** Walk target. */
+  tx: number;
+  tz: number;
+  /** Seconds left of awareness of the player. */
+  alert: number;
+  /** Next allowed shot time. */
+  cool: number;
+  /** Earliest time to shoot after spotting the player. */
+  react: number;
+  /** Seconds spent not moving toward the target. */
+  stuck: number;
+  /** Blinded by a flashbang until this time. */
+  blind: number;
+  /** Running for the Battle Royale zone. */
+  run: boolean;
+  /** Sidestep around an obstacle until `detour`, turning by sign `dsg`. */
+  detour: number;
+  dsg: number;
+  /** Walk phase, crouch target (0/1), crouch amount and next crouch decision time. */
+  ph: number;
+  cr: number;
+  cs: number;
+  crT: number;
+  /** Distance since the last footstep. */
+  sd: number;
+  /** Lying dead: falls from height `fy` at speed `fv`, hidden at `corpseT`. */
+  corpse: boolean;
+  corpseT: number;
+  fy: number;
+  fv: number;
+}
 
 const PAL = [0x6b5a3a, 0x3b3f45, 0x5a3a32, 0x39503f, 0x4a4a2e];
 const BW = ['rifle', 'rifle', 'm4', 'm4', 'mp5', 'p90', 'awp', 'scout', 'svd', 'm3', 'glock', 'deagle', 'pistol'];
 
-function mkBot(b) {
-  const g = b.mesh;
+/** Builds the bot model into `g` and returns its animated parts and name label. */
+function mkBot(id: number, g: THREE.Group, legs: THREE.Group[], knees: THREE.Group[]) {
+  const mat = (c: number) => new THREE.MeshLambertMaterial({ color: c });
 
-  const mat = c => new THREE.MeshLambertMaterial({ color: c });
-
-  const c = PAL[b.id % 5];
+  const c = PAL[id % 5];
   const skin = 0xd9a77d;
   const dk = 0x24262a;
   const vest = 0x2e3a33;
   const U = new THREE.Group();
   g.add(U);
-  b.up = U;
 
-  const add = (p, w, h, d, x, y, z, col) => {
+  const add = (p: THREE.Object3D, w: number, h: number, d: number, x: number, y: number, z: number, col: number) => {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(col));
     m.position.set(x, y, z);
     p.add(m);
@@ -57,8 +111,8 @@ function mkBot(b) {
     add(K, 0.15, 0.4, 0.18, 0, -0.2, 0, c);
     add(K, 0.17, 0.1, 0.27, 0, -0.42, 0.04, dk);
     add(K, 0.19, 0.06, 0.2, 0, -0.12, 0.02, vest);
-    b.legs.push(L);
-    b.knees.push(K);
+    legs.push(L);
+    knees.push(K);
     const A = new THREE.Group();
     A.position.set(s * 0.32, 1.4, 0);
     A.rotation.set(-1.15, 0, -s * 0.25);
@@ -71,22 +125,22 @@ function mkBot(b) {
     add(F, 0.11, 0.28, 0.13, 0, -0.14, 0, c);
     add(F, 0.11, 0.09, 0.11, 0, -0.31, 0, dk);
   }
-  b.gunG = new THREE.Group();
-  b.gunG.position.set(0, 1.18, 0.3);
-  U.add(b.gunG);
-  b.cv = document.createElement('canvas');
-  b.cv.width = 256;
-  b.cv.height = 64;
-  b.tex = srgbTex(new THREE.CanvasTexture(b.cv));
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: b.tex, transparent: true }));
+  const gunG = new THREE.Group();
+  gunG.position.set(0, 1.18, 0.3);
+  U.add(gunG);
+  const cv = document.createElement('canvas');
+  cv.width = 256;
+  cv.height = 64;
+  const tex = srgbTex(new THREE.CanvasTexture(cv));
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
   sp.scale.set(1.6, 0.4, 1);
   sp.position.set(0, 2.15, 0);
-  b.sp = sp;
   sp.visible = false;
   U.add(sp);
+  return { up: U, gunG, cv, tex, sp };
 }
 
-function botGun(b) {
+function botGun(b: Bot) {
   const G = b.gunG;
   while (G.children.length) {
     G.remove(G.children[0]);
@@ -94,7 +148,7 @@ function botGun(b) {
   const w = b.w;
   const W = WPN[w];
 
-  const add = (sx, sy, sz, z, y, c) => {
+  const add = (sx: number, sy: number, sz: number, z: number, y: number, c: number) => {
     const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), new THREE.MeshLambertMaterial({ color: c }));
     m.position.set(0, y, z);
     G.add(m);
@@ -123,8 +177,8 @@ function botGun(b) {
   }
 }
 
-function drawLabel(b) {
-  const x = b.cv.getContext('2d');
+function drawLabel(b: Bot) {
+  const x = b.cv.getContext('2d')!;
   x.clearRect(0, 0, 256, 64);
   x.font = 'bold 30px sans-serif';
   x.textAlign = 'center';
@@ -142,8 +196,8 @@ export function aimLabels() {
     return;
   }
   const cp = Math.cos(state.pitch);
-  const d = [-Math.sin(state.yaw) * cp, Math.sin(state.pitch), -Math.cos(state.yaw) * cp];
-  const o = [P.x, P.y + state.eye, P.z];
+  const d: Vec3 = [-Math.sin(state.yaw) * cp, Math.sin(state.pitch), -Math.cos(state.yaw) * cp];
+  const o: Vec3 = [P.x, P.y + state.eye, P.z];
   const wt = wallT(o, d);
   for (const b of bots) {
     if (b.hp > 0 && rayBox(o, d, [b.x - 0.35, b.y, b.z - 0.35], [b.x + 0.35, b.y + 1.9, b.z + 0.35]) < wt) {
@@ -153,49 +207,79 @@ export function aimLabels() {
   }
 }
 
-export function setBotWeapon(b, w) {
+export function setBotWeapon(b: Bot, w: string) {
   b.w = w;
   botGun(b);
   drawLabel(b);
 }
 
-export const bots = [];
+export const bots: Bot[] = [];
 
-export function addBot(i) {
+export function addBot(i: number) {
   const g = new THREE.Group();
   scene.add(g);
-  const b = { id: i, name: 'Bot ' + (i + 1), mesh: g, x: 0, y: 0, z: 0, g: true, v: { x: 0, y: 0, z: 0 }, hp: 100, tx: 0, tz: 0, alert: 0, cool: 0, react: 0, stuck: 0, respawn: 0, legs: [], knees: [], ph: 0, w: 'rifle', lab: 0, cr: 0, cs: 0, crT: 0 };
-  mkBot(b);
+  const legs: THREE.Group[] = [];
+  const knees: THREE.Group[] = [];
+  const parts = mkBot(i, g, legs, knees);
+  const b: Bot = {
+    id: i,
+    name: 'Bot ' + (i + 1),
+    mesh: g,
+    legs,
+    knees,
+    ...parts,
+    lab: 0,
+    x: 0,
+    y: 0,
+    z: 0,
+    g: true,
+    v: { x: 0, y: 0, z: 0 },
+    hp: 100,
+    w: 'rifle',
+    tx: 0,
+    tz: 0,
+    alert: 0,
+    cool: 0,
+    react: 0,
+    stuck: 0,
+    blind: 0,
+    run: false,
+    detour: 0,
+    dsg: 1,
+    ph: 0,
+    cr: 0,
+    cs: 0,
+    crT: 0,
+    sd: 0,
+    corpse: false,
+    corpseT: 0,
+    fy: 0,
+    fv: 0,
+  };
   bots.push(b);
-  respawnBot(b);
 }
 
-function pickWP(b) {
-  if (state.mode === 'br' && state.TERR && state.brZ.length) {
-    const zt = ZN.next || ZN;
-    for (let k = 0; k < 14; k++) {
-      const a = Math.random() * 6.283;
-      const r = Math.sqrt(Math.random()) * zt.r * 0.8;
-      b.tx = zt.cx + Math.cos(a) * r;
-      b.tz = zt.cz + Math.sin(a) * r;
-      if (state.TERR.h(b.tx, b.tz) > 1.5) {
-        break;
-      }
+/** A new walk target: somewhere dry in the (next) zone, sometimes near the player. */
+function pickWP(b: Bot) {
+  const zt = ZN.next || ZN;
+  for (let k = 0; k < 14; k++) {
+    const a = Math.random() * 6.283;
+    const r = Math.sqrt(Math.random()) * zt.r * 0.8;
+    b.tx = zt.cx + Math.cos(a) * r;
+    b.tz = zt.cz + Math.sin(a) * r;
+    if (state.TERR!.h(b.tx, b.tz) > 1.5) {
+      break;
     }
-    if (!b.run && Math.random() < 0.35 && Math.hypot(P.x - b.x, P.z - b.z) < 120) {
-      b.tx = P.x + (Math.random() - 0.5) * 12;
-      b.tz = P.z + (Math.random() - 0.5) * 12;
-    }
-    return;
   }
-  const w = state.WPTS[Math.random() * state.WPTS.length | 0];
-  const hn = Math.random() < state.D.hunt;
-  b.tx = hn ? P.x + (Math.random() - 0.5) * 6 : w[0];
-  b.tz = hn ? P.z + (Math.random() - 0.5) * 6 : w[1];
+  if (!b.run && Math.random() < 0.35 && Math.hypot(P.x - b.x, P.z - b.z) < 120) {
+    b.tx = P.x + (Math.random() - 0.5) * 12;
+    b.tz = P.z + (Math.random() - 0.5) * 12;
+  }
 }
 
-export function respawnBot(b, idx) {
-  const w = state.mode === 'br' && state.TERR && state.brZ.length ? brSpot() : state.TSP[(idx !== undefined ? idx : b.id) % state.TSP.length];
+/** Drops bot `b` at a random spot with full health and a random weapon. */
+export function respawnBot(b: Bot) {
+  const w = brSpot();
   b.x = w[0] + (Math.random() - 0.5) * 0.6;
   b.z = w[1];
   b.y = floorY(b.x, b.z);
@@ -210,11 +294,11 @@ export function respawnBot(b, idx) {
   b.h = H;
   b.crT = 0;
   b.lab = 0;
-  setBotWeapon(b, state.mode === 'sniper' ? 'awp' : state.mode === 'arms' ? LADDER[Math.min(b.lv | 0, LADDER.length - 1)] : BW[Math.random() * BW.length | 0]);
+  setBotWeapon(b, BW[Math.random() * BW.length | 0]);
   pickWP(b);
 }
 
-export function botsTick(dt) {
+export function botsTick(dt: number) {
   for (const b of bots) {
     if (b.hp <= 0) {
       if (b.corpse && b.fy > b.y + 0.005) {
@@ -226,13 +310,10 @@ export function botsTick(dt) {
         b.mesh.visible = false;
         b.corpse = false;
       }
-      if (state.mode === 'arms' && state.phase === 'live' && state.T >= b.respawn) {
-        respawnBot(b);
-      }
       continue;
     }
     let run = false;
-    if (state.mode === 'br' && state.phase === 'live') {
+    if (state.phase === 'live') {
       const zt = ZN.next || ZN;
       const dn = Math.hypot(b.x - zt.cx, b.z - zt.cz) - zt.r;
       const d0 = Math.hypot(b.x - ZN.cx, b.z - ZN.cz) - ZN.r;
@@ -240,7 +321,7 @@ export function botsTick(dt) {
     }
     b.run = run;
     const ey = b.y + 1.6 - 0.5 * b.cs;
-    const o = [b.x, ey, b.z];
+    const o: Vec3 = [b.x, ey, b.z];
     const dx = P.x - b.x;
     const dy = P.y + 1.2 - ey;
     const dz = P.z - b.z;
@@ -286,8 +367,8 @@ export function botsTick(dt) {
         const hc = state.D.acc * Math.max(0.12, 0.7 - dist * 0.012) * (Math.hypot(V.x, V.z) > 3 ? 0.6 : 1) * (P.h < H ? 0.8 : 1) * (b.g ? 1 : 0.7);
         const hit = Math.random() < Math.min(0.95, hc);
         const m = hit ? 0 : 1.8;
-        const tp = [P.x + (Math.random() - 0.5) * m, P.y + 1.1 + (Math.random() - 0.5) * m, P.z + (Math.random() - 0.5) * m];
-        const o2 = [b.x, b.y + 1.3, b.z];
+        const tp: Vec3 = [P.x + (Math.random() - 0.5) * m, P.y + 1.1 + (Math.random() - 0.5) * m, P.z + (Math.random() - 0.5) * m];
+        const o2: Vec3 = [b.x, b.y + 1.3, b.z];
         const ex = tp[0] - o2[0];
         const ey = tp[1] - o2[1];
         const ez = tp[2] - o2[2];
@@ -306,20 +387,17 @@ export function botsTick(dt) {
       const wz = b.tz - b.z;
       const wd = Math.hypot(wx, wz);
       const zt2 = ZN.next || ZN;
-      const badT = state.mode === 'br' && (Math.hypot(b.tx - ZN.cx, b.tz - ZN.cz) > ZN.r || (b.run && Math.hypot(b.tx - zt2.cx, b.tz - zt2.cz) > zt2.r));
+      const badT = Math.hypot(b.tx - ZN.cx, b.tz - ZN.cz) > ZN.r || (b.run && Math.hypot(b.tx - zt2.cx, b.tz - zt2.cz) > zt2.r);
       if (wd < 1.5 || badT) {
         pickWP(b);
         b.stuck = 0;
       } else if (b.stuck > 0.45) {
-        if (state.mode === 'br') {
-          b.detour = state.T + 1.5;
-          b.dsg = Math.random() < 0.5 ? -1 : 1;
-          if (Math.random() < 0.3) {
-            pickWP(b);
-          }
-        } else {
+        b.detour = state.T + 1.5;
+        b.dsg = Math.random() < 0.5 ? -1 : 1;
+        if (Math.random() < 0.3) {
           pickWP(b);
         }
+
         b.stuck = 0;
       } else {
         if (b.stuck > 0.12 && b.g) {
@@ -347,7 +425,9 @@ export function botsTick(dt) {
         b.v.x *= 1 - 0.45 * wf;
         b.v.z *= 1 - 0.45 * wf;
       }
-    }move(b, b.v, dt);
+    }
+    move(b, b.v, dt);
+
     if (b.g && !b.cr) {
       b.sd = (b.sd || 0) + Math.hypot(b.v.x, b.v.z) * dt;
       if (b.sd > 1.9) {

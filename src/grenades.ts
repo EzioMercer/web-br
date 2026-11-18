@@ -1,4 +1,3 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import * as THREE from 'three';
 import { snd, tone } from './audio';
 import { bots } from './bots';
@@ -11,14 +10,35 @@ import { NC } from './weapons';
 import { GL, breakGlass } from './world/doors';
 import { floorY } from './world/level';
 import { state } from './state';
+import type { GrenadeId, Sphere, Vec3 } from './types';
 
+/** A grenade in flight. */
+interface Nade {
+  x: number;
+  y: number;
+  z: number;
+  vx: number;
+  vy: number;
+  vz: number;
+  t: GrenadeId;
+  m: THREE.Mesh;
+  /** Detonation time. */
+  f: number;
+}
+
+/** A smoke cloud, gone at time `t`. */
+interface Smoke extends Sphere {
+  t: number;
+  m: THREE.Mesh;
+}
+
+/** Points on the grenade aim preview. */
 const AIM_N = 70;
 const aimPos = new Float32Array(AIM_N * 3);
 const aimV = new Float32Array(AIM_N * 6);
 const aimGeo = new THREE.BufferGeometry();
 const aimVA = new THREE.BufferAttribute(aimV, 3);
-const aimIdx = [];
-let aimN = 0;
+const aimIdx: number[] = [];
 for (let i = 0; i < AIM_N - 1; i++) {
   const q = i * 2;
   aimIdx.push(q, q + 1, q + 2, q + 1, q + 3, q + 2);
@@ -30,15 +50,17 @@ aimMesh.frustumCulled = false;
 aimMesh.renderOrder = 6;
 aimMesh.visible = false;
 scene.add(aimMesh);
-export const nade = { he: 0, fl: 0, sm: 0 };
-export const nades = [];
-export const smokes = [];
+/** Grenades carried. */
+export const nade: Record<GrenadeId, number> = { he: 0, fl: 0, sm: 0 };
+export const nades: Nade[] = [];
+export const smokes: Smoke[] = [];
 
-function nadeFuse(t) {
+function nadeFuse(t: GrenadeId) {
   return t === 'sm' ? 1.3 : 1.6;
 }
 
-function nadeStep(n, dt) {
+/** Moves a grenade one step, bouncing off walls and the floor. Returns true if it touched something. */
+function nadeStep(n: Omit<Nade, 't' | 'm' | 'f'>, dt: number) {
   let fl = false;
   n.vy -= 18 * dt;
   let nx = n.x + n.vx * dt;
@@ -100,7 +122,6 @@ export function throwNade() {
 export function aimUpdate() {
   if (!state.cg || state.dead || !nade[state.cg] || !state.grenHeld) {
     aimMesh.visible = false;
-    aimN = 0;
     return;
   }
   const n = nadeStart();
@@ -108,9 +129,9 @@ export function aimUpdate() {
   const steps = Math.round(nadeFuse(state.cg) / dt);
   const every = Math.max(1, Math.ceil(steps / (AIM_N - 2)));
   let k = 1;
-  let px;
-  let py;
-  let pz;
+  let px: number;
+  let py: number;
+  let pz: number;
   aimPos[0] = n.x;
   aimPos[1] = n.y;
   aimPos[2] = n.z;
@@ -172,10 +193,9 @@ export function aimUpdate() {
   aimVA.needsUpdate = true;
   aimGeo.setDrawRange(0, Math.max(0, (k - 1) * 6));
   aimMesh.visible = k > 1;
-  aimN = k - 1;
 }
 
-export function nadesTick(dt) {
+export function nadesTick(dt: number) {
   for (let i = nades.length - 1; i >= 0; i--) {
     const n = nades[i];
     nadeStep(n, dt);
@@ -194,8 +214,8 @@ export function nadesTick(dt) {
   }
 }
 
-function boom(n) {
-  const o = [n.x, n.y + 0.2, n.z];
+function boom(n: Nade) {
+  const o: Vec3 = [n.x, n.y + 0.2, n.z];
   if (n.t === 'sm') {
     const y = Math.max(n.y, 0.1) + 1.6;
     const m = new THREE.Mesh(new THREE.SphereGeometry(3.6, 16, 12), new THREE.MeshLambertMaterial({ color: 0xb9bec2, transparent: true, opacity: 0.95, side: THREE.DoubleSide }));
@@ -214,7 +234,8 @@ function boom(n) {
     fx.push({ m, t: 0.3, max: 0.3 });
     if (!state.dead && pd < 30 && clear(o, [P.x, P.y + state.eye, P.z])) {
       const cp = Math.cos(state.pitch);
-      const f = [-Math.sin(state.yaw) * cp, Math.sin(state.pitch), -Math.cos(state.yaw) * cp];
+      const f: Vec3 = [-Math.sin(state.yaw) * cp, Math.sin(state.pitch), -Math.cos(state.yaw) * cp];
+
       const dot = (f[0] * (o[0] - P.x) + f[1] * (o[1] - P.y - state.eye) + f[2] * (o[2] - P.z)) / pd;
       state.fbang = Math.min(1.3, (1 - pd / 30) * (dot > 0 ? 1.4 : 0.5) + 0.2);
     }

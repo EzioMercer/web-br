@@ -1,16 +1,18 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import { H, R, WLV } from './config';
 import { smokes } from './grenades';
 import { boxes, floorY } from './world/level';
 import { terrT } from './world/terrain';
 import { state } from './state';
+import type { Body, Box, Sphere, Vec3, Vel } from './types';
 
+/** Collision grid cell size (m). */
 const GC = 16;
-const EMPTY = [];
-let GR = new Map();
+const EMPTY: Box[] = [];
+let GR = new Map<number, Box[]>();
 let qid = 0;
 
-export function rayBox(o, d, mn, mx) {
+/** Distance along the ray to the box (0 if `o` is inside), or Infinity. */
+export function rayBox(o: Vec3, d: Vec3, mn: Vec3, mx: Vec3) {
   let t0 = 0;
   let t1 = 1e9;
   for (let i = 0; i < 3; i++) {
@@ -35,12 +37,12 @@ export function rayBox(o, d, mn, mx) {
   return t0;
 }
 
-function gkey(i, j) {
+function gkey(i: number, j: number) {
   return (i + 2048) * 4096 + (j + 2048);
 }
 
 export function gridBuild() {
-  GR = new Map();
+  GR = new Map<number, Box[]>();
   for (const b of boxes) {
     b.s = 0;
     const i0 = Math.floor(b.min[0] / GC);
@@ -61,7 +63,8 @@ export function gridBuild() {
   }
 }
 
-export function near(x, z, r) {
+/** Boxes in the grid cells around (x, z). */
+export function near(x: number, z: number, r: number) {
   const i0 = Math.floor((x - r) / GC);
   const i1 = Math.floor((x + r) / GC);
   const j0 = Math.floor((z - r) / GC);
@@ -69,7 +72,7 @@ export function near(x, z, r) {
   if (i0 === i1 && j0 === j1) {
     return GR.get(gkey(i0, j0)) || EMPTY;
   }
-  const out = [];
+  const out: Box[] = [];
   for (let i = i0; i <= i1; i++) {
     for (let j = j0; j <= j1; j++) {
       const a = GR.get(gkey(i, j));
@@ -83,21 +86,11 @@ export function near(x, z, r) {
   return out;
 }
 
-export function wallT(o, d, maxT, noGlass) {
-  maxT = maxT || 1e4;
-  let t = Infinity;
+/** Distance along the ray to the first wall or the ground, or Infinity. Sets `state.HB` to the box hit. */
+export function wallT(o: Vec3, d: Vec3, maxTIn?: number, noGlass?: boolean) {
+  const maxT = maxTIn || 1e4;
+  let t = terrT(o, d, Math.min(maxT, 1500));
   state.HB = null;
-  if (state.TERR) {
-    const f = terrT(o, d, Math.min(maxT, 1500));
-    if (f < t) {
-      t = f;
-    }
-  } else if (d[1] < 0) {
-    const f = -o[1] / d[1];
-    if (f < t) {
-      t = f;
-    }
-  }
   const qi = ++qid;
   const dx = d[0];
   const dz = d[2];
@@ -144,14 +137,14 @@ export function wallT(o, d, maxT, noGlass) {
   return t;
 }
 
-export function hitBox(p, b) {
+export function hitBox(p: Body, b: Box) {
   return !b.off && p.x + R > b.min[0] && p.x - R < b.max[0] && p.y + (p.h || H) > b.min[1] && p.y < b.max[1] && p.z + R > b.min[2] && p.z - R < b.max[2];
 }
 
-export function move(p, v, dt) {
+export function move(p: Body, v: Vel, dt: number) {
   const g0 = p.g;
   const half = state.TERR ? state.TERR.half - 3 : 1e9;
-  let ox = p.x;
+  const ox = p.x;
   p.x += v.x * dt;
   for (const b of near(p.x, p.z, R + 0.6)) {
     if (hitBox(p, b)) {
@@ -177,7 +170,7 @@ export function move(p, v, dt) {
       v.x = 0;
     }
   }
-  let oz = p.z;
+  const oz = p.z;
   p.z += v.z * dt;
   for (const b of near(p.x, p.z, R + 0.6)) {
     if (hitBox(p, b)) {
@@ -230,7 +223,8 @@ export function move(p, v, dt) {
   }
 }
 
-export function accel(v, wx, wz, cap, rate, dt) {
+/** Accelerates `v` toward direction (wx, wz), up to speed `cap` along it. */
+export function accel(v: Vel, wx: number, wz: number, cap: number, rate: number, dt: number) {
   const add = cap - (v.x * wx + v.z * wz);
   if (add <= 0) {
     return;
@@ -240,20 +234,19 @@ export function accel(v, wx, wz, cap, rate, dt) {
   v.z += a * wz;
 }
 
-export function freeSpot(x, z) {
-  if (state.TERR) {
-    if (state.TERR.h(x, z) < WLV + 0.4 || state.TERR.slope(x, z) > 0.55) {
-      return false;
-    }
-  } else if (floorY(x, z) !== 0) {
+/** Dry, gentle ground with room to stand. */
+export function freeSpot(x: number, z: number) {
+  const T = state.TERR!;
+  if (T.h(x, z) < WLV + 0.4 || T.slope(x, z) > 0.55) {
     return false;
   }
+
   const y = floorY(x, z);
   return !near(x, z, R + 1).some(q => hitBox({ x, y, z, h: H }, q));
 }
 
 // the surface under a point: the terrain, or the top of a floor, roof or crate no higher than y0
-export function groundAt(x, z, y0) {
+export function groundAt(x: number, z: number, y0: number) {
   let g = floorY(x, z);
   for (const q of near(x, z, 0.5)) {
     if (!q.off && !q.glass && !q.door && x + 0.3 > q.min[0] && x - 0.3 < q.max[0] && z + 0.3 > q.min[2] && z - 0.3 < q.max[2] && q.max[1] <= y0 && q.max[1] > g) {
@@ -263,11 +256,12 @@ export function groundAt(x, z, y0) {
   return g;
 }
 
-export function inB(x, y, z) {
+/** Point inside (or touching) a box. */
+export function inB(x: number, y: number, z: number) {
   return near(x, z, 1).some(b => !b.off && x > b.min[0] - 0.06 && x < b.max[0] + 0.06 && y > b.min[1] - 0.06 && y < b.max[1] + 0.06 && z > b.min[2] - 0.06 && z < b.max[2] + 0.06);
 }
 
-function segSph(o, p, s) {
+function segSph(o: Vec3, p: Vec3, s: Sphere) {
   const dx = p[0] - o[0];
   const dy = p[1] - o[1];
   const dz = p[2] - o[2];
@@ -277,7 +271,8 @@ function segSph(o, p, s) {
   return Math.hypot(o[0] + dx * t - s.x, o[1] + dy * t - s.y, o[2] + dz * t - s.z) < s.r;
 }
 
-export function clear(o, p) {
+/** Line of sight from `o` to `p`: no walls (glass is see-through) and no smoke. */
+export function clear(o: Vec3, p: Vec3) {
   const dx = p[0] - o[0];
   const dy = p[1] - o[1];
   const dz = p[2] - o[2];

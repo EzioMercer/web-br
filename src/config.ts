@@ -10,3 +10,5 @@ export const SENS = 0.0021;
 export const FOV = 75;
 /** Water level (m). */
 export const WLV = 0;
+/** Bots in a match. */
+export const BOTS = 19;

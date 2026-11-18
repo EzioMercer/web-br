@@ -1,31 +1,38 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import * as THREE from 'three';
 import { bots } from '../bots';
 import { clearPicks, mkPick, pickups, take } from './pickups';
 import { bodyDown } from '../combat';
 import { nade } from '../grenades';
 import { gunKeys, optTarget } from '../loadout';
-import { endRound } from '../modes';
+import { endMatch } from '../match';
 import { freeSpot } from '../physics';
 import { P, hurt } from '../player';
 import { scene } from '../render/renderer';
 import { LW1, LW2, OPT, WPN } from '../weapons';
-import { MAPS } from '../world/maps';
+import { brWorld } from '../world/level';
+import { BRH } from '../world/terrain';
 import { state } from '../state';
+import type { Circle, GrenadeId, OpticId, PickupKind, Vec2 } from '../types';
 
-export const ZN = { cx: 0, cz: 0, r: 999 };
-export const BRS = [[75, 70, 0.55], [55, 60, 0.36], [45, 50, 0.22], [35, 40, 0.12], [30, 35, 0.05]];
+type ZonePhase = 'hold' | 'shrink' | 'final';
+
+/** The current safe zone, its schedule phase, stage number, seconds left in the phase and the next circle. */
+export const ZN: Circle & { ph: ZonePhase; stage: number; left: number; next: Circle | null } = { cx: 0, cz: 0, r: 999, ph: 'final', stage: 0, left: 0, next: null };
+/** Zone stages: hold seconds, shrink seconds, radius as a fraction of the start radius. */
+export const BRS: [number, number, number][] = [[75, 70, 0.55], [55, 60, 0.36], [45, 50, 0.22], [35, 40, 0.12], [30, 35, 0.05]];
 export const zoneM = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 420, 64, 1, true), new THREE.MeshBasicMaterial({ color: 0x3a7bff, transparent: true, opacity: 0.2, side: THREE.DoubleSide, depthWrite: false }));
 zoneM.visible = false;
 scene.add(zoneM);
 
-function landSpot(minD, fromP) {
+/** A random clear, dry, flat spot on the island, at least `minD` from the player if `fromP`. */
+function landSpot(minD: number, fromP: boolean): Vec2 {
+  const T = state.TERR!;
   for (let i = 0; i < 300; i++) {
     const a = Math.random() * 6.283;
     const r = Math.sqrt(Math.random()) * 330;
     const x = Math.cos(a) * r;
     const z = Math.sin(a) * r;
-    if (state.TERR.h(x, z) > 2 && state.TERR.slope(x, z) < 0.35 && [[0, 0], [3, 0], [-3, 0], [0, 3], [0, -3]].every(([p, q]) => freeSpot(x + p, z + q)) && (!fromP || Math.hypot(x - P.x, z - P.z) > minD)) {
+    if (T.h(x, z) > 2 && T.slope(x, z) < 0.35 && [[0, 0], [3, 0], [-3, 0], [0, 3], [0, -3]].every(([p, q]) => freeSpot(x + p, z + q)) && (!fromP || Math.hypot(x - P.x, z - P.z) > minD)) {
       return [x, z];
     }
   }
@@ -39,18 +46,18 @@ export function brSpot() {
 export function brStart() {
   clearPicks();
   state.SPAWN = landSpot(0, false);
-  const R0 = MAPS.br.half * 1.5;
+  const R0 = BRH * 1.5;
   state.brZ = [];
-  let pv = { cx: 0, cz: 0, r: R0 };
+  let pv: Circle = { cx: 0, cz: 0, r: R0 };
   for (const [hold, shrink, f] of BRS) {
     const r = R0 * f;
-    let to = null;
+    let to: Circle = pv;
     for (let k = 0; k < 60; k++) {
       const a = Math.random() * 6.283;
       const dd = Math.random() * (pv.r - r) * 0.85;
       const cx = pv.cx + Math.cos(a) * dd;
       const cz = pv.cz + Math.sin(a) * dd;
-      if (k === 59 || state.TERR.h(cx, cz) > 1.5) {
+      if (k === 59 || state.TERR!.h(cx, cz) > 1.5) {
         to = { cx, cz, r };
         break;
       }
@@ -61,27 +68,23 @@ export function brStart() {
   ZN.cx = 0;
   ZN.cz = 0;
   ZN.r = R0;
-  state.brT0 = 0; {
-    const zp = zonePhase(0);
-    ZN.ph = zp.ph;
-    ZN.stage = zp.st;
-    ZN.left = zp.left;
-    ZN.next = zp.next;
-  }
+  state.brT0 = 0;
+  setPhase(0);
   const AT = ['pst', 'smg', 'rif', 'shl', 'snp'];
-  const GI = ['he', 'fl', 'sm'];
-  for (const [x, z, y, tier] of MAPS.br.loot) {
+  const GI: GrenadeId[] = ['he', 'fl', 'sm'];
+  const OI: OpticId[] = ['rd', 'rd', 'rd', 'ho', 'ho', 'x2', 'x2', 'x4'];
+  for (const [x, z, y, tier] of brWorld().loot) {
     if (Math.random() > 0.74) {
       continue;
     }
     const r = Math.random();
     const t2 = tier >= 2;
-    const t = r < (t2 ? 0.40 : 0.26) ? 'w' : r < (t2 ? 0.58 : 0.50) ? 'm' : r < (t2 ? 0.68 : 0.58) ? 'a' : r < (t2 ? 0.76 : 0.70) ? 'h' : r < (t2 ? 0.90 : 0.82) ? 'o' : 'g';
-    mkPick(x, z, t, t === 'w' ? (t2 ? LW2 : LW1)[Math.random() * (t2 ? LW2 : LW1).length | 0] : t === 'm' ? AT[Math.random() * AT.length | 0] : t === 'g' ? GI[Math.random() * 3 | 0] : t === 'o' ? ['rd', 'rd', 'rd', 'ho', 'ho', 'x2', 'x2', 'x4'][Math.random() * 8 | 0] : null, undefined, y);
+    const t: PickupKind = r < (t2 ? 0.40 : 0.26) ? 'w' : r < (t2 ? 0.58 : 0.50) ? 'm' : r < (t2 ? 0.68 : 0.58) ? 'a' : r < (t2 ? 0.76 : 0.70) ? 'h' : r < (t2 ? 0.90 : 0.82) ? 'o' : 'g';
+    mkPick(x, z, t, t === 'w' ? (t2 ? LW2 : LW1)[Math.random() * (t2 ? LW2 : LW1).length | 0] : t === 'm' ? AT[Math.random() * AT.length | 0] : t === 'g' ? GI[Math.random() * 3 | 0] : t === 'o' ? OI[Math.random() * 8 | 0] : null, undefined, y);
   }
 }
 
-function zonePhase(t) {
+function zonePhase(t: number): { ph: ZonePhase; st: number; left: number; next: Circle | null } {
   let acc = 0;
   for (let i = 0; i < state.brZ.length; i++) {
     const q = state.brZ[i];
@@ -96,13 +99,21 @@ function zonePhase(t) {
   return { ph: 'final', st: state.brZ.length, left: 0, next: null };
 }
 
-export function brTick(dt) {
+function setPhase(t: number) {
+  const zp = zonePhase(t);
+  ZN.ph = zp.ph;
+  ZN.stage = zp.st;
+  ZN.left = zp.left;
+  ZN.next = zp.next;
+}
+
+export function brTick(dt: number) {
   if (!state.brT0) {
     state.brT0 = state.T;
   }
   const t = state.T - state.brT0;
   let acc = 0;
-  let z = null;
+  let z: Circle | null = null;
   let st = 0;
   for (let i = 0; i < state.brZ.length; i++) {
     const q = state.brZ[i];
@@ -123,13 +134,9 @@ export function brTick(dt) {
   }
   ZN.cx = z.cx;
   ZN.cz = z.cz;
-  ZN.r = z.r; {
-    const zp = zonePhase(t);
-    ZN.ph = zp.ph;
-    ZN.stage = zp.st;
-    ZN.left = zp.left;
-    ZN.next = zp.next;
-  }zoneM.position.set(z.cx, 150, z.cz);
+  ZN.r = z.r;
+  setPhase(t);
+  zoneM.position.set(z.cx, 150, z.cz);
   zoneM.scale.set(z.r, 1, z.r);
   const dps = 1.5 + st * 1.5;
   if (!state.dead && Math.hypot(P.x - z.cx, P.z - z.cz) > z.r) {
@@ -158,7 +165,7 @@ export function brTick(dt) {
     }
     let ok = false;
     if (k.t === 'w') {
-      if (gunKeys().length < 2 || state.owned[k.id]) {
+      if (gunKeys().length < 2 || state.owned[k.id!]) {
         ok = true;
       } else if (d < nd) {
         state.brNear = k;
@@ -179,7 +186,7 @@ export function brTick(dt) {
     } else if (k.t === 'm') {
       ok = Object.keys(state.owned).some(q => WPN[q].at === k.id);
     } else if (k.t === 'g') {
-      ok = nade[k.id] < 2;
+      ok = nade[k.id as GrenadeId] < 2;
     } else {
       ok = state.hp < 100;
     }
@@ -190,15 +197,15 @@ export function brTick(dt) {
     }
   }
   if (state.brNear) {
-    state.brPrompt = state.brNear.t === 'o' ? 'Press E to swap ' + OPT[state.owned[optTarget()].opt].n + ' for ' + state.brNear.n : 'Press E to swap ' + WPN[state.cw !== 'knife' ? state.cw : gunKeys()[1]].name + ' for ' + state.brNear.n;
+    state.brPrompt = state.brNear.t === 'o' ? 'Press E to swap ' + OPT[state.owned[optTarget()!].opt!].n + ' for ' + state.brNear.n : 'Press E to swap ' + WPN[state.cw !== 'knife' ? state.cw : gunKeys()[1]].name + ' for ' + state.brNear.n;
   } else if (hint) {
     state.brPrompt = hint;
   } else if (state.doorFocus && !state.cg) {
     state.brPrompt = 'Press E to ' + (state.doorFocus.tgt ? 'close' : 'open') + ' the door';
   }
   if (state.dead) {
-    endRound(false, 'Eliminated');
+    endMatch(false);
   } else if (bots.every(b => b.hp <= 0)) {
-    endRound(true);
+    endMatch(true);
   }
 }

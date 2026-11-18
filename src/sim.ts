@@ -1,13 +1,12 @@
-// @ts-nocheck -- split from the original monolith, not typed yet
 import { stepNoise, stepSnd } from './audio';
-import { bots, botsTick } from './bots';
+import { botsTick } from './bots';
 import { brTick } from './br/zone';
 import { fire } from './combat';
 import { H } from './config';
 import { ripple } from './effects';
 import { nadesTick } from './grenades';
 import { K } from './input';
-import { endRound, newRound, respawnArms } from './modes';
+import { newMatch } from './match';
 import { accel, hitBox, move, near } from './physics';
 import { P, V, reload } from './player';
 import { doorsTick } from './world/doors';
@@ -17,30 +16,17 @@ import { state } from './state';
 let stepD = 0;
 let wasW = false;
 
-export function tick(dt) {
+/** One fixed simulation step. */
+export function tick(dt: number) {
   state.T += dt;
-  if (state.phase === 'live' && state.mode === 'arms') {
-    state.phaseEnd = state.T + 999;
-    if (state.dead && state.T >= state.respawnAt) {
-      respawnArms();
-    }
-  } else if (state.phase === 'live' && state.mode === 'br') {
+  if (state.phase === 'live') {
     brTick(dt);
-  } else if (state.phase === 'buy') {
+  } else if (state.phase === 'start') {
     if (state.T >= state.phaseEnd) {
       state.phase = 'live';
-      state.phaseEnd = state.T + 100;
-    }
-  } else if (state.phase === 'live') {
-    if (state.dead) {
-      endRound(false);
-    } else if (bots.every(b => b.hp <= 0)) {
-      endRound(true);
-    } else if (state.T >= state.phaseEnd) {
-      endRound(false, 'Time’s up');
     }
   } else if (state.T >= state.phaseEnd) {
-    newRound();
+    newMatch();
   }
   if (!state.dead) {
     const cr = K.ControlLeft || K.KeyC;
@@ -71,8 +57,8 @@ export function tick(dt) {
       state.yaw += tr;
       state.pitch = Math.max(-1.5, Math.min(1.5, state.pitch + tp));
     }
-    const f = (K.KeyW | 0) - (K.KeyS | 0);
-    const s = (K.KeyD | 0) - (K.KeyA | 0);
+    const f = (K.KeyW ? 1 : 0) - (K.KeyS ? 1 : 0);
+    const s = (K.KeyD ? 1 : 0) - (K.KeyA ? 1 : 0);
     const sy = Math.sin(state.yaw);
     const cy = Math.cos(state.yaw);
     let wx = -sy * f + cy * s;
@@ -158,5 +144,7 @@ export function tick(dt) {
   }
   nadesTick(dt);
   doorsTick(dt);
-  state.phase !== 'buy' && botsTick(dt);
+  if (state.phase !== 'start') {
+    botsTick(dt);
+  }
 }
