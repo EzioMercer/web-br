@@ -244,7 +244,7 @@ export const botsTick = (dt: number) => {
       b.upperBody.position.y = -0.46 * c;
       b.legs.forEach((L, i) => {
         L.position.y = 0.88 - 0.46 * c;
-        L.rotation.x = (i ? -sw : sw) - 1.0 * c;
+        L.rotation.x = (i ? -sw : sw) - c;
       });
       b.knees.forEach((K, i) => {
         K.rotation.x = Math.max(0, i ? sw : -sw) * 0.9 + 1.9 * c;

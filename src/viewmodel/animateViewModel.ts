@@ -38,7 +38,7 @@ export const animateViewModel = () => {
       const u = 1 - (loadout.slashEnd - clock.time) / 0.3;
       const sn = Math.sin(u * Math.PI);
 
-      vg.rotation.set(0.12 - 1.0 * sn, -0.3 + 0.9 * sn, 0.5 - 1.6 * sn);
+      vg.rotation.set(0.12 - sn, -0.3 + 0.9 * sn, 0.5 - 1.6 * sn);
       vg.position.set(0.02 - 0.16 * sn, 0.04 - 0.06 * sn, -0.08 - 0.18 * sn);
     }
   }

@@ -118,12 +118,12 @@ document.querySelectorAll<HTMLElement>('#settings .tab').forEach((t) => {
   fvol.value = String(Math.round(settings.footstepVolume * 100));
   show();
   sens.oninput = () => {
-    settings.sensitivity = +sens.value;
+    settings.sensitivity = Number(sens.value);
     show();
     saveSettings();
   };
   fvol.oninput = () => {
-    settings.footstepVolume = +fvol.value / 100;
+    settings.footstepVolume = Number(fvol.value) / 100;
     show();
     saveSettings();
   };

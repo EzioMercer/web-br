@@ -74,7 +74,7 @@ export const frame = (now: number) => {
   slideRoll += ((isSl ? 0.06 : 0) - slideRoll) * Math.min(1, dt * 9);
   camera.rotation.set(player.pitch + player.recoilPitch, player.yaw + player.recoilYaw, player.dead ? 0.9 : slideRoll);
 
-  const runNow = !!(keys.ShiftLeft
+  const runNow = Boolean(keys.ShiftLeft
     && sp > 4.8
     && playerBody.onGround
     && playerBody.height >= PLAYER_HEIGHT
@@ -111,7 +111,7 @@ export const frame = (now: number) => {
     viewModels[k].visible = k === loadout.weaponId && !loadout.grenade;
   }
 
-  heldGrenade.visible = !!loadout.grenade;
+  heldGrenade.visible = Boolean(loadout.grenade);
 
   if (loadout.grenade) {
     heldGrenade.material.color.set(GRENADE_COLORS[loadout.grenade]);
@@ -128,7 +128,7 @@ export const frame = (now: number) => {
 
   const sc = loadout.scoped && !player.dead && loadout.weapon.sniper;
   const ads = loadout.scoped && !player.dead && !loadout.weapon.sniper && aimBlend > 0.4;
-  const so = ads && !!currentOptic();
+  const so = ads && Boolean(currentOptic());
   const oc = so ? loadout.owned[loadout.weaponId].optic : '';
   const mg = oc === OpticId.Scope2x || oc === OpticId.Scope4x;
 

@@ -23,7 +23,7 @@ let miniCtx: CanvasRenderingContext2D | null = null;
 
 /** Battle Royale HUD: player count, minimap, big map and zone strip (shown once the island is loaded). */
 export const mapHud = () => {
-  document.body.classList.toggle('br', !!level.terrain);
+  document.body.classList.toggle('br', Boolean(level.terrain));
 
   if (!level.terrain) {
     return;

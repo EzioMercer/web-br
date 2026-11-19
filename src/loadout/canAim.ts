@@ -1,3 +1,3 @@
 import { loadout } from './state';
 
-export const canAim = () => !!(loadout.weapon.sniper || !loadout.weapon.melee);
+export const canAim = () => Boolean(loadout.weapon.sniper || !loadout.weapon.melee);

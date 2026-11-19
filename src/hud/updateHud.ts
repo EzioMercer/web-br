@@ -72,7 +72,7 @@ export const updateHud = () => {
     byId('wicop').setAttribute('d', CLASS_ICONS[WEAPON_CLASS[loadout.weaponId] || WeaponClass.Rifle]);
   }
 
-  const mel = !!loadout.weapon.melee;
+  const mel = Boolean(loadout.weapon.melee);
 
   byId('mag').textContent = mel ? '—' : String(loadout.ammo);
   byId('rsv').textContent = mel ? '' : '/ ' + loadout.reserve;

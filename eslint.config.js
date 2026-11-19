@@ -51,6 +51,8 @@ export default tseslint.config(
       // Functions are arrow functions: `const f = () => ...`.
       'func-style': ['error', 'expression'],
       'prefer-arrow-callback': 'error',
+      // `Boolean(x)`, `Number(x)`, `String(x)` instead of `!!x`, `+x`, `'' + x`.
+      'no-implicit-coercion': ['error', { boolean: true, number: true, string: true }],
       'one-var': ['error', 'never'],
     },
   },
