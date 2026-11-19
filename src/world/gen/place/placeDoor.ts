@@ -1,7 +1,8 @@
 import { gen } from '../state';
+import type { Axis } from '../../../types';
 
 export const placeDoor = (
-  ax: 'x' | 'z',
+  ax: Axis,
   c: number,
   m: number,
   w: number,

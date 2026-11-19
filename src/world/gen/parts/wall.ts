@@ -1,11 +1,13 @@
 import { placeBox } from '../place/placeBox';
 import { placeDoor } from '../place/placeDoor';
 import { placeGlass } from '../place/placeGlass';
+import { Axis } from '../../../types';
+import { OpeningType } from '../types';
 import type { Opening } from '../types';
 
 /** Wall along `ax` at coordinate `c`, from `a` to `b`, with openings cut out of it. */
 export const wall = (
-  ax: 'x' | 'z',
+  ax: Axis,
   c: number,
   a: number,
   b: number,
@@ -27,7 +29,7 @@ export const wall = (
     const m = (u + v) / 2;
     const l = v - u;
 
-    if (ax === 'x') {
+    if (ax === Axis.X) {
       placeBox(m, c, l, th, hh, col, yy);
     } else {
       placeBox(c, m, th, l, hh, col, yy);
@@ -40,7 +42,7 @@ export const wall = (
 
     seg(q, u, Y, h);
 
-    if (o.type === 'window') {
+    if (o.type === OpeningType.Window) {
       const s = o.sill ?? 0.9;
       const tp = o.top ?? 2.3;
 
@@ -52,7 +54,7 @@ export const wall = (
 
       seg(u, v, Y + dh, h - dh);
 
-      if (o.type === 'door') {
+      if (o.type === OpeningType.Door) {
         placeDoor(ax, c, o.center, o.width, Y, dh, o.color);
       }
     }

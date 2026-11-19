@@ -2,6 +2,7 @@ import { house } from '../buildings/house';
 import { stairTower } from '../buildings/stairTower';
 import { placeBox } from '../place/placeBox';
 import { site } from './site';
+import { FootprintKind } from '../../../types';
 
 /** Cape Light. */
 export const buildCapeLight = () => {
@@ -12,7 +13,7 @@ export const buildCapeLight = () => {
     s.x,
     s.z,
     Y,
-    { size: 7.2, height: 17, color: 0xf0f0f0, roofColor: 0xc9342b, footprintKind: 'lighthouse' },
+    { size: 7.2, height: 17, color: 0xf0f0f0, roofColor: 0xc9342b, footprintKind: FootprintKind.Lighthouse },
   );
 
   for (const q of [5, 10]) {

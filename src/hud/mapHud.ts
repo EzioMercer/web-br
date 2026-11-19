@@ -12,6 +12,8 @@ import { level } from '../world/level/state';
 import { drawMap } from './minimap/drawMap';
 import { maps, MINIMAP_SIZE } from './minimap/state';
 import { pad2 } from '../utils/pad2';
+import { Phase } from '../types';
+import { ZonePhase } from '../br/zone/types';
 
 const PLAYER_ICON = '<svg width="22" height="22" viewBox="0 0 20 20">'
   + '<circle cx="10" cy="6" r="4" fill="currentColor"/>'
@@ -31,11 +33,11 @@ export const mapHud = () => {
 
   byId('pcount').innerHTML = PLAYER_ICON + alive + ' / ' + (BOT_COUNT + 1);
 
-  const hdr = match.phase === 'start'
+  const hdr = match.phase === Phase.Start
     ? 'Match starts in ' + Math.max(0, Math.ceil(match.phaseEnd - clock.time)) + ' s'
-    : zone.phase === 'hold'
+    : zone.phase === ZonePhase.Hold
       ? 'Zone ' + zone.stage + '/' + ZONE_STAGES.length + ' · shrinks in ' + formatTime(zone.timeLeft)
-      : zone.phase === 'shrink'
+      : zone.phase === ZonePhase.Shrink
         ? 'Zone ' + zone.stage + '/' + ZONE_STAGES.length + ' · shrinking, ' + formatTime(zone.timeLeft) + ' left'
         : 'Final zone';
 
@@ -80,12 +82,12 @@ export const mapHud = () => {
   // ----- zone strip (one line): time left, the safe area along the line from you to its centre, and the distance to
   // its edge
   {
-    const ph = match.phase === 'start' ? 'start' : zone.phase;
-    const tl = ph === 'start' ? Math.max(0, match.phaseEnd - clock.time) : zone.timeLeft;
+    const ph = match.phase === Phase.Start ? Phase.Start : zone.phase;
+    const tl = ph === Phase.Start ? Math.max(0, match.phaseEnd - clock.time) : zone.timeLeft;
     const ti = Math.max(0, Math.ceil(tl));
 
-    byId('ztv').textContent = ph === 'final' ? '--:--' : pad2(Math.floor(ti / 60)) + ':' + pad2(ti % 60);
-    byId('ztv').style.color = ph === 'shrink' ? '#ff7a6a' : '#fff';
+    byId('ztv').textContent = ph === ZonePhase.Final ? '--:--' : pad2(Math.floor(ti / 60)) + ':' + pad2(ti % 60);
+    byId('ztv').style.color = ph === ZonePhase.Shrink ? '#ff7a6a' : '#fff';
   }
 
   const dx = zone.cx - playerBody.x;

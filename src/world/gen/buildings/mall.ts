@@ -5,6 +5,8 @@ import { markFootprint } from '../place/markFootprint';
 import { placeBox } from '../place/placeBox';
 import { placeLoot } from '../place/placeLoot';
 import { rand } from '../random/rand';
+import { Axis, FootprintKind } from '../../../types';
+import { OpeningType } from '../types';
 import type { Opening } from '../types';
 
 /* ----- mall (landmark) ----- */
@@ -22,17 +24,17 @@ export const mall = (cx: number, cz: number, Y: number) => {
   const fr: Opening[] = [];
 
   for (const xx of [-24, -17, -3.5, 3.5, 17, 24]) {
-    fr.push({ center: cx + xx, width: 4, type: 'window', sill: 0.5, top: 4.4 });
+    fr.push({ center: cx + xx, width: 4, type: OpeningType.Window, sill: 0.5, top: 4.4 });
   }
 
   for (const xx of [-10, 10]) {
-    fr.push({ center: cx + xx - 0.9, width: 1.7, type: 'door', doorHeight: 3.4, color: 0x4a5a6a });
-    fr.push({ center: cx + xx + 0.9, width: 1.7, type: 'door', doorHeight: 3.4, color: 0x4a5a6a });
+    fr.push({ center: cx + xx - 0.9, width: 1.7, type: OpeningType.Door, doorHeight: 3.4, color: 0x4a5a6a });
+    fr.push({ center: cx + xx + 0.9, width: 1.7, type: OpeningType.Door, doorHeight: 3.4, color: 0x4a5a6a });
   }
 
-  wall('x', z1, x0, x1, Y, h, col, fr);
+  wall(Axis.X, z1, x0, x1, Y, h, col, fr);
   wall(
-    'x',
+    Axis.X,
     z0,
     x0,
     x1,
@@ -40,14 +42,14 @@ export const mall = (cx: number, cz: number, Y: number) => {
     h,
     col,
     [
-      { center: cx + 20, width: 1.8, type: 'door', doorHeight: 3 },
-      { center: cx - 15, width: 3, type: 'window', sill: 3.6, top: 4.8 },
-      { center: cx + 3, width: 3, type: 'window', sill: 3.6, top: 4.8 },
-      { center: cx + 12, width: 3, type: 'window', sill: 3.6, top: 4.8 },
+      { center: cx + 20, width: 1.8, type: OpeningType.Door, doorHeight: 3 },
+      { center: cx - 15, width: 3, type: OpeningType.Window, sill: 3.6, top: 4.8 },
+      { center: cx + 3, width: 3, type: OpeningType.Window, sill: 3.6, top: 4.8 },
+      { center: cx + 12, width: 3, type: OpeningType.Window, sill: 3.6, top: 4.8 },
     ],
   );
   wall(
-    'z',
+    Axis.Z,
     x0,
     z0,
     z1,
@@ -55,13 +57,13 @@ export const mall = (cx: number, cz: number, Y: number) => {
     h,
     col,
     [
-      { center: cz, width: 1.8, type: 'door', doorHeight: 3 },
-      { center: cz - 9, width: 3, type: 'window', sill: 1.2, top: 3.6 },
-      { center: cz + 9, width: 3, type: 'window', sill: 1.2, top: 3.6 },
+      { center: cz, width: 1.8, type: OpeningType.Door, doorHeight: 3 },
+      { center: cz - 9, width: 3, type: OpeningType.Window, sill: 1.2, top: 3.6 },
+      { center: cz + 9, width: 3, type: OpeningType.Window, sill: 1.2, top: 3.6 },
     ],
   );
   wall(
-    'z',
+    Axis.Z,
     x1,
     z0,
     z1,
@@ -69,9 +71,9 @@ export const mall = (cx: number, cz: number, Y: number) => {
     h,
     col,
     [
-      { center: cz, width: 1.8, type: 'door', doorHeight: 3 },
-      { center: cz - 9, width: 3, type: 'window', sill: 1.2, top: 3.6 },
-      { center: cz + 9, width: 3, type: 'window', sill: 1.2, top: 3.6 },
+      { center: cz, width: 1.8, type: OpeningType.Door, doorHeight: 3 },
+      { center: cz - 9, width: 3, type: OpeningType.Window, sill: 1.2, top: 3.6 },
+      { center: cz + 9, width: 3, type: OpeningType.Window, sill: 1.2, top: 3.6 },
     ],
   );
   placeBox(cx, cz, w + 1, d + 1, 0.4, 0x77787a, Y + h);
@@ -83,9 +85,9 @@ export const mall = (cx: number, cz: number, Y: number) => {
     const sx1 = sx0 + (w - 4) / 6;
     const sm = (sx0 + sx1) / 2;
 
-    wall('z', sx0, z0, az0, Y, h, col, []);
+    wall(Axis.Z, sx0, z0, az0, Y, h, col, []);
     wall(
-      'x',
+      Axis.X,
       az0,
       sx0,
       sx1,
@@ -93,8 +95,8 @@ export const mall = (cx: number, cz: number, Y: number) => {
       h,
       col,
       [
-        { center: sm - 1.5, width: 1.6, type: 'door', color: 0x3a3a3a },
-        { center: sm + 1.7, width: 3, type: 'window', sill: 0.4, top: 3 },
+        { center: sm - 1.5, width: 1.6, type: OpeningType.Door, color: 0x3a3a3a },
+        { center: sm + 1.7, width: 3, type: OpeningType.Window, sill: 0.4, top: 3 },
       ],
     );
     placeBox(sm, z0 + 2, sx1 - sx0 - 2, 0.8, 1.1, 0x7a5a3a, Y);
@@ -102,7 +104,7 @@ export const mall = (cx: number, cz: number, Y: number) => {
     placeLoot(sm - 2.5, z0 + 4, Y, 2);
   }
 
-  wall('z', x1 - 2, z0, az0, Y, h, col, []);
+  wall(Axis.Z, x1 - 2, z0, az0, Y, h, col, []);
 
   // south row: shops either side of the two entrance bays
   for (const [a, b] of [[-26, -13.5], [-6.5, 6.5], [13.5, 26]]) {
@@ -111,7 +113,7 @@ export const mall = (cx: number, cz: number, Y: number) => {
     const sm = (sx0 + sx1) / 2;
 
     wall(
-      'x',
+      Axis.X,
       az1,
       sx0,
       sx1,
@@ -119,8 +121,8 @@ export const mall = (cx: number, cz: number, Y: number) => {
       h,
       col,
       [
-        { center: sm - 1.2, width: 1.6, type: 'door', color: 0x3a3a3a },
-        { center: sm + Math.min(2.6, (b - a) / 2 - 1.8), width: 3, type: 'window', sill: 0.4, top: 3 },
+        { center: sm - 1.2, width: 1.6, type: OpeningType.Door, color: 0x3a3a3a },
+        { center: sm + Math.min(2.6, (b - a) / 2 - 1.8), width: 3, type: OpeningType.Window, sill: 0.4, top: 3 },
       ],
     );
     placeBox(sm, z1 - 2, sx1 - sx0 - 2, 0.8, 1.1, 0x7a5a3a, Y);
@@ -129,7 +131,7 @@ export const mall = (cx: number, cz: number, Y: number) => {
   }
 
   for (const xx of [-26, -13.5, -6.5, 6.5, 13.5, 26]) {
-    wall('z', cx + xx, az1, z1, Y, h, col, []);
+    wall(Axis.Z, cx + xx, az1, z1, Y, h, col, []);
   }
 
   for (const xx of [-18, -6, 6, 18]) {
@@ -141,14 +143,14 @@ export const mall = (cx: number, cz: number, Y: number) => {
   placeLoot(cx, cz - 2.5, Y, 2);
   placeLoot(cx - 12, cz + 2.5, Y, 2);
   placeLoot(cx + 12, cz - 2.5, Y, 2);
-  markFootprint(cx, cz, w + 2, d + 2, 'mall');
+  markFootprint(cx, cz, w + 2, d + 2, FootprintKind.Mall);
   // car park south of the mall
   placeBox(cx, z1 + 17, w + 6, 26, 0.02, 0x55585a, Y + 0.03, true);
 
   for (let r = 0; r < 3; r++) {
     for (let c = -4; c <= 4; c++) {
       if (rand() < 0.55) {
-        car(cx + c * 6, z1 + 10 + r * 8, Y, 'z');
+        car(cx + c * 6, z1 + 10 + r * 8, Y, Axis.Z);
       }
     }
   }
@@ -157,5 +159,5 @@ export const mall = (cx: number, cz: number, Y: number) => {
     placeBox(cx + xx, z1 + 22, 0.5, 0.5, 7, 0x666, Y);
   }
 
-  markFootprint(cx, z1 + 17, w + 6, 26, 'carpark');
+  markFootprint(cx, z1 + 17, w + 6, 26, FootprintKind.CarPark);
 };

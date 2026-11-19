@@ -4,6 +4,7 @@ import { warehouse } from '../buildings/warehouse';
 import { markFootprint } from '../place/markFootprint';
 import { placeBox } from '../place/placeBox';
 import { site } from './site';
+import { Face, FootprintKind } from '../../../types';
 
 /** Ironworks. */
 export const buildIronworks = () => {
@@ -14,11 +15,11 @@ export const buildIronworks = () => {
   warehouse(s.x + 14, s.z - 20, 24, 16, Y, { tier: 1 });
   warehouse(s.x + 8, s.z + 16, 28, 14, Y, { height: 8, gateWidth: 6, gateHeight: 5.5, color: 0x8a8f94, tier: 2 });
   placeBox(s.x + 26, s.z + 16, 4, 4, 34, 0x7a7468, Y);
-  markFootprint(s.x + 26, s.z + 16, 5, 5, 'stack');
+  markFootprint(s.x + 26, s.z + 16, 5, 5, FootprintKind.Smokestack);
 
   for (const q of [[-30, 10], [-30, 24], [-18, 32]]) {
-    silo(s.x + q[0], s.z + q[1], Y, 8, 7, 0x8a9098, { face: q[0] < -20 ? 'e' : 'n' });
-    markFootprint(s.x + q[0], s.z + q[1], 9, 9, 'tank');
+    silo(s.x + q[0], s.z + q[1], Y, 8, 7, 0x8a9098, { face: q[0] < -20 ? Face.East : Face.North });
+    markFootprint(s.x + q[0], s.z + q[1], 9, 9, FootprintKind.Tank);
   }
 
   containers(s.x + 4, s.z + 38, Y, 2, 1, false);

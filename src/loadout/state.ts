@@ -1,11 +1,15 @@
 import { WEAPONS } from '../data/weapons';
+import { WeaponId } from '../types';
 import type { GrenadeId, OwnedWeapon, Weapon } from '../types';
 
 /** The weapons the player carries and the state of the one in hand. */
 export const loadout = {
-  weaponId: 'pistol',
-  weapon: WEAPONS.pistol as Weapon,
-  owned: { pistol: { ammo: 12, reserve: 36 }, knife: { ammo: 1, reserve: 0 } } as Record<string, OwnedWeapon>,
+  weaponId: WeaponId.Usp,
+  weapon: WEAPONS[WeaponId.Usp] as Weapon,
+  owned: {
+    [WeaponId.Usp]: { ammo: 12, reserve: 36 },
+    [WeaponId.Knife]: { ammo: 1, reserve: 0 },
+  } as Record<WeaponId, OwnedWeapon>,
   /** Rounds in the magazine and in reserve for the weapon in hand. */
   ammo: 12,
   reserve: 36,

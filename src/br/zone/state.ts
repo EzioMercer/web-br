@@ -1,12 +1,12 @@
+import { ZonePhase } from './types';
 import type { Circle, ZoneStage } from '../../types';
-import type { ZonePhase } from './types';
 
 /** The current safe zone, its schedule phase, stage number, seconds left in the phase and the next circle. */
 export const zone: Circle & { phase: ZonePhase; stage: number; timeLeft: number; next: Circle | null } = {
   cx: 0,
   cz: 0,
   radius: 999,
-  phase: 'final',
+  phase: ZonePhase.Final,
   stage: 0,
   timeLeft: 0,
   next: null,

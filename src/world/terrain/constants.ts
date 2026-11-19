@@ -1,4 +1,6 @@
-import type { Surface } from '../../audio/types';
+import { Axis } from '../../types';
+import { Surface } from '../../audio/types';
+import { SiteType } from './types';
 import type { Vec2, Vec3 } from '../../types';
 import type { Bridge, Region, Site } from './types';
 
@@ -38,21 +40,24 @@ export const RIVERS: Vec2[][] = [
 ];
 
 export const SITES: Site[] = [
-  { name: 'Central Mall', x: 40, z: 75, radius: 56, type: 'mall' },
-  { name: 'Aurora', x: -25, z: -55, radius: 50, type: 'downtown' },
-  { name: 'Maple Heights', x: 138, z: 152, radius: 44, type: 'suburb' },
-  { name: 'Pinecrest', x: -55, z: -245, radius: 44, type: 'village' },
-  { name: 'Frostpeak Lodge', x: -118, z: -152, radius: 24, type: 'lodge' },
-  { name: 'Fort Redstone', x: 150, z: -225, radius: 48, type: 'fort' },
-  { name: 'Ironworks', x: 300, z: 30, radius: 46, type: 'industrial' },
-  { name: 'Port Calder', x: 240, z: 245, radius: 48, type: 'port' },
-  { name: 'Meadowbrook Farm', x: -105, z: 220, radius: 52, type: 'farm' },
-  { name: 'Dusty Gulch', x: -225, z: 80, radius: 36, type: 'hamlet' },
-  { name: 'Skyfield Airstrip', x: -300, z: -30, radius: 28, type: 'airfield' },
-  { name: 'Cape Light', x: 330, z: -95, radius: 22, type: 'lighthouse' },
+  { name: 'Central Mall', x: 40, z: 75, radius: 56, type: SiteType.Mall },
+  { name: 'Aurora', x: -25, z: -55, radius: 50, type: SiteType.Downtown },
+  { name: 'Maple Heights', x: 138, z: 152, radius: 44, type: SiteType.Suburb },
+  { name: 'Pinecrest', x: -55, z: -245, radius: 44, type: SiteType.Village },
+  { name: 'Frostpeak Lodge', x: -118, z: -152, radius: 24, type: SiteType.Lodge },
+  { name: 'Fort Redstone', x: 150, z: -225, radius: 48, type: SiteType.Fort },
+  { name: 'Ironworks', x: 300, z: 30, radius: 46, type: SiteType.Industrial },
+  { name: 'Port Calder', x: 240, z: 245, radius: 48, type: SiteType.Port },
+  { name: 'Meadowbrook Farm', x: -105, z: 220, radius: 52, type: SiteType.Farm },
+  { name: 'Dusty Gulch', x: -225, z: 80, radius: 36, type: SiteType.Hamlet },
+  { name: 'Skyfield Airstrip', x: -300, z: -30, radius: 28, type: SiteType.Airfield },
+  { name: 'Cape Light', x: 330, z: -95, radius: 22, type: SiteType.Lighthouse },
 ];
 
-export const BRIDGES: Bridge[] = [{ x: 20, z: -151, axis: 'z', length: 44 }, { x: 158, z: -40, axis: 'x', length: 44 }];
+export const BRIDGES: Bridge[] = [
+  { x: 20, z: -151, axis: Axis.Z, length: 44 },
+  { x: 158, z: -40, axis: Axis.X, length: 44 },
+];
 
 export const ROADS: Vec2[][] = [
   [[-55, -245], [0, -200], [20, -172], [20, -130], [-25, -55]],
@@ -78,16 +83,16 @@ export const EXTRA_REGIONS: Region[] = [
 
 /** Footstep surface per terrain kind. */
 export const KIND_SURFACE: Surface[] = [
-  'water',
-  'dust',
-  'grass',
-  'grass',
-  'dust',
-  'snow',
-  'dust',
-  'grass',
-  'grass',
-  'grass',
+  Surface.Water,
+  Surface.Dust,
+  Surface.Grass,
+  Surface.Grass,
+  Surface.Dust,
+  Surface.Snow,
+  Surface.Dust,
+  Surface.Grass,
+  Surface.Grass,
+  Surface.Grass,
 ];
 
 /**

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Velocity } from '../types';
+import type { Velocity, WeaponId } from '../types';
 
 export interface Bot {
   id: number;
@@ -24,7 +24,7 @@ export interface Bot {
   vel: Velocity;
   health: number;
   /** Weapon id. */
-  weaponId: string;
+  weaponId: WeaponId;
   /** Walk target. */
   targetX: number;
   targetZ: number;

@@ -1,10 +1,11 @@
 import { loadout } from '../loadout/state';
 import { noiseBurst } from './noiseBurst';
 import { tone } from './tone';
+import { WeaponId } from '../types';
 
 export const fireSound = () => {
   if (loadout.weapon.sniper) {
-    const big = loadout.weaponId === 'm82';
+    const big = loadout.weaponId === WeaponId.BarrettM82;
 
     noiseBurst(big ? 1 : 0.8, big ? 0.7 : 0.55, big ? 800 : 1100);
     noiseBurst(0.5, 0.08, 6000);
@@ -23,7 +24,7 @@ export const fireSound = () => {
       tone(300, 150, 0.06, 0.3, 'square');
     }, 450);
   } else if (loadout.weapon.slot === 2) {
-    if (loadout.weaponId === 'deagle') {
+    if (loadout.weaponId === WeaponId.DesertEagle) {
       noiseBurst(0.7, 0.22, 2500);
       tone(160, 40, 0.2, 0.8, 'triangle');
     } else {
@@ -34,7 +35,7 @@ export const fireSound = () => {
     noiseBurst(0.4, 0.07, 5000);
     tone(300, 120, 0.07, 0.3, 'square');
   } else {
-    noiseBurst(0.5, 0.16, loadout.weaponId === 'm4' ? 2800 : 2200);
-    tone(loadout.weaponId === 'm4' ? 160 : 130, 45, 0.16, 0.5, 'triangle');
+    noiseBurst(0.5, 0.16, loadout.weaponId === WeaponId.M4a1 ? 2800 : 2200);
+    tone(loadout.weaponId === WeaponId.M4a1 ? 160 : 130, 45, 0.16, 0.5, 'triangle');
   }
 };

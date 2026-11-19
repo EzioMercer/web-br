@@ -1,7 +1,8 @@
+import { AmmoType, WeaponId } from '../types';
 import type { Weapon } from '../types';
 
-export const WEAPONS: Record<string, Weapon> = {
-  pistol: {
+export const WEAPONS: Record<WeaponId, Weapon> = {
+  [WeaponId.Usp]: {
     name: 'USP',
     magSize: 12,
     fireInterval: 0.17,
@@ -10,9 +11,9 @@ export const WEAPONS: Record<string, Weapon> = {
     auto: false,
     reloadTime: 1.9,
     slot: 2,
-    ammoType: 'pst',
+    ammoType: AmmoType.Pistol,
   },
-  glock: {
+  [WeaponId.Glock18]: {
     name: 'Glock 18',
     magSize: 20,
     fireInterval: 0.12,
@@ -21,9 +22,9 @@ export const WEAPONS: Record<string, Weapon> = {
     auto: false,
     reloadTime: 2.2,
     slot: 2,
-    ammoType: 'pst',
+    ammoType: AmmoType.Pistol,
   },
-  deagle: {
+  [WeaponId.DesertEagle]: {
     name: 'Desert Eagle',
     magSize: 7,
     fireInterval: 0.3,
@@ -32,9 +33,9 @@ export const WEAPONS: Record<string, Weapon> = {
     auto: false,
     reloadTime: 2.2,
     slot: 2,
-    ammoType: 'pst',
+    ammoType: AmmoType.Pistol,
   },
-  m3: {
+  [WeaponId.M3]: {
     name: 'M3 Shotgun',
     magSize: 8,
     fireInterval: 0.9,
@@ -44,9 +45,9 @@ export const WEAPONS: Record<string, Weapon> = {
     auto: false,
     reloadTime: 2.6,
     slot: 1,
-    ammoType: 'shl',
+    ammoType: AmmoType.Shotgun,
   },
-  mp5: {
+  [WeaponId.Mp5]: {
     name: 'MP5',
     magSize: 30,
     fireInterval: 0.075,
@@ -55,9 +56,9 @@ export const WEAPONS: Record<string, Weapon> = {
     auto: true,
     reloadTime: 2.3,
     slot: 1,
-    ammoType: 'smg',
+    ammoType: AmmoType.Smg,
   },
-  p90: {
+  [WeaponId.P90]: {
     name: 'P90',
     magSize: 50,
     fireInterval: 0.07,
@@ -66,9 +67,9 @@ export const WEAPONS: Record<string, Weapon> = {
     auto: true,
     reloadTime: 3,
     slot: 1,
-    ammoType: 'smg',
+    ammoType: AmmoType.Smg,
   },
-  rifle: {
+  [WeaponId.Ak47]: {
     name: 'AK-47',
     magSize: 30,
     fireInterval: 0.1,
@@ -77,9 +78,9 @@ export const WEAPONS: Record<string, Weapon> = {
     auto: true,
     reloadTime: 2.4,
     slot: 1,
-    ammoType: 'rif',
+    ammoType: AmmoType.Rifle,
   },
-  m4: {
+  [WeaponId.M4a1]: {
     name: 'M4A1',
     magSize: 30,
     fireInterval: 0.09,
@@ -88,9 +89,9 @@ export const WEAPONS: Record<string, Weapon> = {
     auto: true,
     reloadTime: 2.4,
     slot: 1,
-    ammoType: 'rif',
+    ammoType: AmmoType.Rifle,
   },
-  awp: {
+  [WeaponId.Awp]: {
     name: 'AWP',
     magSize: 10,
     fireInterval: 1.45,
@@ -99,12 +100,12 @@ export const WEAPONS: Record<string, Weapon> = {
     auto: false,
     reloadTime: 3.2,
     slot: 1,
-    ammoType: 'snp',
+    ammoType: AmmoType.Sniper,
     boltAction: true,
     scopeFov: 20,
     sniper: true,
   },
-  scout: {
+  [WeaponId.Scout]: {
     name: 'Scout',
     magSize: 10,
     fireInterval: 1.25,
@@ -116,9 +117,9 @@ export const WEAPONS: Record<string, Weapon> = {
     boltAction: true,
     scopeFov: 28,
     sniper: true,
-    ammoType: 'snp',
+    ammoType: AmmoType.Sniper,
   },
-  svd: {
+  [WeaponId.Svd]: {
     name: 'SVD Dragunov',
     magSize: 10,
     fireInterval: 0.5,
@@ -129,9 +130,9 @@ export const WEAPONS: Record<string, Weapon> = {
     slot: 1,
     scopeFov: 24,
     sniper: true,
-    ammoType: 'snp',
+    ammoType: AmmoType.Sniper,
   },
-  g3: {
+  [WeaponId.G3sg1]: {
     name: 'G3SG1',
     magSize: 20,
     fireInterval: 0.28,
@@ -142,9 +143,9 @@ export const WEAPONS: Record<string, Weapon> = {
     slot: 1,
     scopeFov: 22,
     sniper: true,
-    ammoType: 'snp',
+    ammoType: AmmoType.Sniper,
   },
-  kar: {
+  [WeaponId.Kar98k]: {
     name: 'Kar98k',
     magSize: 5,
     fireInterval: 1.3,
@@ -156,9 +157,9 @@ export const WEAPONS: Record<string, Weapon> = {
     boltAction: true,
     scopeFov: 26,
     sniper: true,
-    ammoType: 'snp',
+    ammoType: AmmoType.Sniper,
   },
-  m82: {
+  [WeaponId.BarrettM82]: {
     name: 'Barrett M82',
     magSize: 5,
     fireInterval: 0.95,
@@ -169,9 +170,9 @@ export const WEAPONS: Record<string, Weapon> = {
     slot: 1,
     scopeFov: 14,
     sniper: true,
-    ammoType: 'snp',
+    ammoType: AmmoType.Sniper,
   },
-  knife: {
+  [WeaponId.Knife]: {
     name: 'Knife',
     magSize: 1,
     fireInterval: 0.5,
@@ -181,6 +182,6 @@ export const WEAPONS: Record<string, Weapon> = {
     reloadTime: 0,
     slot: 3,
     melee: true,
-    ammoType: 'none',
+    ammoType: AmmoType.None,
   },
 };

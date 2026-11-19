@@ -27,6 +27,8 @@ import { animateViewModel } from '../viewmodel/animateViewModel';
 import { gunRig, heldGrenade, muzzleFlashMesh, muzzleZ, opticMeshes, sightTip, viewModels } from '../viewmodel/models';
 import { shards } from '../world/doors/state';
 import { waterMeshes } from '../world/level/state';
+import { OpticId } from '../types';
+import type { WeaponId } from '../types';
 
 let lastFrame = performance.now();
 
@@ -105,7 +107,7 @@ export const frame = (now: number) => {
 
   gunRig.visible = !(loadout.scoped && (loadout.weapon.sniper || (currentOptic() && aimBlend > 0.4)));
 
-  for (const k in viewModels) {
+  for (const k of Object.keys(viewModels) as WeaponId[]) {
     viewModels[k].visible = k === loadout.weaponId && !loadout.grenade;
   }
 
@@ -128,7 +130,7 @@ export const frame = (now: number) => {
   const ads = loadout.scoped && !player.dead && !loadout.weapon.sniper && aimBlend > 0.4;
   const so = ads && !!currentOptic();
   const oc = so ? loadout.owned[loadout.weaponId].optic : '';
-  const mg = oc === 'x2' || oc === 'x4';
+  const mg = oc === OpticId.Scope2x || oc === OpticId.Scope4x;
 
   {
     const sk = byId('scope');
@@ -137,7 +139,7 @@ export const frame = (now: number) => {
 
     if (mg) {
       sk.className = 'op';
-      sk.style.setProperty('--sr', oc === 'x4' ? '27vmin' : '33vmin');
+      sk.style.setProperty('--sr', oc === OpticId.Scope4x ? '27vmin' : '33vmin');
     } else if (sk.className) {
       sk.className = '';
       sk.style.removeProperty('--sr');

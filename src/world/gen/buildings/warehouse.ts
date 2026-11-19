@@ -3,6 +3,8 @@ import { markFootprint } from '../place/markFootprint';
 import { placeBox } from '../place/placeBox';
 import { placeLoot } from '../place/placeLoot';
 import { rand } from '../random/rand';
+import { Axis, FootprintKind } from '../../../types';
+import { OpeningType } from '../types';
 import type { BuildOpts } from '../types';
 
 /* ----- warehouse / hangar ----- */
@@ -16,7 +18,7 @@ export const warehouse = (cx: number, cz: number, w: number, d: number, Y: numbe
   const gw = o.gateWidth || 6;
 
   wall(
-    'x',
+    Axis.X,
     z1,
     x0,
     x1,
@@ -24,12 +26,12 @@ export const warehouse = (cx: number, cz: number, w: number, d: number, Y: numbe
     h,
     col,
     [
-      { center: cx, width: gw, type: 'gate', doorHeight: o.gateHeight || 4.5 },
-      { center: x1 - 3, width: 1.4, type: 'door' },
+      { center: cx, width: gw, type: OpeningType.Gate, doorHeight: o.gateHeight || 4.5 },
+      { center: x1 - 3, width: 1.4, type: OpeningType.Door },
     ],
   );
   wall(
-    'x',
+    Axis.X,
     z0,
     x0,
     x1,
@@ -37,13 +39,13 @@ export const warehouse = (cx: number, cz: number, w: number, d: number, Y: numbe
     h,
     col,
     [
-      { center: cx - w / 3, width: 2, type: 'window', sill: 3.8, top: 5.4 },
-      { center: cx + w / 3, width: 2, type: 'window', sill: 3.8, top: 5.4 },
-      { center: cx, width: 1.4, type: 'door' },
+      { center: cx - w / 3, width: 2, type: OpeningType.Window, sill: 3.8, top: 5.4 },
+      { center: cx + w / 3, width: 2, type: OpeningType.Window, sill: 3.8, top: 5.4 },
+      { center: cx, width: 1.4, type: OpeningType.Door },
     ],
   );
   wall(
-    'z',
+    Axis.Z,
     x0,
     z0,
     z1,
@@ -51,13 +53,13 @@ export const warehouse = (cx: number, cz: number, w: number, d: number, Y: numbe
     h,
     col,
     [
-      { center: cz, width: 1.4, type: 'door' },
-      { center: cz - d / 4, width: 2, type: 'window', sill: 3.8, top: 5.4 },
-      { center: cz + d / 4, width: 2, type: 'window', sill: 3.8, top: 5.4 },
+      { center: cz, width: 1.4, type: OpeningType.Door },
+      { center: cz - d / 4, width: 2, type: OpeningType.Window, sill: 3.8, top: 5.4 },
+      { center: cz + d / 4, width: 2, type: OpeningType.Window, sill: 3.8, top: 5.4 },
     ],
   );
   wall(
-    'z',
+    Axis.Z,
     x1,
     z0,
     z1,
@@ -65,8 +67,8 @@ export const warehouse = (cx: number, cz: number, w: number, d: number, Y: numbe
     h,
     col,
     [
-      { center: cz - d / 4, width: 2, type: 'window', sill: 3.8, top: 5.4 },
-      { center: cz + d / 4, width: 2, type: 'window', sill: 3.8, top: 5.4 },
+      { center: cz - d / 4, width: 2, type: OpeningType.Window, sill: 3.8, top: 5.4 },
+      { center: cz + d / 4, width: 2, type: OpeningType.Window, sill: 3.8, top: 5.4 },
     ],
   );
   placeBox(cx, cz, w + 0.8, d + 0.8, 0.4, 0x6a7077, Y + h);
@@ -84,10 +86,10 @@ export const warehouse = (cx: number, cz: number, w: number, d: number, Y: numbe
   }
 
   placeBox(x0 + 3.6, z0 + 3.6, 7, 0.4, 3, col, Y);
-  wall('z', x0 + 7, z0, z0 + 7, Y, 3, col, [{ center: z0 + 4, width: 1.2, type: 'door' }]);
+  wall(Axis.Z, x0 + 7, z0, z0 + 7, Y, 3, col, [{ center: z0 + 4, width: 1.2, type: OpeningType.Door }]);
   placeBox(x0 + 3.5, z0 + 3.5, 6, 6, 0.3, 0x6a7077, Y + 3, true);
   placeLoot(x0 + 2.5, z0 + 2.5, Y, o.tier || 1);
   placeLoot(cx + w / 4, cz, Y, o.tier || 1);
   placeLoot(x1 - 2, z1 - 3, Y, 1);
-  markFootprint(cx, cz, w + 1, d + 1, 'warehouse');
+  markFootprint(cx, cz, w + 1, d + 1, FootprintKind.Warehouse);
 };

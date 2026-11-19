@@ -17,6 +17,7 @@ import { spray } from './state';
 import type { Bot } from '../bots/types';
 import type { Vec3 } from '../types';
 import { eyePos } from '../player/eyePos';
+import { WeaponId } from '../types';
 
 export const fireWeapon = () => {
   if (loadout.weapon.melee) {
@@ -41,7 +42,7 @@ export const fireWeapon = () => {
   player.recoilPitch += Math.min(1.25, 0.5 + i * 0.12) * 0.0175 * loadout.weapon.recoil;
   player.recoilYaw += Math.sin(i * 0.65) * Math.min(1, i * 0.12) * 0.0175 * loadout.weapon.recoil;
   screenFx.gunKick = loadout.weapon.sniper
-    ? (loadout.weaponId === 'm82' ? 0.2 : 0.14)
+    ? (loadout.weaponId === WeaponId.BarrettM82 ? 0.2 : 0.14)
     : loadout.weapon.slot === 2
       ? 0.05
       : 0.07;

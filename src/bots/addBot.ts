@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { scene } from '../render/scene';
 import { buildBotModel } from './buildBotModel';
 import { bots } from './state';
+import { WeaponId } from '../types';
 import type { Bot } from './types';
 
 export const addBot = (i: number) => {
@@ -26,7 +27,7 @@ export const addBot = (i: number) => {
     onGround: true,
     vel: { x: 0, y: 0, z: 0 },
     health: 100,
-    weaponId: 'rifle',
+    weaponId: WeaponId.Ak47,
     targetX: 0,
     targetZ: 0,
     alert: 0,

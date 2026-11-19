@@ -2,6 +2,7 @@ import { loadout } from '../loadout/state';
 import { clock } from '../sim/state';
 import { smoothstep } from '../utils/smoothstep';
 import { active, boltMeshes, bulletMeshes, magMeshes, viewModels } from './models';
+import { WeaponId } from '../types';
 
 /** Bolt handle pose: `l` lifted, `b` pulled back (0..1). */
 const boltPose = (l: number, b: number) => {
@@ -15,12 +16,12 @@ export const animateViewModel = () => {
     active.bullet = bulletMeshes[loadout.weaponId];
   }
 
-  for (const k in viewModels) {
+  for (const k of Object.keys(viewModels) as WeaponId[]) {
     viewModels[k].position.set(0, 0, 0);
     viewModels[k].rotation.set(0, 0, 0);
   }
 
-  for (const k in magMeshes) {
+  for (const k of Object.keys(magMeshes) as WeaponId[]) {
     magMeshes[k].position.y = magMeshes[k].userData.y;
   }
 
@@ -29,7 +30,7 @@ export const animateViewModel = () => {
 
   const vg = viewModels[loadout.weaponId];
 
-  if (loadout.weaponId === 'knife') {
+  if (loadout.weaponId === WeaponId.Knife) {
     vg.rotation.set(0.12, -0.3, 0.5);
     vg.position.set(0.02, 0.04, -0.08);
 
@@ -64,7 +65,7 @@ export const animateViewModel = () => {
         active.bullet.rotation.z = 0.6 * (1 - f);
       }
     } else {
-      const p = loadout.weaponId === 'pistol' ? 0.7 : 1;
+      const p = loadout.weaponId === WeaponId.Usp ? 0.7 : 1;
       const m = magMeshes[loadout.weaponId];
 
       vg.position.set(-0.05 * o, -0.05 * o - 0.015 * Math.sin(Math.PI * smoothstep(0.65, 0.72, u)), 0.03 * o);

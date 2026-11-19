@@ -1,10 +1,11 @@
 import { placeBox } from '../place/placeBox';
+import { Axis } from '../../../types';
 import type { Bridge } from '../../terrain/types';
 
 /* ----- bridge: thin deck on pillars, so the river can still be waded underneath ----- */
 export const bridge = (b: Bridge) => {
   const Y = b.deckY! + 0.2;
-  const z = b.axis === 'z';
+  const z = b.axis === Axis.Z;
 
   placeBox(b.x, b.z, z ? 6 : b.length, z ? b.length : 6, 0.4, 0x8a6a4a, Y - 0.4);
   placeBox(b.x + (z ? -2.8 : 0), b.z + (z ? 0 : -2.8), z ? 0.4 : b.length, z ? b.length : 0.4, 1.1, 0x6b4a2a, Y);

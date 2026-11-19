@@ -6,6 +6,8 @@ import { insideFootprint } from '../place/insideFootprint';
 import { placeBox } from '../place/placeBox';
 import { randRange } from '../random/randRange';
 import { site } from './site';
+import { Axis, Face, FootprintKind } from '../../../types';
+import { OpeningType } from '../types';
 
 /** Fort Redstone. */
 export const buildFortRedstone = () => {
@@ -15,10 +17,30 @@ export const buildFortRedstone = () => {
   const c = 0x8a8f94;
   const th = 1.2;
 
-  wall('x', s.z - hh, s.x - hh, s.x + hh, Y, 5, c, [{ center: s.x, width: 8, type: 'gate', doorHeight: 4.2 }], th);
-  wall('x', s.z + hh, s.x - hh, s.x + hh, Y, 5, c, [{ center: s.x, width: 8, type: 'gate', doorHeight: 4.2 }], th);
-  wall('z', s.x - hh, s.z - hh, s.z + hh, Y, 5, c, [], th);
-  wall('z', s.x + hh, s.z - hh, s.z + hh, Y, 5, c, [], th);
+  wall(
+    Axis.X,
+    s.z - hh,
+    s.x - hh,
+    s.x + hh,
+    Y,
+    5,
+    c,
+    [{ center: s.x, width: 8, type: OpeningType.Gate, doorHeight: 4.2 }],
+    th,
+  );
+  wall(
+    Axis.X,
+    s.z + hh,
+    s.x - hh,
+    s.x + hh,
+    Y,
+    5,
+    c,
+    [{ center: s.x, width: 8, type: OpeningType.Gate, doorHeight: 4.2 }],
+    th,
+  );
+  wall(Axis.Z, s.x - hh, s.z - hh, s.z + hh, Y, 5, c, [], th);
+  wall(Axis.Z, s.x + hh, s.z - hh, s.z + hh, Y, 5, c, [], th);
 
   for (const q of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
     const x = s.x + q[0] * (hh - 4);
@@ -33,8 +55,8 @@ export const buildFortRedstone = () => {
         height: 13,
         color: 0x7a7f84,
         roofColor: 0x555a60,
-        face: q[0] < 0 ? 'e' : 'w',
-        footprintKind: 'fortTower',
+        face: q[0] < 0 ? Face.East : Face.West,
+        footprintKind: FootprintKind.FortTower,
       },
     );
   }

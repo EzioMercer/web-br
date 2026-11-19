@@ -5,16 +5,18 @@ import { giveWeapon } from '../../loadout/giveWeapon';
 import { opticTarget } from '../../loadout/opticTarget';
 import { loadout } from '../../loadout/state';
 import { player } from '../../player/state';
+import { PickupKind } from '../../types';
 import type { GrenadeId, OpticId, Pickup } from '../../types';
+import type { WeaponId } from '../../types';
 
 export const takePickup = (k: Pickup) => {
-  if (k.kind === 'weapon') {
-    giveWeapon(k.itemId!, k.weaponState);
-  } else if (k.kind === 'armor') {
+  if (k.kind === PickupKind.Weapon) {
+    giveWeapon(k.itemId as WeaponId, k.weaponState);
+  } else if (k.kind === PickupKind.Armor) {
     player.armor = 100;
-  } else if (k.kind === 'grenade') {
+  } else if (k.kind === PickupKind.Grenade) {
     grenadeCount[k.itemId as GrenadeId]++;
-  } else if (k.kind === 'optic') {
+  } else if (k.kind === PickupKind.Optic) {
     const tg = opticTarget();
 
     if (tg) {
@@ -24,10 +26,10 @@ export const takePickup = (k: Pickup) => {
     }
 
     return;
-  } else if (k.kind === 'ammo') {
+  } else if (k.kind === PickupKind.Ammo) {
     let add = 0;
 
-    for (const q in loadout.owned) {
+    for (const q of Object.keys(loadout.owned) as WeaponId[]) {
       if (WEAPONS[q].ammoType === k.itemId) {
         add = WEAPONS[q].magSize * 2;
 

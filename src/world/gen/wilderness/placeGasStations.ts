@@ -9,6 +9,7 @@ import { gen } from '../state';
 import { groundRange } from './groundRange';
 import { nearSite } from './nearSite';
 import { roadNear } from './roadNear';
+import { FootprintKind } from '../../../types';
 
 /** Gas stations next to the roads. Returns how many. */
 export const placeGasStations = () => {
@@ -45,7 +46,7 @@ export const placeGasStations = () => {
         placeBox(x + q, z + 12, 1, 0.8, 1.6, 0x2a2a2a, mx);
       }
 
-      markFootprint(x, z + 6, 14, 22, 'gas');
+      markFootprint(x, z + 6, 14, 22, FootprintKind.GasStation);
       gasStations++;
       break;
     }

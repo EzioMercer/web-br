@@ -5,12 +5,13 @@ import { markFootprint } from '../place/markFootprint';
 import { placeBox } from '../place/placeBox';
 import { placeLoot } from '../place/placeLoot';
 import { gen } from '../state';
+import { Face, FootprintKind } from '../../../types';
 import type { Stairwell } from '../../../types';
 import type { BuildOpts } from '../types';
 
 export const stairTower = (cx: number, cz: number, Y: number, o: BuildOpts = {}) => {
   const out = o.size || 6.4;
-  const f = o.face || 's';
+  const f = o.face || Face.South;
   const col = o.color || 0xbfc4c8;
   const RISE = 0.45;
   const sw = 1.2;
@@ -75,7 +76,7 @@ export const stairTower = (cx: number, cz: number, Y: number, o: BuildOpts = {})
       out,
       hh,
       col,
-      y === 0 ? f : '-',
+      y === 0 ? f : Face.None,
       y === 0 ? { width: 1.2, sill: 1, top: 2.4 } : { width: 0.9, sill: 1, top: 2.6 },
     );
   }
@@ -120,7 +121,7 @@ export const stairTower = (cx: number, cz: number, Y: number, o: BuildOpts = {})
       }
     }
   }
-  shell(cx, cz, Y + hf, out, 3.2, col, '-', { width: 3.2, sill: 0.9, top: 2.5 });
+  shell(cx, cz, Y + hf, out, 3.2, col, Face.None, { width: 3.2, sill: 0.9, top: 2.5 });
   placeBox(cx, cz, out + 0.9, out + 0.9, 0.4, o.roofColor || 0x444a50, Y + hf + 3.2);
   {
     const [a, b] = rotateLocal(f, 0.2, -1.4);
@@ -133,6 +134,6 @@ export const stairTower = (cx: number, cz: number, Y: number, o: BuildOpts = {})
   }
   rec.door = rotateLocal(f, 0, out / 2).map((v, i) => (i ? cz : cx) + v);
   gen.stairwells.push(rec);
-  markFootprint(cx, cz, out + 1, out + 1, o.footprintKind || 'tower');
+  markFootprint(cx, cz, out + 1, out + 1, o.footprintKind || FootprintKind.Tower);
   return rec;
 };

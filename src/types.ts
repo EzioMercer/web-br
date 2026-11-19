@@ -5,14 +5,84 @@ export type Vec2 = [number, number];
 export type Vec3 = [number, number, number];
 
 /** Match phase: countdown before the drop, playing, or finished (a new match follows). */
-export type Phase = 'start' | 'live' | 'over';
+/** Horizontal axis a wall, door or bridge runs along. */
+export enum Axis {
+  X = 'x',
+  Z = 'z',
+}
 
-export type GrenadeId = 'he' | 'fl' | 'sm';
+/** Weapon id (the key of the weapon table). */
+export enum WeaponId {
+  Usp = 'pistol',
+  Glock18 = 'glock',
+  DesertEagle = 'deagle',
+  M3 = 'm3',
+  Mp5 = 'mp5',
+  P90 = 'p90',
+  Ak47 = 'rifle',
+  M4a1 = 'm4',
+  Awp = 'awp',
+  Scout = 'scout',
+  Svd = 'svd',
+  G3sg1 = 'g3',
+  Kar98k = 'kar',
+  BarrettM82 = 'm82',
+  Knife = 'knife',
+}
 
-export type OpticId = 'rd' | 'ho' | 'x2' | 'x4';
+/** What a building footprint is, for the minimap and placement checks. */
+export enum FootprintKind {
+  House = 'house',
+  Villa = 'villa',
+  Shop = 'shop',
+  Mall = 'mall',
+  CarPark = 'carpark',
+  Warehouse = 'warehouse',
+  Tower = 'tower',
+  Lookout = 'lookout',
+  FortTower = 'fortTower',
+  Lighthouse = 'lighthouse',
+  Containers = 'containers',
+  Plaza = 'plaza',
+  Smokestack = 'stack',
+  Tank = 'tank',
+  Silo = 'silo',
+  Paddock = 'paddock',
+  Mill = 'mill',
+  WaterTower = 'wtower',
+  Well = 'well',
+  Runway = 'runway',
+  GasStation = 'gas',
+}
+
+export enum Phase {
+  Start = 'start',
+  Live = 'live',
+  Over = 'over',
+}
+
+export enum GrenadeId {
+  HighExplosive = 'he',
+  Flashbang = 'fl',
+  Smoke = 'sm',
+}
+
+export enum OpticId {
+  RedDot = 'rd',
+  Holographic = 'ho',
+  Scope2x = 'x2',
+  Scope4x = 'x4',
+}
 
 /** Ammo type: pistol, SMG, rifle, shotgun, sniper, or none (knife). */
-export type AmmoType = 'pst' | 'smg' | 'rif' | 'shl' | 'snp' | 'none';
+export enum AmmoType {
+  Pistol = 'pst',
+  Smg = 'smg',
+  Rifle = 'rif',
+  Shotgun = 'shl',
+  Sniper = 'snp',
+  None = 'none',
+}
 
 export interface Weapon {
   name: string;
@@ -74,7 +144,7 @@ export interface Door {
   box: Box;
   pivot: THREE.Group;
   baseAngle: number;
-  axis: 'x' | 'z';
+  axis: Axis;
   swingDir: number;
   /** Current open amount, 0..1. */
   openAmount: number;
@@ -89,7 +159,14 @@ export interface Door {
 }
 
 /** Pickup kinds: weapon, armor, ammo, grenade, optic, health. */
-export type PickupKind = 'weapon' | 'armor' | 'ammo' | 'grenade' | 'optic' | 'health';
+export enum PickupKind {
+  Weapon = 'weapon',
+  Armor = 'armor',
+  Ammo = 'ammo',
+  Grenade = 'grenade',
+  Optic = 'optic',
+  Health = 'health',
+}
 
 export interface Pickup {
   mesh: THREE.Group;
@@ -146,7 +223,7 @@ export type MapGlass = [x: number, z: number, width: number, depth: number, heig
 
 /** Hinged door in a wall along `axis` at coordinate `wallAt`, centred at `center` along the wall. */
 export interface MapDoor {
-  axis: 'x' | 'z';
+  axis: Axis;
   wallAt: number;
   center: number;
   width: number;
@@ -159,10 +236,16 @@ export interface MapDoor {
 export type MapLoot = [x: number, z: number, y: number, tier: number];
 
 /** Building footprint (for the minimap and placement checks): centre x and z, width, depth, kind. */
-export type Footprint = [x: number, z: number, width: number, depth: number, kind: string];
+export type Footprint = [x: number, z: number, width: number, depth: number, kind: FootprintKind];
 
 /** Side a structure's door faces: south, north, east, west, or none. */
-export type Face = 's' | 'n' | 'e' | 'w' | '-';
+export enum Face {
+  South = 's',
+  North = 'n',
+  East = 'e',
+  West = 'w',
+  None = '-',
+}
 
 /** Stair tower, recorded so bots can climb it. */
 export interface Stairwell {

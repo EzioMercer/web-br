@@ -1,11 +1,17 @@
-import type { Face } from '../../types';
+import type { Face, FootprintKind } from '../../types';
 import type { genWorld } from './genWorld';
+
+export enum OpeningType {
+  Door = 'door',
+  Window = 'window',
+  Gate = 'gate',
+}
 
 /** Wall opening centred at `center` along the wall, `width` wide. */
 export interface Opening {
   center: number;
   width: number;
-  type: 'door' | 'window' | 'gate';
+  type: OpeningType;
   /** Window sill height. */
   sill?: number;
   /** Window top height. */
@@ -36,7 +42,7 @@ export interface BuildOpts {
   size?: number;
   face?: Face;
   /** Footprint kind. */
-  footprintKind?: string;
+  footprintKind?: FootprintKind;
 }
 
 export type GeneratedWorld = ReturnType<typeof genWorld>;

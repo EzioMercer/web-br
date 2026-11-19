@@ -3,15 +3,16 @@ import { doors } from '../doors/state';
 import { mapGroup } from './mapGroup';
 import { doorMats, unitGeo } from './materials';
 import { boxes } from './state';
+import { Axis } from '../../types';
 import type { Box, MapDoor } from '../../types';
 
 export const addDoor = (o: MapDoor) => {
   const { axis: ax, wallAt: c, center: m, width: w, y, height: h } = o;
-  const x = ax === 'x' ? m : c;
-  const z = ax === 'x' ? c : m;
+  const x = ax === Axis.X ? m : c;
+  const z = ax === Axis.X ? c : m;
   const b: Box = {
-    min: ax === 'x' ? [m - w / 2, y, c - 0.07] : [c - 0.07, y, m - w / 2],
-    max: ax === 'x' ? [m + w / 2, y + h, c + 0.07] : [c + 0.07, y + h, m + w / 2],
+    min: ax === Axis.X ? [m - w / 2, y, c - 0.07] : [c - 0.07, y, m - w / 2],
+    max: ax === Axis.X ? [m + w / 2, y + h, c + 0.07] : [c + 0.07, y + h, m + w / 2],
     door: true,
   };
 
@@ -19,9 +20,9 @@ export const addDoor = (o: MapDoor) => {
 
   const grp = new THREE.Group();
 
-  grp.position.set(ax === 'x' ? m - w / 2 : c, y, ax === 'x' ? c : m - w / 2);
+  grp.position.set(ax === Axis.X ? m - w / 2 : c, y, ax === Axis.X ? c : m - w / 2);
 
-  const th0 = ax === 'x' ? 0 : -Math.PI / 2;
+  const th0 = ax === Axis.X ? 0 : -Math.PI / 2;
 
   grp.rotation.y = th0;
 

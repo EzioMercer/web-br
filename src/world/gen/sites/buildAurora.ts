@@ -10,12 +10,22 @@ import { placeLoot } from '../place/placeLoot';
 import { rand } from '../random/rand';
 import { randRange } from '../random/randRange';
 import { site } from './site';
+import { Axis, FootprintKind } from '../../../types';
 
 /** Aurora. */
 export const buildAurora = () => {
   const s = site('Aurora');
   const Y = s.groundY;
-  const types = ['villa', 'shop', 'house', 'villa', 'warehouse', 'house', 'shop', 'villa'];
+  const types = [
+    FootprintKind.Villa,
+    FootprintKind.Shop,
+    FootprintKind.House,
+    FootprintKind.Villa,
+    FootprintKind.Warehouse,
+    FootprintKind.House,
+    FootprintKind.Shop,
+    FootprintKind.Villa,
+  ];
   let k = 0;
 
   for (let i = -1; i <= 1; i++) {
@@ -31,18 +41,18 @@ export const buildAurora = () => {
           placeBox(x + q[0], z + q[1], q[0] ? 0.8 : 2, q[0] ? 2 : 0.8, 0.6, 0x6e4a2a, Y);
         }
 
-        markFootprint(x, z, 12, 12, 'plaza');
+        markFootprint(x, z, 12, 12, FootprintKind.Plaza);
         placeLoot(x + 3, z + 3, Y, 1);
         continue;
       }
 
       const t = types[k++ % types.length];
 
-      if (t === 'villa') {
+      if (t === FootprintKind.Villa) {
         villa(x, z, 14, 11, Y);
-      } else if (t === 'shop') {
+      } else if (t === FootprintKind.Shop) {
         shop(x, z, 16, 9, Y);
-      } else if (t === 'house') {
+      } else if (t === FootprintKind.House) {
         house(x, z, 10, 9, Y);
       } else {
         warehouse(x, z, 18, 12, Y, { height: 5, gateWidth: 4, gateHeight: 3.6 });
@@ -55,7 +65,7 @@ export const buildAurora = () => {
     const z = s.z + randRange(-40, 40);
 
     if (!insideFootprint(x, z, 5)) {
-      car(x, z, Y, 'z');
+      car(x, z, Y, Axis.Z);
     }
   }
 };

@@ -4,8 +4,9 @@ import { clock } from '../sim/state';
 import { loadout } from './state';
 import { loadAmmo } from './loadAmmo';
 import { stashAmmo } from './stashAmmo';
+import type { WeaponId } from '../types';
 
-export const switchWeapon = (id: string) => {
+export const switchWeapon = (id: WeaponId) => {
   if (!loadout.owned[id] || id === loadout.weaponId || player.dead) {
     return;
   }

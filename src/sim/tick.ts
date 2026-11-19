@@ -20,6 +20,8 @@ import { doorsTick } from '../world/doors/doorsTick';
 import { surfaceAt } from '../world/level/surfaceAt';
 import { waterDepth } from '../world/level/waterDepth';
 import { clock, slide } from './state';
+import { Phase } from '../types';
+import { Surface } from '../audio/types';
 
 let stepDist = 0;
 
@@ -135,7 +137,7 @@ export const tick = (dt: number) => {
       if (w2 > 0 && !wasInWater) {
         ripple(playerBody.x, playerBody.z);
         ripple(playerBody.x, playerBody.z);
-        footstep('water', 1.6);
+        footstep(Surface.Water, 1.6);
       }
 
       wasInWater = w2 > 0;
@@ -192,7 +194,7 @@ export const tick = (dt: number) => {
   grenadesTick(dt);
   doorsTick(dt);
 
-  if (match.phase !== 'start') {
+  if (match.phase !== Phase.Start) {
     botsTick(dt);
   }
 };

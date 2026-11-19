@@ -1,5 +1,6 @@
 import { ctx2d } from '../../utils/ctx2d';
 import { KIND_COLORS } from '../../world/terrain/constants';
+import { FootprintKind } from '../../types';
 import type { MapBg } from '../../types';
 import type { GeneratedWorld } from '../../world/gen/types';
 
@@ -87,7 +88,7 @@ export const renderMapBg = (m: GeneratedWorld, S: number, labels: boolean): MapB
   x.fillStyle = '#5b4a3a';
 
   for (const f of m.footprints) {
-    if (f[4] !== 'carpark'
+    if (f[4] !== FootprintKind.CarPark
       && f[4] !== 'runway'
       && f[4] !== 'plaza'
       && f[4] !== 'paddock'

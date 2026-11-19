@@ -18,6 +18,7 @@ import { makeNoise } from './makeNoise';
 import type { Vec2 } from '../../types';
 import type { Region } from './types';
 import { smoothstep } from '../../utils/smoothstep';
+import { Axis } from '../../types';
 
 export const genTerrain = () => {
   const { n2, fbm } = makeNoise(777);
@@ -108,7 +109,7 @@ export const genTerrain = () => {
   const bridgeY = WATER_LEVEL + 2;
 
   for (const b of BRIDGES) {
-    const e: Vec2[] = b.axis === 'z'
+    const e: Vec2[] = b.axis === Axis.Z
       ? [[b.x, b.z - b.length / 2], [b.x, b.z + b.length / 2]]
       : [[b.x - b.length / 2, b.z], [b.x + b.length / 2, b.z]];
 
@@ -134,8 +135,8 @@ export const genTerrain = () => {
       }
 
       for (const b of BRIDGES) {
-        const ux = b.axis === 'z' ? 0 : 1;
-        const uz = b.axis === 'z' ? 1 : 0;
+        const ux = b.axis === Axis.Z ? 0 : 1;
+        const uz = b.axis === Axis.Z ? 1 : 0;
         const al = (x - b.x) * ux + (z - b.z) * uz;
         const pp = Math.abs((x - b.x) * uz - (z - b.z) * ux);
 

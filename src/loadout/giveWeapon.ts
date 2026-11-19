@@ -4,12 +4,13 @@ import { loadout } from './state';
 import type { OwnedWeapon } from '../types';
 import { loadAmmo } from './loadAmmo';
 import { stashAmmo } from './stashAmmo';
+import { WeaponId } from '../types';
 
 /**
  * Gives weapon `id` (with ammo and optic `st` if dropped by someone) and switches to it, dropping `drop` if both
  * slots are full.
  */
-export const giveWeapon = (id: string, st?: OwnedWeapon, drop?: string) => {
+export const giveWeapon = (id: WeaponId, st?: OwnedWeapon, drop?: WeaponId) => {
   const w = WEAPONS[id];
 
   stashAmmo();
@@ -22,7 +23,7 @@ export const giveWeapon = (id: string, st?: OwnedWeapon, drop?: string) => {
     }
   } else {
     if (carriedGuns().length >= 2) {
-      delete loadout.owned[drop || (loadout.weaponId !== 'knife' ? loadout.weaponId : carriedGuns()[1])];
+      delete loadout.owned[drop || (loadout.weaponId !== WeaponId.Knife ? loadout.weaponId : carriedGuns()[1])];
     }
 
     loadout.owned[id] = st

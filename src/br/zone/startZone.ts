@@ -8,7 +8,8 @@ import { applyZonePhase } from './applyZonePhase';
 import { ZONE_STAGES } from './constants';
 import { landingSpot } from './landingSpot';
 import { schedule, zone } from './state';
-import type { Circle, GrenadeId, OpticId, PickupKind, Vec2 } from '../../types';
+import { AmmoType, GrenadeId, OpticId, PickupKind } from '../../types';
+import type { Circle, Vec2 } from '../../types';
 
 /** Plans the zone schedule and scatters the loot. Returns the player's landing spot. */
 export const startZone = (): Vec2 => {
@@ -47,9 +48,18 @@ export const startZone = (): Vec2 => {
   schedule.startTime = 0;
   applyZonePhase(0);
 
-  const AT = ['pst', 'smg', 'rif', 'shl', 'snp'];
-  const GI: GrenadeId[] = ['he', 'fl', 'sm'];
-  const OI: OpticId[] = ['rd', 'rd', 'rd', 'ho', 'ho', 'x2', 'x2', 'x4'];
+  const AT = [AmmoType.Pistol, AmmoType.Smg, AmmoType.Rifle, AmmoType.Shotgun, AmmoType.Sniper];
+  const GI: GrenadeId[] = [GrenadeId.HighExplosive, GrenadeId.Flashbang, GrenadeId.Smoke];
+  const OI: OpticId[] = [
+    OpticId.RedDot,
+    OpticId.RedDot,
+    OpticId.RedDot,
+    OpticId.Holographic,
+    OpticId.Holographic,
+    OpticId.Scope2x,
+    OpticId.Scope2x,
+    OpticId.Scope4x,
+  ];
 
   for (const [x, z, y, tier] of getIsland().loot) {
     if (Math.random() > 0.74) {
@@ -59,28 +69,28 @@ export const startZone = (): Vec2 => {
     const r = Math.random();
     const t2 = tier >= 2;
     const t: PickupKind = r < (t2 ? 0.40 : 0.26)
-      ? 'weapon'
+      ? PickupKind.Weapon
       : r < (t2 ? 0.58 : 0.50)
-        ? 'ammo'
+        ? PickupKind.Ammo
         : r < (t2 ? 0.68 : 0.58)
-          ? 'armor'
+          ? PickupKind.Armor
           : r < (t2 ? 0.76 : 0.70)
-            ? 'health'
+            ? PickupKind.Health
             : r < (t2 ? 0.90 : 0.82)
-              ? 'optic'
-              : 'grenade';
+              ? PickupKind.Optic
+              : PickupKind.Grenade;
 
     spawnPickup(
       x,
       z,
       t,
-      t === 'weapon'
+      t === PickupKind.Weapon
         ? (t2 ? LOOT_TIER2 : LOOT_TIER1)[Math.random() * (t2 ? LOOT_TIER2 : LOOT_TIER1).length | 0]
-        : t === 'ammo'
+        : t === PickupKind.Ammo
           ? AT[Math.random() * AT.length | 0]
-          : t === 'grenade'
+          : t === PickupKind.Grenade
             ? GI[Math.random() * 3 | 0]
-            : t === 'optic'
+            : t === PickupKind.Optic
               ? OI[Math.random() * 8 | 0]
               : null,
       undefined,

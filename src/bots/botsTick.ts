@@ -20,6 +20,8 @@ import { pickWaypoint } from './pickWaypoint';
 import { bots } from './state';
 import type { Vec3 } from '../types';
 import { eyePos } from '../player/eyePos';
+import { Phase } from '../types';
+import { ZonePhase } from '../br/zone/types';
 
 export const botsTick = (dt: number) => {
   for (const b of bots) {
@@ -40,14 +42,14 @@ export const botsTick = (dt: number) => {
 
     let run = false;
 
-    if (match.phase === 'live') {
+    if (match.phase === Phase.Live) {
       const zt = zone.next || zone;
       const dn = Math.hypot(b.x - zt.cx, b.z - zt.cz) - zt.radius;
       const d0 = Math.hypot(b.x - zone.cx, b.z - zone.cz) - zone.radius;
 
       run = d0 > -10
-        || (zone.phase === 'shrink' && dn > -6)
-        || (zone.phase === 'hold' && zone.timeLeft < 45 && dn > -12);
+        || (zone.phase === ZonePhase.Shrink && dn > -6)
+        || (zone.phase === ZonePhase.Hold && zone.timeLeft < 45 && dn > -12);
     }
 
     b.running = run;

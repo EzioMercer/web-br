@@ -18,6 +18,7 @@ import { schedule, zone } from './state';
 import { zoneMesh } from './zoneMesh';
 import type { Circle, GrenadeId } from '../../types';
 import { removePickup } from '../pickups/removePickup';
+import { PickupKind, WeaponId } from '../../types';
 
 export const zoneTick = (dt: number) => {
   if (!schedule.startTime) {
@@ -102,14 +103,14 @@ export const zoneTick = (dt: number) => {
 
     let ok = false;
 
-    if (k.kind === 'weapon') {
-      if (carriedGuns().length < 2 || loadout.owned[k.itemId!]) {
+    if (k.kind === PickupKind.Weapon) {
+      if (carriedGuns().length < 2 || loadout.owned[k.itemId as WeaponId]) {
         ok = true;
       } else if (d < nd) {
         looting.swapTarget = k;
         nd = d;
       }
-    } else if (k.kind === 'optic') {
+    } else if (k.kind === PickupKind.Optic) {
       const tg = opticTarget();
 
       if (!tg) {
@@ -120,11 +121,11 @@ export const zoneTick = (dt: number) => {
         looting.swapTarget = k;
         nd = d;
       }
-    } else if (k.kind === 'armor') {
+    } else if (k.kind === PickupKind.Armor) {
       ok = player.armor < 100;
-    } else if (k.kind === 'ammo') {
-      ok = Object.keys(loadout.owned).some(q => WEAPONS[q].ammoType === k.itemId);
-    } else if (k.kind === 'grenade') {
+    } else if (k.kind === PickupKind.Ammo) {
+      ok = (Object.keys(loadout.owned) as WeaponId[]).some(q => WEAPONS[q].ammoType === k.itemId);
+    } else if (k.kind === PickupKind.Grenade) {
       ok = grenadeCount[k.itemId as GrenadeId] < 2;
     } else {
       ok = player.health < 100;
@@ -137,10 +138,10 @@ export const zoneTick = (dt: number) => {
   }
 
   if (looting.swapTarget) {
-    looting.prompt = looting.swapTarget.kind === 'optic'
+    looting.prompt = looting.swapTarget.kind === PickupKind.Optic
       ? 'Press E to swap ' + OPTICS[loadout.owned[opticTarget()!].optic!].name + ' for ' + looting.swapTarget.name
       : 'Press E to swap '
-        + WEAPONS[loadout.weaponId !== 'knife' ? loadout.weaponId : carriedGuns()[1]].name
+        + WEAPONS[loadout.weaponId !== WeaponId.Knife ? loadout.weaponId : carriedGuns()[1]].name
         + ' for '
         + looting.swapTarget.name;
   } else if (hint) {

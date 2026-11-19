@@ -5,6 +5,7 @@ import { placeBox } from '../place/placeBox';
 import { pick } from '../random/pick';
 import { randInt } from '../random/randInt';
 import { site } from './site';
+import { FootprintKind } from '../../../types';
 
 /** Dusty Gulch. */
 export const buildDustyGulch = () => {
@@ -29,7 +30,7 @@ export const buildDustyGulch = () => {
   }
 
   placeBox(s.x, s.z, 6, 6, 2.2, 0x8a6a4a, Y + 6);
-  markFootprint(s.x, s.z, 7, 7, 'wtower');
+  markFootprint(s.x, s.z, 7, 7, FootprintKind.WaterTower);
   placeBox(s.x + 8, s.z + 8, 2, 2, 1, 0x888, Y);
-  markFootprint(s.x + 8, s.z + 8, 3, 3, 'well');
+  markFootprint(s.x + 8, s.z + 8, 3, 3, FootprintKind.Well);
 };

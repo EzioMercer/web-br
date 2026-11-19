@@ -4,6 +4,7 @@ import { villa } from '../buildings/villa';
 import { car } from '../parts/car';
 import { rand } from '../random/rand';
 import { site } from './site';
+import { Axis } from '../../../types';
 
 /** Maple Heights. */
 export const buildMapleHeights = () => {
@@ -15,7 +16,7 @@ export const buildMapleHeights = () => {
       house(s.x + rx, s.z + rz, 10, 9, Y);
 
       if (rand() < 0.6) {
-        car(s.x + rx + 7.5, s.z + rz + 8, Y, 'z');
+        car(s.x + rx + 7.5, s.z + rz + 8, Y, Axis.Z);
       }
     }
   }

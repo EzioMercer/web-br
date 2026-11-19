@@ -4,22 +4,23 @@ import { settings } from '../settings/state';
 import { floorY } from '../world/level/floorY';
 import { pickWaypoint } from './pickWaypoint';
 import { setBotWeapon } from './setBotWeapon';
+import { WeaponId } from '../types';
 import type { Bot } from './types';
 
-const BOT_WEAPONS = [
-  'rifle',
-  'rifle',
-  'm4',
-  'm4',
-  'mp5',
-  'p90',
-  'awp',
-  'scout',
-  'svd',
-  'm3',
-  'glock',
-  'deagle',
-  'pistol',
+const BOT_WEAPONS: WeaponId[] = [
+  WeaponId.Ak47,
+  WeaponId.Ak47,
+  WeaponId.M4a1,
+  WeaponId.M4a1,
+  WeaponId.Mp5,
+  WeaponId.P90,
+  WeaponId.Awp,
+  WeaponId.Scout,
+  WeaponId.Svd,
+  WeaponId.M3,
+  WeaponId.Glock18,
+  WeaponId.DesertEagle,
+  WeaponId.Usp,
 ];
 
 /** Drops bot `b` at a random spot with full health and a random weapon. */

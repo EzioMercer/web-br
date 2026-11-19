@@ -7,6 +7,7 @@ import { opticTarget } from './opticTarget';
 import { loadout } from './state';
 import type { OpticId, Pickup } from '../types';
 import { removePickup } from '../br/pickups/removePickup';
+import { PickupKind } from '../types';
 
 export const swapOptic = (k: Pickup) => {
   const tg = opticTarget();
@@ -20,7 +21,7 @@ export const swapOptic = (k: Pickup) => {
   loadout.owned[tg].optic = k.itemId as OpticId;
 
   if (old) {
-    spawnPickup(k.x, k.z, 'optic', old, undefined, k.y);
+    spawnPickup(k.x, k.z, PickupKind.Optic, old, undefined, k.y);
   }
 
   removePickup(k);

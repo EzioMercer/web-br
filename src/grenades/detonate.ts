@@ -16,11 +16,12 @@ import type { Vec3 } from '../types';
 import type { Grenade } from './types';
 import { eyePos } from '../player/eyePos';
 import { viewDir } from '../player/viewDir';
+import { GrenadeId } from '../types';
 
 export const detonate = (n: Grenade) => {
   const o: Vec3 = [n.x, n.y + 0.2, n.z];
 
-  if (n.type === 'sm') {
+  if (n.type === GrenadeId.Smoke) {
     const y = Math.max(n.y, 0.1) + 1.6;
     const m = new THREE.Mesh(
       new THREE.SphereGeometry(3.6, 16, 12),
@@ -36,7 +37,7 @@ export const detonate = (n: Grenade) => {
 
   const pd = Math.hypot(playerBody.x - o[0], playerBody.y + 1 - o[1], playerBody.z - o[2]);
 
-  if (n.type === 'fl') {
+  if (n.type === GrenadeId.Flashbang) {
     noiseBurst(0.6, 0.25, 6000);
 
     const m = new THREE.Mesh(

@@ -2,6 +2,7 @@ import { house } from '../buildings/house';
 import { stairTower } from '../buildings/stairTower';
 import { villa } from '../buildings/villa';
 import { site } from './site';
+import { Face, FootprintKind } from '../../../types';
 
 /** Frostpeak Lodge. */
 export const buildFrostpeakLodge = () => {
@@ -15,6 +16,13 @@ export const buildFrostpeakLodge = () => {
     s.x - 15,
     s.z - 12,
     Y,
-    { size: 6.4, height: 9, color: 0x7a6a50, roofColor: 0x6b3a2a, face: 'e', footprintKind: 'lookout' },
+    {
+      size: 6.4,
+      height: 9,
+      color: 0x7a6a50,
+      roofColor: 0x6b3a2a,
+      face: Face.East,
+      footprintKind: FootprintKind.Lookout,
+    },
   );
 };

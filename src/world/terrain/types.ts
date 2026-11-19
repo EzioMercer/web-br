@@ -1,19 +1,21 @@
 import type { genTerrain } from './genTerrain';
+import type { Axis } from '../../types';
 
 /** Kind of Battle Royale site, which decides what the world generator builds there. */
-type SiteType =
-  | 'mall'
-  | 'downtown'
-  | 'suburb'
-  | 'village'
-  | 'lodge'
-  | 'fort'
-  | 'industrial'
-  | 'port'
-  | 'farm'
-  | 'hamlet'
-  | 'airfield'
-  | 'lighthouse';
+export enum SiteType {
+  Mall = 'mall',
+  Downtown = 'downtown',
+  Suburb = 'suburb',
+  Village = 'village',
+  Lodge = 'lodge',
+  Fort = 'fort',
+  Industrial = 'industrial',
+  Port = 'port',
+  Farm = 'farm',
+  Hamlet = 'hamlet',
+  Airfield = 'airfield',
+  Lighthouse = 'lighthouse',
+}
 
 export interface Site {
   name: string;
@@ -28,7 +30,7 @@ export interface Site {
 export interface Bridge {
   x: number;
   z: number;
-  axis: 'x' | 'z';
+  axis: Axis;
   length: number;
   /** Deck height, set by `genTerrain`. */
   deckY?: number;

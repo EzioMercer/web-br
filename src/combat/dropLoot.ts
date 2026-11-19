@@ -4,8 +4,9 @@ import { WEAPONS } from '../data/weapons';
 import { takesOptic } from '../loadout/takesOptic';
 import { groundAt } from '../physics/groundAt';
 import { isFreeSpot } from '../physics/isFreeSpot';
+import { GrenadeId, PickupKind } from '../types';
 import type { Bot } from '../bots/types';
-import type { OwnedWeapon, PickupKind } from '../types';
+import type { OwnedWeapon } from '../types';
 
 /** Battle Royale: scatters a dead bot's gear around it. */
 export const dropLoot = (b: Bot) => {
@@ -16,7 +17,7 @@ export const dropLoot = (b: Bot) => {
   if (!W.melee) {
     items.push(
       [
-        'weapon',
+        PickupKind.Weapon,
         w,
         {
           ammo: Math.max(4, Math.round(W.magSize * (0.35 + Math.random() * 0.65))),
@@ -28,23 +29,25 @@ export const dropLoot = (b: Bot) => {
   }
 
   if (!W.melee && Math.random() < 0.75) {
-    items.push(['ammo', W.ammoType!]);
+    items.push([PickupKind.Ammo, W.ammoType!]);
   }
 
   if (Math.random() < 0.4) {
-    items.push(['armor']);
+    items.push([PickupKind.Armor]);
   }
 
   if (Math.random() < 0.4) {
-    items.push(['health']);
+    items.push([PickupKind.Health]);
   }
 
   if (Math.random() < 0.4) {
-    items.push(['grenade', ['he', 'fl', 'sm'][Math.random() * 3 | 0]]);
+    items.push(
+      [PickupKind.Grenade, [GrenadeId.HighExplosive, GrenadeId.Flashbang, GrenadeId.Smoke][Math.random() * 3 | 0]],
+    );
   }
 
   if (Math.random() < 0.22) {
-    items.push(['optic', OPTIC_IDS[Math.random() * 4 | 0]]);
+    items.push([PickupKind.Optic, OPTIC_IDS[Math.random() * 4 | 0]]);
   }
 
   const n = items.length;

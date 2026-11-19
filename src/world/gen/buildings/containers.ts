@@ -2,6 +2,7 @@ import { markFootprint } from '../place/markFootprint';
 import { placeBox } from '../place/placeBox';
 import { pick } from '../random/pick';
 import { rand } from '../random/rand';
+import { FootprintKind } from '../../../types';
 
 export const containers = (x: number, z: number, Y: number, nx: number, nz: number, hi: boolean) => {
   const cols = [0xb03a2e, 0x2e6db0, 0x3a8a4a, 0xd9822b, 0x7a7f85, 0xc9a227];
@@ -24,5 +25,5 @@ export const containers = (x: number, z: number, Y: number, nx: number, nz: numb
     }
   }
 
-  markFootprint(x + (nx - 1) * 7.25, z + (nz - 1) * 3, nx * 14.5, nz * 6 + 2.6, 'containers');
+  markFootprint(x + (nx - 1) * 7.25, z + (nz - 1) * 3, nx * 14.5, nz * 6 + 2.6, FootprintKind.Containers);
 };

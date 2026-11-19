@@ -11,14 +11,16 @@ import { viewModels } from '../../viewmodel/models';
 import { floorY } from '../../world/level/floorY';
 import { makeLabel } from './makeLabel';
 import { pickups } from './state';
-import type { AmmoType, GrenadeId, OpticId, OwnedWeapon, PickupKind } from '../../types';
+import { AmmoType, PickupKind } from '../../types';
+import type { GrenadeId, OpticId, OwnedWeapon } from '../../types';
+import type { WeaponId } from '../../types';
 
 const AMMO_NAMES: Partial<Record<AmmoType, string>> = {
-  pst: 'Pistol ammo',
-  smg: 'SMG ammo',
-  rif: 'Rifle ammo',
-  shl: 'Shotgun shells',
-  snp: 'Sniper ammo',
+  [AmmoType.Pistol]: 'Pistol ammo',
+  [AmmoType.Smg]: 'SMG ammo',
+  [AmmoType.Rifle]: 'Rifle ammo',
+  [AmmoType.Shotgun]: 'Shotgun shells',
+  [AmmoType.Sniper]: 'Sniper ammo',
 };
 
 /**
@@ -26,42 +28,42 @@ const AMMO_NAMES: Partial<Record<AmmoType, string>> = {
  * given.
  */
 export const spawnPickup = (x: number, z: number, t: PickupKind, id: string | null, st?: OwnedWeapon, y0?: number) => {
-  const col = t === 'weapon'
+  const col = t === PickupKind.Weapon
     ? 0xf2a23a
-    : t === 'armor'
+    : t === PickupKind.Armor
       ? 0x4a8cff
-      : t === 'ammo'
+      : t === PickupKind.Ammo
         ? 0xd9d046
-        : t === 'grenade'
+        : t === PickupKind.Grenade
           ? 0xe05a3a
-          : t === 'optic'
+          : t === PickupKind.Optic
             ? 0xb98cff
             : 0x4ad66a;
   const g = new THREE.Group();
   const it = new THREE.Group();
   const k = id!;
-  const n = t === 'weapon'
-    ? WEAPONS[k].name + (st && st.optic ? ' + ' + OPTICS[st.optic].shortName : '')
-    : t === 'armor'
+  const n = t === PickupKind.Weapon
+    ? WEAPONS[k as WeaponId].name + (st && st.optic ? ' + ' + OPTICS[st.optic].shortName : '')
+    : t === PickupKind.Armor
       ? 'Kevlar vest'
-      : t === 'ammo'
+      : t === PickupKind.Ammo
         ? AMMO_NAMES[k as AmmoType]!
-        : t === 'grenade'
+        : t === PickupKind.Grenade
           ? GRENADE_NAMES[k as GrenadeId]
-          : t === 'optic'
+          : t === PickupKind.Optic
             ? OPTICS[k as OpticId].name
             : 'Medkit';
 
-  if (t === 'weapon') {
-    const m = viewModels[k].clone(true);
+  if (t === PickupKind.Weapon) {
+    const m = viewModels[k as WeaponId].clone(true);
 
     m.visible = true;
     m.position.set(0, 0, 0);
     m.rotation.set(0, 0, 0);
-    m.scale.setScalar(WEAPONS[k].slot === 2 ? 2.4 : 1.4);
+    m.scale.setScalar(WEAPONS[k as WeaponId].slot === 2 ? 2.4 : 1.4);
     it.add(m);
     it.position.y = 0.95;
-  } else if (t === 'armor') {
+  } else if (t === PickupKind.Armor) {
     const b = lambert(0x2f5fb8);
 
     boxMesh(it, 0.5, 0.6, 0.3, 0, 0, 0, b);
@@ -69,7 +71,7 @@ export const spawnPickup = (x: number, z: number, t: PickupKind, id: string | nu
     boxMesh(it, 0.12, 0.2, 0.32, -0.17, 0.38, 0, b);
     boxMesh(it, 0.12, 0.2, 0.32, 0.17, 0.38, 0, b);
     it.position.y = 0.7;
-  } else if (t === 'ammo') {
+  } else if (t === PickupKind.Ammo) {
     boxMesh(it, 0.55, 0.28, 0.36, 0, 0, 0, lambert(0x55603a));
 
     for (const i of [-1, 0, 1]) {
@@ -77,14 +79,14 @@ export const spawnPickup = (x: number, z: number, t: PickupKind, id: string | nu
     }
 
     it.position.y = 0.45;
-  } else if (t === 'optic') {
+  } else if (t === PickupKind.Optic) {
     const m = makeOptic(k as OpticId);
 
     m.scale.setScalar(4.2);
     m.visible = true;
     it.add(m);
     it.position.y = 0.5;
-  } else if (t === 'grenade') {
+  } else if (t === PickupKind.Grenade) {
     it.add(
       new THREE.Mesh(
         new THREE.SphereGeometry(0.14, 12, 10),
@@ -112,15 +114,15 @@ export const spawnPickup = (x: number, z: number, t: PickupKind, id: string | nu
 
   const lab = makeLabel(
     n,
-    t === 'weapon'
+    t === PickupKind.Weapon
       ? '#ffcf5a'
-      : t === 'armor'
+      : t === PickupKind.Armor
         ? '#8fb8ff'
-        : t === 'ammo'
+        : t === PickupKind.Ammo
           ? '#ffe27a'
-          : t === 'grenade'
+          : t === PickupKind.Grenade
             ? '#ff9a7a'
-            : t === 'optic'
+            : t === PickupKind.Optic
               ? '#d3b2ff'
               : '#8fffa8',
   );

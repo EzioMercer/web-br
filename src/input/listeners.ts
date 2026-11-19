@@ -21,7 +21,7 @@ import { useDoor } from '../world/doors/useDoor';
 import { lockMouse } from './lockMouse';
 import { setPlaying } from './setPlaying';
 import { input, keys } from './state';
-import type { GrenadeId } from '../types';
+import { GrenadeId, WeaponId } from '../types';
 
 let lastWheel = 0;
 
@@ -127,10 +127,14 @@ addEventListener('keydown', (e) => {
 
   if (e.code === 'Digit3') {
     loadout.grenade = null;
-    switchWeapon('knife');
+    switchWeapon(WeaponId.Knife);
   }
 
-  const gk = ({ Digit4: 'he', Digit5: 'fl', Digit6: 'sm' } as Record<string, GrenadeId>)[e.code];
+  const gk = ({
+    Digit4: GrenadeId.HighExplosive,
+    Digit5: GrenadeId.Flashbang,
+    Digit6: GrenadeId.Smoke,
+  } as Record<string, GrenadeId>)[e.code];
 
   if (gk && grenadeCount[gk] > 0 && !player.dead && !loadout.reloading) {
     loadout.grenade = loadout.grenade === gk ? null : gk;
@@ -168,7 +172,7 @@ addEventListener('wheel', (e) => {
     return;
   }
 
-  const ks = Object.keys(loadout.owned);
+  const ks = Object.keys(loadout.owned) as WeaponId[];
 
   if (ks.length < 2) {
     return;

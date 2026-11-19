@@ -1,4 +1,16 @@
 /** Ground surface, for footstep sounds. */
-export type Surface = 'dust' | 'grass' | 'snow' | 'water';
+export enum Surface {
+  Dust = 'dust',
+  Grass = 'grass',
+  Snow = 'snow',
+  Water = 'water',
+}
 
-export type ReloadClick = 'out' | 'in' | 'slap' | 'bolt' | 'shell' | 'pump';
+export enum ReloadClick {
+  MagOut = 'out',
+  MagIn = 'in',
+  Slap = 'slap',
+  Bolt = 'bolt',
+  Shell = 'shell',
+  Pump = 'pump',
+}

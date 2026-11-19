@@ -8,6 +8,8 @@ import { placeLoot } from '../place/placeLoot';
 import { pick } from '../random/pick';
 import { rand } from '../random/rand';
 import { randRange } from '../random/randRange';
+import { Axis, FootprintKind } from '../../../types';
+import { OpeningType } from '../types';
 import type { BuildOpts, Opening } from '../types';
 
 /* ----- house (1 floor) ----- */
@@ -23,7 +25,7 @@ export const house = (cx: number, cz: number, w: number, d: number, Y: number, o
   const pz = cz - d / 6;
 
   wall(
-    'x',
+    Axis.X,
     z1,
     x0,
     x1,
@@ -32,14 +34,14 @@ export const house = (cx: number, cz: number, w: number, d: number, Y: number, o
     col,
     dropWindowsAtDoors(
       [
-        { center: dm, width: 1.4, type: 'door' },
-        { center: cx - w / 2 + 1.6, width: 1.6, type: 'window' },
-        { center: cx + w / 2 - 1.6, width: 1.6, type: 'window' },
+        { center: dm, width: 1.4, type: OpeningType.Door },
+        { center: cx - w / 2 + 1.6, width: 1.6, type: OpeningType.Window },
+        { center: cx + w / 2 - 1.6, width: 1.6, type: OpeningType.Window },
       ],
     ),
   );
   wall(
-    'x',
+    Axis.X,
     z0,
     x0,
     x1,
@@ -48,15 +50,15 @@ export const house = (cx: number, cz: number, w: number, d: number, Y: number, o
     col,
     dropWindowsAtDoors(
       [
-        ...(rand() < 0.5 ? [{ center: cx, width: 1.3, type: 'door' } as Opening] : []),
-        { center: cx - w / 3, width: 1.6, type: 'window' },
-        { center: cx + w / 3, width: 1.6, type: 'window' },
+        ...(rand() < 0.5 ? [{ center: cx, width: 1.3, type: OpeningType.Door } as Opening] : []),
+        { center: cx - w / 3, width: 1.6, type: OpeningType.Window },
+        { center: cx + w / 3, width: 1.6, type: OpeningType.Window },
       ],
     ),
   );
-  wall('z', x0, z0, z1, Y, h, col, [{ center: cz, width: 1.6, type: 'window' }]);
-  wall('z', x1, z0, z1, Y, h, col, [{ center: cz, width: 1.6, type: 'window' }]);
-  wall('x', pz, x0, x1, Y, h, col, [{ center: cx + randRange(-w / 4, w / 4), width: 1.2, type: 'door' }]);
+  wall(Axis.Z, x0, z0, z1, Y, h, col, [{ center: cz, width: 1.6, type: OpeningType.Window }]);
+  wall(Axis.Z, x1, z0, z1, Y, h, col, [{ center: cz, width: 1.6, type: OpeningType.Window }]);
+  wall(Axis.X, pz, x0, x1, Y, h, col, [{ center: cx + randRange(-w / 4, w / 4), width: 1.2, type: OpeningType.Door }]);
   roof(cx, cz, w, d, Y + h, rc);
   placeBox(x1 - 1.4, cz + 1, 1, 1, 1.6, 0x7a5a4a, Y + h + 0.4);
   table(cx + randRange(-1.5, 1.5), (pz + z1) / 2 + 0.4, Y);
@@ -65,6 +67,6 @@ export const house = (cx: number, cz: number, w: number, d: number, Y: number, o
   placeBox(x1 - 0.8, (z0 + pz) / 2, 0.5, 2.6, 1.8, 0x6e4a2a, Y);
   placeLoot(x0 + 1.5, z1 - 1.6, Y, 1);
   placeLoot(x1 - 1.6, z0 + 1.6, Y, o.tier || 1);
-  markFootprint(cx, cz, w + 1, d + 1, 'house');
+  markFootprint(cx, cz, w + 1, d + 1, FootprintKind.House);
   return { x0, x1, z0, z1 };
 };
