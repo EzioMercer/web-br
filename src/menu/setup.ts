@@ -11,7 +11,10 @@ import { startGame } from './startGame';
 
 /** Read-only key bindings shown in Settings → Controls. */
 const CONTROLS: [string, string[]][] = [
-  ['Move', ['W', 'A', 'S', 'D']],
+  ['Move forward', ['W']],
+  ['Move left', ['A']],
+  ['Move backward', ['S']],
+  ['Move right', ['D']],
   ['Look', ['Mouse', 'Arrow keys']],
   ['Run', ['Shift']],
   ['Crouch (while running: slide)', ['Ctrl', 'C']],
