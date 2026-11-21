@@ -2,6 +2,7 @@ import { addBot } from '../bots/addBot';
 import { bots } from '../bots/state';
 import { zoneMesh } from '../br/zone/zoneMesh';
 import { BOT_COUNT } from '../config';
+import { markShadows } from '../graphics/markShadows';
 import { loadMap } from '../world/level/loadMap';
 import { newMatch } from './newMatch';
 
@@ -14,4 +15,5 @@ export const startMatch = () => {
   zoneMesh.visible = true;
   loadMap();
   newMatch();
+  markShadows();
 };

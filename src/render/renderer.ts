@@ -1,12 +1,19 @@
 import * as THREE from 'three';
 import { camera } from './camera';
-import { glCanvas } from './glCanvas';
+import { glCanvas, replaceGlCanvas } from './glCanvas';
 
-export const renderer = new THREE.WebGLRenderer({ canvas: glCanvas, antialias: true });
+/** The WebGL renderer, made by createRenderer (applyGraphics does that before the first frame). */
+export let renderer: THREE.WebGLRenderer | null = null;
 
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+/** Render resolution as a fraction of the screen's. */
+let resolution = 1;
 
 const resize = () => {
+  if (!renderer) {
+    return;
+  }
+
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2) * resolution);
   renderer.setSize(innerWidth, innerHeight, false);
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
@@ -14,4 +21,22 @@ const resize = () => {
 
 addEventListener('resize', resize);
 
-resize();
+/** (Re)creates the renderer: antialiasing can only be set when the WebGL context is created. */
+export const createRenderer = (antialias: boolean) => {
+  if (renderer) {
+    renderer.dispose();
+    renderer.forceContextLoss();
+    replaceGlCanvas();
+  }
+
+  renderer = new THREE.WebGLRenderer({ canvas: glCanvas, antialias });
+  renderer.shadowMap.type = THREE.PCFShadowMap;
+  resize();
+
+  return renderer;
+};
+
+export const setResolution = (r: number) => {
+  resolution = r;
+  resize();
+};

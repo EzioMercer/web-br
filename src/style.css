@@ -116,6 +116,10 @@ body.br #prompt{left:50%;top:auto;bottom:calc(150px + env(safe-area-inset-bottom
 .srow input{width:100%;accent-color:var(--amber);cursor:pointer}
 .srow output{text-align:right;font-variant-numeric:tabular-nums;color:var(--amber)}
 @media (max-width:460px){.srow{grid-template-columns:1fr 48px}.srow input{grid-column:1/-1;grid-row:2}}
+.seg{grid-column:2/-1;display:flex;gap:6px}.seg .dbtn{flex:1;padding:5px 6px;white-space:nowrap}
+.srow.stack{grid-template-columns:1fr;gap:10px}.srow.stack .seg{grid-column:auto}
+.shint{font-size:15px;opacity:.65;line-height:1.35}.shint:empty{display:none}
+@media (max-width:460px){.srow .seg{grid-column:1/-1;grid-row:2}.srow.stack .seg{grid-row:auto}.seg .dbtn{font-size:14px}.tab{font-size:14px;letter-spacing:.06em;padding:10px 4px}}
 .ctl{width:100%;border-collapse:collapse;font-size:17px}
 .ctl th{text-align:left;font-size:13px;letter-spacing:.16em;text-transform:uppercase;opacity:.6;padding:0 8px 8px}
 .ctl th:last-child,.ctl td:last-child{text-align:right}

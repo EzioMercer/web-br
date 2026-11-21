@@ -1,4 +1,7 @@
 import { DIFFICULTIES } from '../data/difficulties';
+import { applyGraphics } from '../graphics/applyGraphics';
+import { detectTier } from '../graphics/detectTier';
+import { graphics } from '../graphics/state';
 import { input } from '../input/state';
 import { loadSettings } from '../settings/loadSettings';
 import { saveSettings } from '../settings/saveSettings';
@@ -6,6 +9,8 @@ import { settings } from '../settings/state';
 import { byId } from '../utils/byId';
 import { openSettings } from './openSettings';
 import { selectTab } from './selectTab';
+import { setupGraphicsTab } from './setupGraphicsTab';
+import { showGraphicsOptions } from './showGraphicsOptions';
 import { showMenu } from './showMenu';
 import { startGame } from './startGame';
 
@@ -35,6 +40,9 @@ const CONTROLS: [string, string[]][] = [
 ];
 
 loadSettings();
+graphics.autoTier = detectTier();
+applyGraphics();
+setupGraphicsTab();
 
 byId('play').onclick = () => startGame();
 
@@ -48,7 +56,11 @@ byId('tomenu').onclick = (e) => {
   showMenu();
 };
 
-byId('setbtn').onclick = () => openSettings(true);
+byId('setbtn').onclick = () => {
+  // Auto may have lowered its tier during the last match.
+  showGraphicsOptions();
+  openSettings(true);
+};
 
 byId('setclose').onclick = () => openSettings(false);
 

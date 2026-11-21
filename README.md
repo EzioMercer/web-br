@@ -37,7 +37,8 @@ src/
   types.ts      shared types
   data/         weapons, optics, grenades, bot difficulties, loot tables
   utils/        shared helpers (smoothstep, pad2, label text, three.js box/cylinder meshes...)
-  render/       scene, camera, renderer, mesh clean-up
+  render/       scene, camera, renderer, sun and its shadows, mesh clean-up
+  graphics/     graphics quality presets, device detection (Auto) and applying them to the renderer
   loop/         render loop (camera, viewmodel and HUD per frame)
   sim/          fixed-step simulation tick
   match/        match flow: start, countdown, victory or elimination, next match
