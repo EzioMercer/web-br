@@ -11,18 +11,25 @@ export const LOOT_TIER1: WeaponId[] = [
   WeaponId.Scout,
 ];
 
+/** Tier 2: mostly rifles and close-range guns; about one in four is a sniper rifle, the AWP and M82 rarest. */
 export const LOOT_TIER2: WeaponId[] = [
   WeaponId.M4a1,
+  WeaponId.M4a1,
+  WeaponId.M4a1,
+  WeaponId.Ak47,
+  WeaponId.Ak47,
   WeaponId.Ak47,
   WeaponId.P90,
-  WeaponId.Awp,
+  WeaponId.P90,
+  WeaponId.Mp5,
   WeaponId.Mp5,
   WeaponId.M3,
+  WeaponId.M3,
   WeaponId.DesertEagle,
-  WeaponId.M4a1,
+  WeaponId.Scout,
   WeaponId.Svd,
   WeaponId.Kar98k,
   WeaponId.G3sg1,
+  WeaponId.Awp,
   WeaponId.BarrettM82,
-  WeaponId.Scout,
 ];

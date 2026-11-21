@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { noiseBurst } from '../audio/noiseBurst';
 import { tone } from '../audio/tone';
+import { alarmBot } from '../bots/alarmBot';
+import { Alarm } from '../bots/types';
 import { bots } from '../bots/state';
 import { killBot } from '../combat/killBot';
 import { screenFx, transientFx } from '../effects/state';
@@ -96,7 +98,7 @@ export const detonate = (n: Grenade) => {
 
     if (bd < 9 && lineOfSight(o, [b.x, b.y + 0.9, b.z])) {
       b.health -= Math.round(160 * (1 - bd / 9));
-      b.alert = 1.5;
+      alarmBot(b, Alarm.Hit);
 
       if (b.health <= 0) {
         killBot(b, false);

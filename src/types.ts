@@ -105,6 +105,13 @@ export interface Weapon {
   scopeFov?: number;
   sniper?: boolean;
   melee?: boolean;
+  /**
+   * Effective range (m) in a bot's hands: its hit chance halves at this distance, and it holds fire beyond 2.5 times
+   * it (420 m at most).
+   */
+  range: number;
+  /** Muzzle velocity of the player's bullets (m/s): far targets need leading, and bullets drop over distance. */
+  bulletSpeed: number;
 }
 
 export interface Difficulty {
@@ -143,10 +150,14 @@ export interface Box {
 export interface Door {
   box: Box;
   pivot: THREE.Group;
-  baseAngle: number;
   axis: Axis;
-  swingDir: number;
-  /** Current open amount, 0..1. */
+  /** Hinged end of the opening: -1 the low end, +1 the high end (along the wall). */
+  hinge: number;
+  /** Side it swings to: -1 or +1 along the wall normal (+z for a wall along x, +x for a wall along z). */
+  side: number;
+  /** How far it may swing toward the -normal and +normal side before it would hit something, 0..1 of 90 degrees. */
+  maxOpen: [number, number];
+  /** Current open amount, 0..1 of `maxOpen` on its side. */
   openAmount: number;
   /** Target open amount, 0 or 1. */
   target: number;
@@ -230,6 +241,10 @@ export interface MapDoor {
   y: number;
   height: number;
   color: number;
+  /** Hinged end of the opening: -1 the low end (default), +1 the high end. Set by `fitDoors`. */
+  hinge?: number;
+  /** How far the door may open toward the -normal and +normal side, 0..1 of 90 degrees. Set by `fitDoors`. */
+  open?: [number, number];
 }
 
 /** Loot spawn: x, z, floor y, tier (1 common, 2 better). */

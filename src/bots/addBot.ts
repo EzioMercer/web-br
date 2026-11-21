@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import { scene } from '../render/scene';
 import { buildBotModel } from './buildBotModel';
+import { makeGlint } from './makeGlint';
 import { bots } from './state';
 import { WeaponId } from '../types';
+import { BotMode } from './types';
 import type { Bot } from './types';
 
 export const addBot = (i: number) => {
@@ -13,6 +15,10 @@ export const addBot = (i: number) => {
   const legs: THREE.Group[] = [];
   const knees: THREE.Group[] = [];
   const parts = buildBotModel(i, g, legs, knees);
+  const glint = makeGlint();
+
+  scene.add(glint);
+
   const b: Bot = {
     id: i,
     name: 'Bot ' + (i + 1),
@@ -31,6 +37,21 @@ export const addBot = (i: number) => {
     targetX: 0,
     targetZ: 0,
     alert: 0,
+    mode: BotMode.Roam,
+    modeUntil: 0,
+    knownX: 0,
+    knownY: 0,
+    knownZ: 0,
+    coverX: 0,
+    coverZ: 0,
+    inCover: false,
+    underFireAt: 0,
+    coverAt: 0,
+    heardAt: -9,
+    sees: false,
+    nextSightAt: 0,
+    toOverwatch: false,
+    glint,
     nextShotAt: 0,
     reactAt: 0,
     stuck: 0,

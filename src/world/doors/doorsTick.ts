@@ -5,6 +5,7 @@ import { findDoor } from './findDoor';
 import { doorFocus, doors } from './state';
 import type { Body, Door } from '../../types';
 import { swingAwayFrom } from './swingAwayFrom';
+import { doorAngle } from './doorAngle';
 
 let doorTimer = 0;
 
@@ -70,7 +71,7 @@ export const doorsTick = (dt: number) => {
 
     if (d.openAmount !== d.target) {
       d.openAmount += Math.sign(d.target - d.openAmount) * Math.min(Math.abs(d.target - d.openAmount), st * 3.2);
-      d.pivot.rotation.y = d.baseAngle + d.swingDir * d.openAmount * 1.5708;
+      d.pivot.rotation.y = doorAngle(d);
       d.box.disabled = d.openAmount > 0.5;
     }
   }

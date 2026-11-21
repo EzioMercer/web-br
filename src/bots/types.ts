@@ -1,6 +1,30 @@
 import * as THREE from 'three';
 import type { Velocity, WeaponId } from '../types';
 
+/** What a bot is doing. */
+export enum BotMode {
+  /** Walking between waypoints. */
+  Roam = 'roam',
+  /** Holding a high spot with a sniper rifle, scanning for targets. */
+  Overwatch = 'overwatch',
+  /** Shooting at the player. */
+  Fight = 'fight',
+  /** Running to (and hiding behind) cover from the player. */
+  Cover = 'cover',
+  /** Moving toward where it thinks the player is. */
+  Hunt = 'hunt',
+}
+
+/** How a bot found out where the player is. */
+export enum Alarm {
+  /** It was hit (bullet, knife or grenade). */
+  Hit = 'hit',
+  /** A shot flew right past it. */
+  NearMiss = 'nearMiss',
+  /** It heard the player shoot. */
+  Heard = 'heard',
+}
+
 export interface Bot {
   id: number;
   name: string;
@@ -30,6 +54,29 @@ export interface Bot {
   targetZ: number;
   /** Seconds left of awareness of the player. */
   alert: number;
+  mode: BotMode;
+  /** When the current mode runs out (Overwatch, Cover and Hunt). */
+  modeUntil: number;
+  /** Where the bot believes the player is. */
+  knownX: number;
+  knownY: number;
+  knownZ: number;
+  /** Cover spot it runs to, and whether it has reached it. */
+  coverX: number;
+  coverZ: number;
+  inCover: boolean;
+  /** Last time it was shot at (hit or near miss), and last time it decided whether to take cover. */
+  underFireAt: number;
+  coverAt: number;
+  /** Last time it heard the player shoot. */
+  heardAt: number;
+  /** Cached result of the last sight check, and when to check again. */
+  sees: boolean;
+  nextSightAt: number;
+  /** Walking to a high spot to hold with a sniper rifle. */
+  toOverwatch: boolean;
+  /** Scope glint shown while it aims a sniper rifle at the player. */
+  glint: THREE.Sprite;
   /** Next allowed shot time. */
   nextShotAt: number;
   /** Earliest time to shoot after spotting the player. */

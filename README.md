@@ -63,6 +63,16 @@ src/
     doors/      doors and breakable glass
 ```
 
+## Balance
+
+No single spot or weapon should win on its own. Holding a mountain top with a sniper rifle is strong, but it has a price:
+
+- **Bots shoot back from range.** Each weapon has an effective range (`range` in `data/weapons.ts`). Bots with sniper rifles spot and hit targets out to about 400 m; rifles reach about 130 m; SMGs, pistols and shotguns stay short. Far shots take a bot longer to line up and never exceed about one in three hits on Normal.
+- **Being seen.** Bots spot the player farther away when the player has just fired (muzzle flash), moves fast, or stands high above them against the sky. A scoped player is seen by any bot they aim at (lens glint, up to 450 m). A bot sniper aiming at the player shows a glint too.
+- **Bots react to being shot.** A bot that is hit or nearly hit and cannot shoot back runs for the nearest spot hidden from the shooter. After a few seconds it moves in on the shooter's last known position. Bots that hear a shot (louder guns carry farther) come looking. Bot snipers often climb to high ground and hold it.
+- **Bullets fly.** The player's bullets have a muzzle velocity and drop. At 300 m an AWP shot needs about a metre of lead on a walking target and aims about 0.6 m high. At close range there is no difference.
+- **Map.** Mountain flanks have boulder fields, so a climb toward a sniper can go from cover to cover, while the summits stay bare. Sniper rifles are about a quarter of tier 2 loot, and sniper ammo is the scarcest (one magazine per box).
+
 ## TODO
 
 - [x] **Battle Royale only.** The prototype's arena maps (Blockout, Mansion, Dust 2), their modes (Casual, Only Sniper, Arms Race), the buy menu and money are removed. A seeded match produced identical state before and after.

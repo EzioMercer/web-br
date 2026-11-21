@@ -14,8 +14,10 @@ import { buildMeadowbrookFarm } from './sites/buildMeadowbrookFarm';
 import { buildPinecrest } from './sites/buildPinecrest';
 import { buildPortCalder } from './sites/buildPortCalder';
 import { buildSkyfieldAirstrip } from './sites/buildSkyfieldAirstrip';
+import { fitDoors } from './place/fitDoors';
 import { gen } from './state';
 import { placeCabins } from './wilderness/placeCabins';
+import { placeBoulders } from './wilderness/placeBoulders';
 import { placeGasStations } from './wilderness/placeGasStations';
 import { placeRocks } from './wilderness/placeRocks';
 import { plantTrees } from './wilderness/plantTrees';
@@ -51,8 +53,10 @@ export const genWorld = () => {
   const gasStations = placeGasStations();
   const treeCount = plantTrees();
   const rockCount = placeRocks();
+  const boulders = placeBoulders();
 
   scatterLoot();
+  fitDoors();
   return {
     terrain: gen.terrain,
     mesh: terrainMesh(gen.terrain),
@@ -63,6 +67,6 @@ export const genWorld = () => {
     footprints: gen.footprints,
     stairs: gen.stairwells,
     pois: SITES,
-    counts: { trees: treeCount, rocks: rockCount, cabins, gas: gasStations },
+    counts: { trees: treeCount, rocks: rockCount, boulders, cabins, gas: gasStations },
   };
 };

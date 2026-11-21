@@ -1,6 +1,7 @@
 import { footstep } from '../audio/footstep';
 import { stepNoise } from '../audio/stepNoise';
 import { botsTick } from '../bots/botsTick';
+import { bulletsTick } from '../combat/bulletsTick';
 import { fireWeapon } from '../combat/fireWeapon';
 import { PLAYER_HEIGHT } from '../config';
 import { ripple } from '../effects/ripple';
@@ -191,6 +192,7 @@ export const tick = (dt: number) => {
     }
   }
 
+  bulletsTick(dt);
   grenadesTick(dt);
   doorsTick(dt);
 

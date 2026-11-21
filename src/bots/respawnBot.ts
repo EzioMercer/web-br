@@ -5,6 +5,7 @@ import { floorY } from '../world/level/floorY';
 import { pickWaypoint } from './pickWaypoint';
 import { setBotWeapon } from './setBotWeapon';
 import { WeaponId } from '../types';
+import { BotMode } from './types';
 import type { Bot } from './types';
 
 const BOT_WEAPONS: WeaponId[] = [
@@ -36,6 +37,15 @@ export const respawnBot = (b: Bot) => {
   b.corpse = false;
   b.mesh.visible = true;
   b.alert = 0;
+  b.mode = BotMode.Roam;
+  b.inCover = false;
+  b.underFireAt = 0;
+  b.coverAt = 0;
+  b.heardAt = -9;
+  b.sees = false;
+  b.nextSightAt = 0;
+  b.stuck = 0;
+  b.glint.visible = false;
   b.crouch = 0;
   b.crouchAmount = 0;
   b.height = PLAYER_HEIGHT;

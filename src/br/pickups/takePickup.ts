@@ -31,7 +31,8 @@ export const takePickup = (k: Pickup) => {
 
     for (const q of Object.keys(loadout.owned) as WeaponId[]) {
       if (WEAPONS[q].ammoType === k.itemId) {
-        add = WEAPONS[q].magSize * 2;
+        // one magazine of sniper rounds, two of anything else
+        add = WEAPONS[q].magSize * (WEAPONS[q].sniper ? 1 : 2);
 
         if (q === loadout.weaponId) {
           loadout.reserve += add;

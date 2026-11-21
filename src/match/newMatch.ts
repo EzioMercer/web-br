@@ -1,6 +1,7 @@
 import { respawnBot } from '../bots/respawnBot';
 import { bots } from '../bots/state';
 import { startZone } from '../br/zone/startZone';
+import { bullets } from '../combat/state';
 import { WEAPONS } from '../data/weapons';
 import { screenFx } from '../effects/state';
 import { flyingGrenades, grenadeCount, smokes } from '../grenades/state';
@@ -27,6 +28,8 @@ export const newMatch = () => {
   loadout.grenade = null;
   clearMeshes(flyingGrenades);
   clearMeshes(smokes);
+  clearMeshes(bullets.map(b => ({ mesh: b.streak })));
+  bullets.length = 0;
   screenFx.flashbang = 0;
   spawnPlayer(startZone());
 

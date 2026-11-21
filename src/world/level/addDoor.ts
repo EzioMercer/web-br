@@ -4,7 +4,8 @@ import { mapGroup } from './mapGroup';
 import { doorMats, unitGeo } from './materials';
 import { boxes } from './state';
 import { Axis } from '../../types';
-import type { Box, MapDoor } from '../../types';
+import { doorAngle } from '../doors/doorAngle';
+import type { Box, Door, MapDoor } from '../../types';
 
 export const addDoor = (o: MapDoor) => {
   const { axis: ax, wallAt: c, center: m, width: w, y, height: h } = o;
@@ -20,11 +21,9 @@ export const addDoor = (o: MapDoor) => {
 
   const grp = new THREE.Group();
 
-  grp.position.set(ax === Axis.X ? m - w / 2 : c, y, ax === Axis.X ? c : m - w / 2);
+  const hinge = o.hinge ?? -1;
 
-  const th0 = ax === Axis.X ? 0 : -Math.PI / 2;
-
-  grp.rotation.y = th0;
+  grp.position.set(ax === Axis.X ? m + hinge * w / 2 : c, y, ax === Axis.X ? c : m + hinge * w / 2);
 
   const mat = doorMats[o.color] || (doorMats[o.color] = new THREE.MeshLambertMaterial({ color: o.color }));
   const mesh = new THREE.Mesh(unitGeo, mat);
@@ -39,19 +38,22 @@ export const addDoor = (o: MapDoor) => {
   kn.position.set(w - 0.2, h * 0.45, 0);
   grp.add(kn);
   mapGroup.add(grp);
-  doors.push(
-    {
-      box: b,
-      pivot: grp,
-      baseAngle: th0,
-      axis: ax,
-      swingDir: 1,
-      openAmount: 0,
-      target: 0,
-      x,
-      z,
-      y,
-      reachSq: (w / 2 + 1.5) * (w / 2 + 1.5),
-    },
-  );
+
+  const d: Door = {
+    box: b,
+    pivot: grp,
+    axis: ax,
+    hinge,
+    side: 1,
+    maxOpen: o.open ?? [1, 1],
+    openAmount: 0,
+    target: 0,
+    x,
+    z,
+    y,
+    reachSq: (w / 2 + 1.5) * (w / 2 + 1.5),
+  };
+
+  grp.rotation.y = doorAngle(d);
+  doors.push(d);
 };

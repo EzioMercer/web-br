@@ -48,7 +48,17 @@ export const startZone = (): Vec2 => {
   schedule.startTime = 0;
   applyZonePhase(0);
 
-  const AT = [AmmoType.Pistol, AmmoType.Smg, AmmoType.Rifle, AmmoType.Shotgun, AmmoType.Sniper];
+  // sniper rounds are the scarcest ammo
+  const AT = [
+    AmmoType.Pistol,
+    AmmoType.Pistol,
+    AmmoType.Smg,
+    AmmoType.Smg,
+    AmmoType.Rifle,
+    AmmoType.Rifle,
+    AmmoType.Shotgun,
+    AmmoType.Sniper,
+  ];
   const GI: GrenadeId[] = [GrenadeId.HighExplosive, GrenadeId.Flashbang, GrenadeId.Smoke];
   const OI: OpticId[] = [
     OpticId.RedDot,

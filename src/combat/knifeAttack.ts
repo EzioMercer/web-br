@@ -1,5 +1,7 @@
 import { stepNoise } from '../audio/stepNoise';
 import { stepThump } from '../audio/stepThump';
+import { alarmBot } from '../bots/alarmBot';
+import { Alarm } from '../bots/types';
 import { bots } from '../bots/state';
 import { screenFx } from '../effects/state';
 import { loadout } from '../loadout/state';
@@ -43,8 +45,7 @@ export const knifeAttack = () => {
 
   if (tgt) {
     tgt.health -= loadout.weapon.damage;
-    tgt.alert = 1.5;
-    tgt.reactAt = clock.time + 0.15;
+    alarmBot(tgt, Alarm.Hit);
     screenFx.hitMarker = 1;
     stepNoise(0.4, 0.08, 900, 0.004);
     stepThump(140, 70, 0.1, 0.25);

@@ -1,20 +1,14 @@
+import * as THREE from 'three';
 import { fireSound } from '../audio/fireSound';
-import { bots } from '../bots/state';
-import { bulletMark } from '../effects/bulletMark';
+import { hearShot } from '../bots/hearShot';
 import { screenFx } from '../effects/state';
-import { tracer } from '../effects/tracer';
 import { loadout } from '../loadout/state';
-import { castRay } from '../physics/castRay';
-import { rayBox } from '../physics/rayBox';
-import { collision } from '../physics/state';
+import { scene } from '../render/scene';
 import { player, playerVel } from '../player/state';
 import { clock } from '../sim/state';
-import { breakGlass } from '../world/doors/breakGlass';
-import { killBot } from './killBot';
 import { knifeAttack } from './knifeAttack';
 import { shotSpread } from './shotSpread';
-import { spray } from './state';
-import type { Bot } from '../bots/types';
+import { bullets, spray } from './state';
 import type { Vec3 } from '../types';
 import { eyePos } from '../player/eyePos';
 import { WeaponId } from '../types';
@@ -48,6 +42,7 @@ export const fireWeapon = () => {
       : 0.07;
   screenFx.muzzleFlash = 0.04;
   fireSound();
+  hearShot();
 
   if (loadout.weapon.boltAction) {
     loadout.boltCycleEnd = clock.time + loadout.weapon.fireInterval;
@@ -70,52 +65,22 @@ export const fireWeapon = () => {
     const d0: Vec3 = [-sY * cP + cY * sx + sY * sP * sy, sP + cP * sy, -cY * cP - sY * sx + cY * sP * sy];
     const l = Math.hypot(...d0);
     const d: Vec3 = [d0[0] / l, d0[1] / l, d0[2] / l];
-    let best = castRay(o, d);
-    let tgt: Bot | null = null;
-    let mult = 1;
-    let gb = 0;
+    const v = loadout.weapon.bulletSpeed;
+    const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...o), new THREE.Vector3(...o)]);
+    const streak = new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0xffe08a, transparent: true }));
 
-    for (let gi = 0; gi < 4 && collision.lastHit && collision.lastHit.glass && best < 1e8; gi++) {
-      breakGlass(collision.lastHit);
-      gb += best + 0.06;
-      best = gb + castRay([o[0] + d[0] * gb, o[1] + d[1] * gb, o[2] + d[2] * gb], d);
-    }
-
-    for (const b of bots) {
-      if (b.health <= 0) {
-        continue;
-      }
-
-      const yo = b.y - 0.5 * b.crouchAmount;
-      const tb = rayBox(o, d, [b.x - 0.3, b.y, b.z - 0.3], [b.x + 0.3, yo + 1.45, b.z + 0.3]);
-      const th = rayBox(o, d, [b.x - 0.17, yo + 1.45, b.z - 0.17], [b.x + 0.17, yo + 1.85, b.z + 0.17]);
-      const t = Math.min(tb, th);
-
-      if (t < best) {
-        best = t;
-        tgt = b;
-
-        const y = o[1] + d[1] * t;
-
-        mult = th < tb ? 4 : (y < b.y + 0.7 ? 0.75 : 1);
-      }
-    }
-
-    const e: Vec3 = [o[0] + d[0] * best, o[1] + d[1] * best, o[2] + d[2] * best];
-
-    tracer([o[0] + cY * 0.2 - sY * 0.6, o[1] - 0.15, o[2] - cY * 0.6 - sY * 0.2], e, 0xffe08a);
-
-    if (tgt) {
-      tgt.health -= loadout.weapon.damage * mult;
-      tgt.alert = 1.5;
-      tgt.reactAt = clock.time + 0.15;
-      screenFx.hitMarker = 1;
-
-      if (tgt.health <= 0) {
-        killBot(tgt, mult >= 4);
-      }
-    } else if (best < 1e8) {
-      bulletMark([e[0] - d[0] * 0.03, e[1] - d[1] * 0.03, e[2] - d[2] * 0.03]);
-    }
+    scene.add(streak);
+    bullets.push({
+      x: o[0],
+      y: o[1],
+      z: o[2],
+      vx: d[0] * v,
+      vy: d[1] * v,
+      vz: d[2] * v,
+      weapon: loadout.weapon,
+      flown: 0,
+      streak,
+      muzzle: [o[0] + cY * 0.2 - sY * 0.6, o[1] - 0.15, o[2] - cY * 0.6 - sY * 0.2],
+    });
   }
 };

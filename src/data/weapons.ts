@@ -12,6 +12,8 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     reloadTime: 1.9,
     slot: 2,
     ammoType: AmmoType.Pistol,
+    range: 29,
+    bulletSpeed: 320,
   },
   [WeaponId.Glock18]: {
     name: 'Glock 18',
@@ -23,6 +25,8 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     reloadTime: 2.2,
     slot: 2,
     ammoType: AmmoType.Pistol,
+    range: 26,
+    bulletSpeed: 320,
   },
   [WeaponId.DesertEagle]: {
     name: 'Desert Eagle',
@@ -34,6 +38,8 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     reloadTime: 2.2,
     slot: 2,
     ammoType: AmmoType.Pistol,
+    range: 34,
+    bulletSpeed: 420,
   },
   [WeaponId.M3]: {
     name: 'M3 Shotgun',
@@ -46,6 +52,8 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     reloadTime: 2.6,
     slot: 1,
     ammoType: AmmoType.Shotgun,
+    range: 20,
+    bulletSpeed: 380,
   },
   [WeaponId.Mp5]: {
     name: 'MP5',
@@ -57,6 +65,8 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     reloadTime: 2.3,
     slot: 1,
     ammoType: AmmoType.Smg,
+    range: 30,
+    bulletSpeed: 360,
   },
   [WeaponId.P90]: {
     name: 'P90',
@@ -68,6 +78,8 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     reloadTime: 3,
     slot: 1,
     ammoType: AmmoType.Smg,
+    range: 32,
+    bulletSpeed: 400,
   },
   [WeaponId.Ak47]: {
     name: 'AK-47',
@@ -79,6 +91,8 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     reloadTime: 2.4,
     slot: 1,
     ammoType: AmmoType.Rifle,
+    range: 50,
+    bulletSpeed: 650,
   },
   [WeaponId.M4a1]: {
     name: 'M4A1',
@@ -90,6 +104,8 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     reloadTime: 2.4,
     slot: 1,
     ammoType: AmmoType.Rifle,
+    range: 55,
+    bulletSpeed: 700,
   },
   [WeaponId.Awp]: {
     name: 'AWP',
@@ -104,6 +120,8 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     boltAction: true,
     scopeFov: 20,
     sniper: true,
+    range: 260,
+    bulletSpeed: 850,
   },
   [WeaponId.Scout]: {
     name: 'Scout',
@@ -118,6 +136,8 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     scopeFov: 28,
     sniper: true,
     ammoType: AmmoType.Sniper,
+    range: 220,
+    bulletSpeed: 800,
   },
   [WeaponId.Svd]: {
     name: 'SVD Dragunov',
@@ -131,6 +151,8 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     scopeFov: 24,
     sniper: true,
     ammoType: AmmoType.Sniper,
+    range: 200,
+    bulletSpeed: 780,
   },
   [WeaponId.G3sg1]: {
     name: 'G3SG1',
@@ -144,6 +166,8 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     scopeFov: 22,
     sniper: true,
     ammoType: AmmoType.Sniper,
+    range: 190,
+    bulletSpeed: 760,
   },
   [WeaponId.Kar98k]: {
     name: 'Kar98k',
@@ -158,6 +182,8 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     scopeFov: 26,
     sniper: true,
     ammoType: AmmoType.Sniper,
+    range: 240,
+    bulletSpeed: 800,
   },
   [WeaponId.BarrettM82]: {
     name: 'Barrett M82',
@@ -171,6 +197,8 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     scopeFov: 14,
     sniper: true,
     ammoType: AmmoType.Sniper,
+    range: 300,
+    bulletSpeed: 850,
   },
   [WeaponId.Knife]: {
     name: 'Knife',
@@ -183,5 +211,7 @@ export const WEAPONS: Record<WeaponId, Weapon> = {
     slot: 3,
     melee: true,
     ammoType: AmmoType.None,
+    range: 1,
+    bulletSpeed: 1,
   },
 };

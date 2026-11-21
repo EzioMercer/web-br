@@ -1,31 +1,158 @@
 import { footstep } from '../audio/footstep';
-import { noiseBurst } from '../audio/noiseBurst';
 import { zone } from '../br/zone/state';
+import { ZonePhase } from '../br/zone/types';
 import { PLAYER_HEIGHT } from '../config';
 import { WEAPONS } from '../data/weapons';
 import { ripple } from '../effects/ripple';
-import { tracer } from '../effects/tracer';
 import { match } from '../match/state';
-import { castRay } from '../physics/castRay';
-import { lineOfSight } from '../physics/lineOfSight';
 import { moveBody } from '../physics/moveBody';
-import { damagePlayer } from '../player/damagePlayer';
-import { player, playerBody, playerVel } from '../player/state';
+import { eyePos } from '../player/eyePos';
+import { player, playerBody } from '../player/state';
 import { settings } from '../settings/state';
 import { clock } from '../sim/state';
-import { shatter } from '../world/doors/shatter';
 import { surfaceAt } from '../world/level/surfaceAt';
 import { waterDepth } from '../world/level/waterDepth';
+import { botSees } from './botSees';
+import { botShoot } from './botShoot';
+import { engageRange } from './engageRange';
+import { findCover } from './findCover';
 import { pickWaypoint } from './pickWaypoint';
 import { bots } from './state';
-import type { Vec3 } from '../types';
-import { eyePos } from '../player/eyePos';
+import { steer } from './steer';
+import { BotMode } from './types';
 import { Phase } from '../types';
-import { ZonePhase } from '../br/zone/types';
+import type { Vec3 } from '../types';
+import type { Bot } from './types';
+
+/** Walking speed of a bot (m/s), before the difficulty multiplier. */
+const WALK = 3.4;
+
+/** Starts a hunt for the player's last known position. */
+const hunt = (b: Bot) => {
+  if (b.mode !== BotMode.Hunt) {
+    b.mode = BotMode.Hunt;
+    b.modeUntil = clock.time + 20;
+  }
+};
+
+/** Shot at: hide if it can't shoot back (or is badly hurt), otherwise keep fighting. */
+const reactToFire = (b: Bot, canFight: boolean) => {
+  b.coverAt = clock.time;
+
+  if (canFight && (b.health > 40 * settings.difficulty.health || Math.random() < 0.5)) {
+    return;
+  }
+
+  const c = findCover(b, [b.knownX, b.knownY + 1.5, b.knownZ]);
+
+  if (c) {
+    b.mode = BotMode.Cover;
+    b.coverX = c[0];
+    b.coverZ = c[1];
+    b.inCover = false;
+    b.modeUntil = clock.time + 7;
+  } else if (!canFight) {
+    hunt(b);
+  }
+};
+
+/** Facing the player and shooting: riflemen strafe, snipers hold still. */
+const fight = (b: Bot, dist: number, dx: number, dz: number, dt: number) => {
+  const w = WEAPONS[b.weaponId];
+  const still = w.sniper && dist > 25;
+
+  b.mode = BotMode.Fight;
+  b.mesh.rotation.y = Math.atan2(dx, dz);
+
+  if (still) {
+    b.vel.x = 0;
+    b.vel.z = 0;
+  } else {
+    const st = Math.sin(clock.time * 1.7 + b.id * 2) * 2;
+    const sm = b.crouch ? 0.25 : 1;
+
+    b.vel.x = Math.cos(b.mesh.rotation.y) * st * sm;
+    b.vel.z = -Math.sin(b.mesh.rotation.y) * st * sm;
+  }
+
+  if (w.melee && dist > 1.6) {
+    const hd = Math.hypot(dx, dz) || 1;
+
+    b.vel.x = dx / hd * 4.2 * settings.difficulty.speed;
+    b.vel.z = dz / hd * 4.2 * settings.difficulty.speed;
+  }
+
+  if (!still && !b.crouch && b.onGround && dist > 5 && dist < 30 && Math.random() < dt * 0.4) {
+    b.vel.y = 7;
+  }
+
+  if (clock.time >= b.nextCrouchAt) {
+    b.nextCrouchAt = clock.time + 1 + Math.random() * 2.5;
+    b.crouch = Math.random() < (still ? 0.6 : 0.4) ? 1 : 0;
+  }
+
+  if (clock.time >= b.reactAt && clock.time >= b.nextShotAt && (!w.melee || dist < 2.8)) {
+    botShoot(b, dist);
+  }
+};
+
+/** Walks between waypoints; a sniper that reaches its high spot holds it for a while. */
+const roam = (b: Bot) => {
+  const zt = zone.next || zone;
+  const wd = Math.hypot(b.targetX - b.x, b.targetZ - b.z);
+  const badT = Math.hypot(b.targetX - zone.cx, b.targetZ - zone.cz) > zone.radius
+    || (b.running && Math.hypot(b.targetX - zt.cx, b.targetZ - zt.cz) > zt.radius);
+
+  b.mode = BotMode.Roam;
+  b.crouch = 0;
+
+  if (wd < 1.5 && b.toOverwatch && !badT) {
+    b.toOverwatch = false;
+    b.mode = BotMode.Overwatch;
+    b.modeUntil = clock.time + 15 + Math.random() * 20;
+    b.detourDir = Math.random() < 0.5 ? -1 : 1;
+    b.vel.x = 0;
+    b.vel.z = 0;
+    return false;
+  }
+
+  if (wd < 1.5 || badT) {
+    pickWaypoint(b);
+    b.stuck = 0;
+    return false;
+  }
+
+  if (steer(b, b.targetX, b.targetZ, WALK * settings.difficulty.speed * (b.running ? 1.7 : 1)) < 0) {
+    pickWaypoint(b);
+  }
+
+  return true;
+};
+
+/** Scope glint over a sniper's head while it aims at the player, so long-range shots come with a warning. */
+const updateGlint = (b: Bot, dist: number) => {
+  const on = b.mode === BotMode.Fight && Boolean(WEAPONS[b.weaponId].sniper) && dist > 30 && !player.dead;
+
+  b.glint.visible = on;
+
+  if (on) {
+    // about the same size on screen at any range
+    const s = (0.4 + dist * 0.05) * (0.8 + 0.2 * Math.sin(clock.time * 9 + b.id));
+    const hy = b.y + 1.6 - 0.5 * b.crouchAmount;
+    const e = eyePos();
+    // drawn a little in front of the scope, toward the player, so the ground around the bot doesn't cut it off
+    const k = Math.min(s * 0.6, dist * 0.5) / (Math.hypot(e[0] - b.x, e[1] - hy, e[2] - b.z) || 1);
+
+    b.glint.scale.set(s, s, 1);
+    b.glint.position.set(b.x + (e[0] - b.x) * k, hy + (e[1] - hy) * k, b.z + (e[2] - b.z) * k);
+  }
+};
 
 export const botsTick = (dt: number) => {
   for (const b of bots) {
     if (b.health <= 0) {
+      b.glint.visible = false;
+
       if (b.corpse && b.fallY > b.y + 0.005) {
         b.fallVel -= 20 * dt;
         b.fallY = Math.max(b.y, b.fallY + b.fallVel * dt);
@@ -57,148 +184,92 @@ export const botsTick = (dt: number) => {
     const ey = b.y + 1.6 - 0.5 * b.crouchAmount;
     const o: Vec3 = [b.x, ey, b.z];
     const dx = playerBody.x - b.x;
-    const dy = playerBody.y + 1.2 - ey;
     const dz = playerBody.z - b.z;
-    const dist = Math.hypot(dx, dy, dz);
-    let sees = false;
+    const dist = Math.hypot(dx, playerBody.y + 1.2 - ey, dz);
+    const sees = botSees(b, o, dist);
 
-    if (!player.dead && dist < 50 && clock.time >= (b.blindUntil || 0)) {
-      const da = Math.atan2(dx, dz) - b.mesh.rotation.y;
-      const ang = Math.abs(((da + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI);
-
-      sees = (b.alert > 0 || dist < 8 || ang < settings.difficulty.viewAngle)
-        && lineOfSight(o, eyePos())
-        && lineOfSight(o, [playerBody.x, playerBody.y + player.eyeHeight * 0.65, playerBody.z]);
-    }
+    b.sees = sees;
 
     if (sees) {
       if (b.alert <= 0) {
-        b.reactAt = clock.time + (0.35 + Math.random() * 0.3) * settings.difficulty.reactionTime;
+        b.reactAt = clock.time + (0.35 + Math.random() * 0.3) * settings.difficulty.reactionTime + dist * 0.004;
       }
 
       b.alert = 1.2 * settings.difficulty.memory;
+      b.knownX = playerBody.x;
+      b.knownY = playerBody.y;
+      b.knownZ = playerBody.z;
     } else {
       b.alert -= dt;
     }
 
     const px = b.x;
     const pz = b.z;
+    const canFight = sees && dist <= engageRange(WEAPONS[b.weaponId]);
+    const fleeing = b.running && dist > 14;
+    const sp = WALK * settings.difficulty.speed;
+    let moving = false;
 
-    if (b.alert > 0 && !player.dead && !(b.running && dist > 14)) {
-      b.mesh.rotation.y = Math.atan2(dx, dz);
+    if (!fleeing && !player.dead && b.underFireAt > b.coverAt && clock.time - b.underFireAt < 0.6) {
+      reactToFire(b, canFight);
+    }
 
-      const st = Math.sin(clock.time * 1.7 + b.id * 2) * 2;
-      const rx = Math.cos(b.mesh.rotation.y);
-      const rz = -Math.sin(b.mesh.rotation.y);
-      const sm = b.crouch ? 0.25 : 1;
+    if (player.dead || fleeing) {
+      moving = roam(b);
+    } else if (b.mode === BotMode.Cover && !b.inCover) {
+      // sprinting for cover
+      const left = steer(b, b.coverX, b.coverZ, sp * 1.6);
 
-      b.vel.x = rx * st * sm;
-      b.vel.z = rz * st * sm;
+      b.crouch = 0;
+      moving = true;
 
-      if (WEAPONS[b.weaponId].melee && dist > 1.6) {
-        const hd = Math.hypot(dx, dz) || 1;
-
-        b.vel.x = dx / hd * 4.2 * settings.difficulty.speed;
-        b.vel.z = dz / hd * 4.2 * settings.difficulty.speed;
+      if (left >= 0 && left < 1) {
+        b.inCover = true;
+        b.modeUntil = clock.time + 2 + Math.random() * 3;
+      } else if (clock.time > b.modeUntil) {
+        hunt(b);
       }
+    } else if (canFight) {
+      b.inCover = false;
+      fight(b, dist, dx, dz, dt);
+    } else if (b.mode === BotMode.Cover) {
+      // hiding, then going after the player
+      b.vel.x = 0;
+      b.vel.z = 0;
+      b.crouch = 1;
+      b.mesh.rotation.y = Math.atan2(b.knownX - b.x, b.knownZ - b.z);
 
-      if (!b.crouch && b.onGround && dist > 5 && Math.random() < dt * 0.4) {
-        b.vel.y = 7;
+      if (clock.time > b.modeUntil) {
+        b.inCover = false;
+        hunt(b);
       }
-
-      if (clock.time >= b.nextCrouchAt) {
-        b.nextCrouchAt = clock.time + 1 + Math.random() * 2.5;
-        b.crouch = sees && Math.random() < 0.4 ? 1 : 0;
-      }
-
-      if (sees && clock.time >= b.reactAt && clock.time >= b.nextShotAt && (!WEAPONS[b.weaponId].melee || dist < 2.8)) {
-        b.nextShotAt = clock.time
-          + Math.max(0.1, WEAPONS[b.weaponId].fireInterval * 1.6 * settings.difficulty.fireDelay)
-          + Math.random() * 0.15 * settings.difficulty.fireDelay;
-
-        const hc = settings.difficulty.accuracy
-          * Math.max(0.12, 0.7 - dist * 0.012)
-          * (Math.hypot(playerVel.x, playerVel.z) > 3 ? 0.6 : 1)
-          * (playerBody.height < PLAYER_HEIGHT ? 0.8 : 1)
-          * (b.onGround ? 1 : 0.7);
-        const hit = Math.random() < Math.min(0.95, hc);
-        const m = hit ? 0 : 1.8;
-        const tp: Vec3 = [
-          playerBody.x + (Math.random() - 0.5) * m,
-          playerBody.y + 1.1 + (Math.random() - 0.5) * m,
-          playerBody.z + (Math.random() - 0.5) * m,
-        ];
-        const o2: Vec3 = [b.x, b.y + 1.3, b.z];
-        const ex = tp[0] - o2[0];
-        const ey = tp[1] - o2[1];
-        const ez = tp[2] - o2[2];
-        const el = Math.hypot(ex, ey, ez);
-        const wt = Math.min(el, castRay(o2, [ex / el, ey / el, ez / el], el));
-
-        shatter(o2, [ex / el, ey / el, ez / el], el);
-        tracer(o2, [o2[0] + ex / el * wt, o2[1] + ey / el * wt, o2[2] + ez / el * wt], 0xff7a55);
-        noiseBurst(
-          (WEAPONS[b.weaponId].sniper ? 0.6 : 0.22) / (1 + dist * 0.12),
-          WEAPONS[b.weaponId].sniper ? 0.4 : 0.12,
-          WEAPONS[b.weaponId].sniper ? 900 : 1500,
-        );
-
-        if (hit) {
-          damagePlayer(
-            Math.min(
-              60,
-              WEAPONS[b.weaponId].damage * 0.3 * settings.difficulty.damage,
-            ) * (0.8 + Math.random() * 0.4) * (WEAPONS[b.weaponId].pellets ? 2 : 1),
-            b,
-          );
-        }
-      }
-    } else {
+    } else if (b.alert > 0 || b.mode === BotMode.Hunt || b.mode === BotMode.Fight) {
+      // lost sight of the player (or heard them): go to where they were last seen
+      hunt(b);
       b.crouch = 0;
 
-      const wx = b.targetX - b.x;
-      const wz = b.targetZ - b.z;
-      const wd = Math.hypot(wx, wz);
-      const zt2 = zone.next || zone;
-      const badT = Math.hypot(b.targetX - zone.cx, b.targetZ - zone.cz) > zone.radius
-        || (b.running && Math.hypot(b.targetX - zt2.cx, b.targetZ - zt2.cz) > zt2.radius);
+      const left = steer(b, b.knownX, b.knownZ, sp * (sees ? 1.5 : 1.25));
 
-      if (wd < 1.5 || badT) {
-        pickWaypoint(b);
-        b.stuck = 0;
-      } else if (b.stuck > 0.45) {
-        b.detourUntil = clock.time + 1.5;
-        b.detourDir = Math.random() < 0.5 ? -1 : 1;
+      moving = true;
 
-        if (Math.random() < 0.3) {
-          pickWaypoint(b);
-        }
-
-        b.stuck = 0;
-      } else {
-        if (b.stuck > 0.12 && b.onGround) {
-          b.vel.y = 7;
-        }
-
-        let ux = wx / wd;
-        let uz = wz / wd;
-
-        if (clock.time < (b.detourUntil || 0)) {
-          const a = b.detourDir * 1.1;
-          const c = Math.cos(a);
-          const s2 = Math.sin(a);
-          const tx = ux * c - uz * s2;
-
-          uz = ux * s2 + uz * c;
-          ux = tx;
-        }
-
-        const sp = 3.4 * settings.difficulty.speed * (b.running ? 1.7 : 1);
-
-        b.vel.x = ux * sp;
-        b.vel.z = uz * sp;
-        b.mesh.rotation.y = Math.atan2(ux, uz);
+      if ((left >= 0 && left < 2.5)
+        || clock.time > b.modeUntil
+        || Math.hypot(b.knownX - zone.cx, b.knownZ - zone.cz) > zone.radius) {
+        b.alert = 0;
+        moving = roam(b);
       }
+    } else if (b.mode === BotMode.Overwatch) {
+      // holding high ground with a sniper rifle, scanning the area
+      b.vel.x = 0;
+      b.vel.z = 0;
+      b.mesh.rotation.y += dt * 0.45 * b.detourDir;
+
+      if (clock.time > b.modeUntil) {
+        pickWaypoint(b);
+        b.mode = BotMode.Roam;
+      }
+    } else {
+      moving = roam(b);
     }
 
     b.vel.y -= 20 * dt; {
@@ -251,14 +322,13 @@ export const botsTick = (dt: number) => {
       });
     }
 
-    if (b.alert <= 0) {
-      if (Math.hypot(b.x - px, b.z - pz) < 0.3 * 3.4 * dt) {
-        b.stuck += dt;
-      } else {
-        b.stuck = 0;
-      }
+    if (moving && Math.hypot(b.x - px, b.z - pz) < 0.3 * WALK * dt) {
+      b.stuck += dt;
+    } else {
+      b.stuck = 0;
     }
 
     b.mesh.position.set(b.x, b.y, b.z);
+    updateGlint(b, dist);
   }
 };
