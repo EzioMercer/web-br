@@ -81,6 +81,7 @@
   <div id="start">
     <div class="pause-box">
       <button class="mbtn primary" id="go">Resume</button>
+      <button class="mbtn" id="pauseset">Settings</button>
       <button class="mbtn" id="tomenu">Main menu</button>
     </div>
   </div>
@@ -102,11 +103,6 @@
           <stop offset="0" stop-color="#5a3a36" />
           <stop offset="1" stop-color="#0d1218" />
         </linearGradient>
-        <linearGradient id="zone" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#5aa8ff" stop-opacity="0" />
-          <stop offset=".5" stop-color="#5aa8ff" stop-opacity=".22" />
-          <stop offset="1" stop-color="#5aa8ff" stop-opacity="0" />
-        </linearGradient>
       </defs>
       <rect width="1600" height="900" fill="url(#sky)" />
       <circle cx="1060" cy="600" r="260" fill="url(#sun)" />
@@ -124,7 +120,6 @@
         <rect x="470" y="598" width="5" height="24" />
         <rect x="462" y="594" width="21" height="6" />
       </g>
-      <ellipse cx="480" cy="680" rx="420" ry="110" fill="none" stroke="url(#zone)" stroke-width="3" />
       <g class="mbg-plane" fill="#0e0b0d">
         <path d="M0 0 L46 -3 L52 -10 L56 -10 L54 -2 L64 0 L54 2 L56 10 L52 10 L46 3 Z" />
       </g>
@@ -142,39 +137,39 @@
       <button class="mbtn primary big" id="play">Start</button>
       <div id="mdiff"><span>Bot difficulty</span></div>
     </div>
-    <div id="settings" role="dialog" aria-modal="true" aria-labelledby="settitle">
-      <div class="sbox">
-        <div class="shead">
-          <h2 id="settitle">Settings</h2>
-          <button class="iconbtn" id="setclose" title="Close" aria-label="Close">✕</button>
-        </div>
-        <div class="tabs" role="tablist">
-          <button class="tab on" role="tab" data-tab="tcfg">Configuration</button>
-          <button class="tab" role="tab" data-tab="tgfx">Graphics</button>
-          <button class="tab" role="tab" data-tab="tctl">Controls</button>
-        </div>
-        <div class="tpane on" id="tcfg" role="tabpanel">
-          <label class="srow"><span>Mouse sensitivity</span>
-            <input id="sens" type="range" min="0.4" max="3" step="0.1" value="1"><output id="sensv">1.0</output></label>
-          <label class="srow"><span>Footsteps volume</span>
-            <input id="fvol" type="range" min="0" max="100" step="5" value="60"><output id="fvolv">60%</output></label>
-        </div>
-        <div class="tpane" id="tgfx" role="tabpanel">
-          <div class="srow stack"><span>Quality</span><div class="seg" id="gpreset"></div>
-            <small class="shint" id="ghint"></small></div>
-          <label class="srow"><span>Resolution</span>
-            <input id="gres" type="range" min="50" max="100" step="5" value="100"><output id="gresv">100%</output></label>
-          <div class="srow"><span>View distance</span><div class="seg" id="gview"></div></div>
-          <div class="srow"><span>Shadows</span><div class="seg" id="gshadow"></div></div>
-          <div class="srow"><span>Antialiasing</span><div class="seg" id="gaa"></div></div>
-          <div class="srow"><span>Show FPS</span><div class="seg" id="gfps"></div></div>
-        </div>
-        <div class="tpane" id="tctl" role="tabpanel">
-          <table class="ctl">
-            <thead><tr><th>Action</th><th>Key</th></tr></thead>
-            <tbody id="ctlbody"></tbody>
-          </table>
-        </div>
+  </div>
+  <div id="settings" role="dialog" aria-modal="true" aria-labelledby="settitle">
+    <div class="sbox">
+      <div class="shead">
+        <h2 id="settitle">Settings</h2>
+        <button class="iconbtn" id="setclose" title="Close" aria-label="Close">✕</button>
+      </div>
+      <div class="tabs" role="tablist">
+        <button class="tab on" role="tab" data-tab="tcfg">Configuration</button>
+        <button class="tab" role="tab" data-tab="tgfx">Graphics</button>
+        <button class="tab" role="tab" data-tab="tctl">Controls</button>
+      </div>
+      <div class="tpane on" id="tcfg" role="tabpanel">
+        <label class="srow"><span>Mouse sensitivity</span>
+          <input id="sens" type="range" min="0.4" max="3" step="0.1" value="1"><output id="sensv">1.0</output></label>
+        <label class="srow"><span>Footsteps volume</span>
+          <input id="fvol" type="range" min="0" max="100" step="5" value="60"><output id="fvolv">60%</output></label>
+      </div>
+      <div class="tpane" id="tgfx" role="tabpanel">
+        <div class="srow stack"><span>Quality</span><div class="seg" id="gpreset"></div>
+          <small class="shint" id="ghint"></small></div>
+        <label class="srow"><span>Resolution</span>
+          <input id="gres" type="range" min="50" max="100" step="5" value="100"><output id="gresv">100%</output></label>
+        <div class="srow"><span>View distance</span><div class="seg" id="gview"></div></div>
+        <div class="srow"><span>Shadows</span><div class="seg" id="gshadow"></div></div>
+        <div class="srow"><span>Antialiasing</span><div class="seg" id="gaa"></div></div>
+        <div class="srow"><span>Show FPS</span><div class="seg" id="gfps"></div></div>
+      </div>
+      <div class="tpane" id="tctl" role="tabpanel">
+        <table class="ctl">
+          <thead><tr><th>Action</th><th>Key</th></tr></thead>
+          <tbody id="ctlbody"></tbody>
+        </table>
       </div>
     </div>
   </div>

@@ -103,7 +103,7 @@ body.br #prompt{left:50%;top:auto;bottom:calc(150px + env(safe-area-inset-bottom
 #setbtn svg{transition:transform .4s}#setbtn:hover svg{transform:rotate(60deg)}
 
 /* Settings window */
-#settings{position:absolute;inset:0;z-index:2;display:none;align-items:center;justify-content:center;background:rgba(6,8,12,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:16px}
+#settings{position:fixed;inset:0;z-index:6;display:none;align-items:center;justify-content:center;background:rgba(6,8,12,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:16px}
 #settings.on{display:flex}
 .sbox{width:min(560px,100%);max-height:calc(100% - 32px);display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(26,32,38,.97),rgba(12,15,19,.98));border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 60px rgba(0,0,0,.6)}
 .shead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px 20px}

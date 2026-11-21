@@ -49,6 +49,10 @@ export const stairTower = (cx: number, cz: number, Y: number, o: BuildOpts = {})
     C.push([hi - sw - t2 * (j + 0.5), hi - sw / 2, t2, sw]);
   }
 
+  // the corner between the south and the west run: left open at the bottom (the way in from the door is there), but
+  // every loop above needs a step there or the climb has a hole in it
+  C.push([-hi + sw / 2, hi - 0.5, sw, 1]);
+
   const N = Math.max(C.length, Math.round((o.height || 14) / RISE) - 1);
   const hf = (N + 1) * RISE;
   const rec: Stairwell = { cx, cz, baseY: Y, floorHeight: hf, face: f, treads: [] };

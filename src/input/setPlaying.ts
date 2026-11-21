@@ -1,5 +1,6 @@
 import { grenadeThrow } from '../grenades/state';
 import { setCursor } from '../hud/inventory/setCursor';
+import { openSettings } from '../menu/openSettings';
 import { byId } from '../utils/byId';
 import { input, keys } from './state';
 
@@ -8,6 +9,10 @@ export const setPlaying = (v: boolean) => {
 
   if (!v) {
     grenadeThrow.held = false;
+  }
+
+  if (v) {
+    openSettings(false);
   }
 
   byId('start').style.display = (v || input.inMenu) ? 'none' : 'flex';
