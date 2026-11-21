@@ -22,7 +22,8 @@ const CONTROLS: [string, string[]][] = [
   ['Move right', ['D']],
   ['Look', ['Mouse', 'Arrow keys']],
   ['Run', ['Shift']],
-  ['Crouch (while running: slide)', ['Ctrl', 'C']],
+  ['Crouch (while running: slide)', ['C']],
+  ['Inventory cursor (inventory open)', ['Ctrl']],
   ['Jump / bunnyhop', ['Space']],
   ['Fire / throw grenade', ['Left mouse']],
   ['Aim / scope', ['Right mouse']],
@@ -63,6 +64,13 @@ byId('setbtn').onclick = () => {
   openSettings(true);
 };
 
+// the same settings from the pause screen; the game stays paused behind them
+byId('pauseset').onclick = (e) => {
+  e.stopPropagation();
+  showGraphicsOptions();
+  openSettings(true);
+};
+
 byId('setclose').onclick = () => openSettings(false);
 
 byId('settings').onclick = (e) => {
@@ -72,7 +80,7 @@ byId('settings').onclick = (e) => {
 };
 
 addEventListener('keydown', (e) => {
-  if (e.code === 'Escape' && input.inMenu) {
+  if (e.code === 'Escape' && !input.playing) {
     openSettings(false);
   }
 });

@@ -53,7 +53,8 @@ const gunCard = (n: number, id: WeaponId | undefined) => {
   return '<div class="ivw c' + c + (inHand ? ' on' : '') + '">'
     + '<div class="ivt"><i>' + n + '</i><b>' + w.name + '</b><span>' + CLASS_NAMES[c] + '</span></div>'
     + '<div class="ivb"><svg viewBox="0 0 120 40"><path fill="currentColor" d="' + CLASS_ICONS[c] + '"/></svg>'
-    + '<div class="ivm"><b>' + mag + '</b>/' + w.magSize + '<small>+' + reserve(id) + ' spare</small></div></div>'
+    + '<div class="ivm"><b>' + mag + '</b>/ ' + reserve(id)
+    + '<small>loaded / spare · mag ' + w.magSize + '</small></div></div>'
     // the values the game uses (data/weapons.ts); bars against the strongest gun of all
     + '<div class="ivs">'
     + bar('Damage', w.pellets ? w.pellets + '×' + w.damage : String(w.damage), w.damage * (w.pellets || 1) / 150)
