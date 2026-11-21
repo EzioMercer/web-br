@@ -3,6 +3,7 @@ import { graphics } from '../graphics/state';
 import { GraphicsPreset } from '../graphics/types';
 import { byId } from '../utils/byId';
 import { PRESET_CHOICES } from './graphicsChoices';
+import { settings } from '../settings/state';
 
 /** Marks the button whose value is `v` in a row of option buttons. */
 const select = (id: string, v: unknown) => {
@@ -20,6 +21,7 @@ export const showGraphicsOptions = () => {
   select('gview', o.viewDistance);
   select('gshadow', o.shadows);
   select('gaa', o.antialias);
+  select('gfps', settings.showFps);
   byId<HTMLInputElement>('gres').value = String(pct);
   byId('gresv').textContent = pct + '%';
 

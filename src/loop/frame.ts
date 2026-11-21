@@ -27,12 +27,15 @@ import { isSliding } from '../sim/isSliding';
 import { clock } from '../sim/state';
 import { tick } from '../sim/tick';
 import { byId } from '../utils/byId';
+import { writeDom } from '../utils/dom/writeDom';
 import { animateViewModel } from '../viewmodel/animateViewModel';
 import { gunRig, heldGrenade, muzzleFlashMesh, muzzleZ, opticMeshes, sightTip, viewModels } from '../viewmodel/models';
 import { shards } from '../world/doors/state';
 import { waterMeshes } from '../world/level/state';
 import { OpticId } from '../types';
 import type { WeaponId } from '../types';
+import { disposeObject } from '../utils/three/disposeObject';
+import { updateFps } from '../hud/updateFps';
 
 let lastFrame = performance.now();
 
@@ -139,24 +142,15 @@ export const frame = (now: number) => {
   {
     const sk = byId('scope');
 
-    sk.style.display = sc || mg ? 'block' : 'none';
-
-    if (mg) {
-      sk.className = 'op';
-      sk.style.setProperty('--sr', oc === OpticId.Scope4x ? '27vmin' : '33vmin');
-    } else if (sk.className) {
-      sk.className = '';
-      sk.style.removeProperty('--sr');
-    }
+    writeDom(sk, 'display', sc || mg ? 'block' : 'none');
+    writeDom(sk, 'class', mg ? 'op' : '');
+    writeDom(sk, '--sr', mg ? (oc === OpticId.Scope4x ? '27vmin' : '33vmin') : '');
   }
-  byId('xh').style.display = sc || ads ? 'none' : ''; {
+  writeDom(byId('xh'), 'display', sc || ads ? 'none' : ''); {
     const r = byId('reti');
-    const cl = so ? 'hud ' + oc : 'hud';
 
-    if (r.className !== cl) {
-      r.className = cl;
-      r.style.display = so ? 'block' : 'none';
-    }
+    writeDom(r, 'class', so ? 'hud ' + oc : 'hud');
+    writeDom(r, 'display', so ? 'block' : 'none');
   }
   screenFx.gunKick = Math.max(0, screenFx.gunKick - dt * 0.5);
   screenFx.muzzleFlash = Math.max(0, screenFx.muzzleFlash - dt);
@@ -210,6 +204,7 @@ export const frame = (now: number) => {
 
     if (f.life <= 0) {
       scene.remove(f.mesh);
+      disposeObject(f.mesh);
       transientFx.splice(i, 1);
     }
   }
@@ -226,6 +221,7 @@ export const frame = (now: number) => {
 
     if (k >= 1) {
       scene.remove(q.mesh);
+      disposeObject(q.mesh);
       ripples.splice(i, 1);
     }
   }
@@ -252,25 +248,26 @@ export const frame = (now: number) => {
 
   screenFx.damageFlash = Math.max(0, screenFx.damageFlash - dt * 1.6);
   screenFx.hitMarker = Math.max(0, screenFx.hitMarker - dt * 4);
-  byId('vg').style.opacity = String(screenFx.damageFlash * 0.8);
+  writeDom(byId('vg'), 'opacity', String(screenFx.damageFlash * 0.8));
   screenFx.flashbang = Math.max(0, screenFx.flashbang - dt * 0.3);
-  byId('fb').style.opacity = String(Math.min(1, screenFx.flashbang * 1.4));
-  byId('hm').className = 'hud' + (screenFx.hitMarker > 0.7 ? ' on' : '');
-  byId('hm').style.opacity = String(screenFx.hitMarker > 0.7 ? 1 : screenFx.hitMarker);
+  writeDom(byId('fb'), 'opacity', String(Math.min(1, screenFx.flashbang * 1.4)));
+  writeDom(byId('hm'), 'class', 'hud' + (screenFx.hitMarker > 0.7 ? ' on' : ''));
+  writeDom(byId('hm'), 'opacity', String(screenFx.hitMarker > 0.7 ? 1 : screenFx.hitMarker));
 
   const ppr = (innerHeight / 2) / Math.tan(camera.fov * Math.PI / 360);
 
-  byId('xh').style.setProperty('--g', (shotSpread(sp) * ppr * 0.9 + 3).toFixed(1) + 'px');
+  writeDom(byId('xh'), '--g', (shotSpread(sp) * ppr * 0.9 + 3).toFixed(1) + 'px');
   updateHud();
   updateInventory();
   drawCompass();
   screenFx.damageDir = Math.max(0, screenFx.damageDir - dt);
-  byId('dd').style.opacity = String(Math.min(1, screenFx.damageDir * 1.4));
+  writeDom(byId('dd'), 'opacity', String(Math.min(1, screenFx.damageDir * 1.4)));
 
   mapHud();
-  byId('prompt').innerHTML = promptText();
+  writeDom(byId('prompt'), 'html', promptText());
 
   autoTune();
+  updateFps(now);
 
   // The main menu covers the screen with its own backdrop, so the 3D scene is not drawn behind it.
   if (!input.inMenu && renderer) {

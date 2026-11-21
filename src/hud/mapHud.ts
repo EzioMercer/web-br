@@ -6,6 +6,7 @@ import { match } from '../match/state';
 import { player, playerBody } from '../player/state';
 import { clock } from '../sim/state';
 import { byId } from '../utils/byId';
+import { writeDom } from '../utils/dom/writeDom';
 import { ctx2d } from '../utils/ctx2d';
 import { formatTime } from '../utils/formatTime';
 import { level } from '../world/level/state';
@@ -14,12 +15,22 @@ import { maps, MINIMAP_SIZE } from './minimap/state';
 import { pad2 } from '../utils/pad2';
 import { Phase } from '../types';
 import { ZonePhase } from '../br/zone/types';
+import type { MapBg } from '../types';
 
 const PLAYER_ICON = '<svg width="22" height="22" viewBox="0 0 20 20">'
   + '<circle cx="10" cy="6" r="4" fill="currentColor"/>'
   + '<path d="M2 19c0-5 3-8 8-8s8 3 8 8z" fill="currentColor"/></svg>';
 
 let miniCtx: CanvasRenderingContext2D | null = null;
+
+/** What the minimap and the big map last drew (see mapKey). */
+let lastMapKey = '';
+
+let lastBigKey = '';
+
+let lastMini: MapBg | null = null;
+
+let lastBig: MapBg | null = null;
 
 /** Battle Royale HUD: player count, minimap, big map and zone strip (shown once the island is loaded). */
 export const mapHud = () => {
@@ -31,7 +42,7 @@ export const mapHud = () => {
 
   const alive = bots.filter(b => b.health > 0).length + (player.dead ? 0 : 1);
 
-  byId('pcount').innerHTML = PLAYER_ICON + alive + ' / ' + (BOT_COUNT + 1);
+  writeDom(byId('pcount'), 'html', PLAYER_ICON + alive + ' / ' + (BOT_COUNT + 1));
 
   const hdr = match.phase === Phase.Start
     ? 'Match starts in ' + Math.max(0, Math.ceil(match.phaseEnd - clock.time)) + ' s'
@@ -41,7 +52,7 @@ export const mapHud = () => {
         ? 'Zone ' + zone.stage + '/' + ZONE_STAGES.length + ' · shrinking, ' + formatTime(zone.timeLeft) + ' left'
         : 'Final zone';
 
-  byId('mmh').textContent = hdr;
+  writeDom(byId('mmh'), 'text', hdr);
 
   // ----- mini map
   const c = byId<HTMLCanvasElement>('mmc');
@@ -50,11 +61,21 @@ export const mapHud = () => {
   if (!miniCtx || c.width !== MINIMAP_SIZE * dpr) {
     c.width = c.height = MINIMAP_SIZE * dpr;
     miniCtx = ctx2d(c);
+    lastMapKey = '';
   }
 
-  miniCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  miniCtx.clearRect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE);
-  drawMap(miniCtx, MINIMAP_SIZE, maps.mini);
+  // what the maps show: redrawn only when it changes (not while the player stands still with the zone holding)
+  const nz = zone.next;
+  const mapKey = playerBody.x + ',' + playerBody.z + ',' + player.yaw + ',' + zone.cx + ',' + zone.cz + ','
+    + zone.radius + (nz ? ',' + nz.cx + ',' + nz.cz + ',' + nz.radius : '');
+
+  if (mapKey !== lastMapKey || maps.mini !== lastMini) {
+    lastMapKey = mapKey;
+    lastMini = maps.mini;
+    miniCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    miniCtx.clearRect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE);
+    drawMap(miniCtx, MINIMAP_SIZE, maps.mini);
+  }
 
   const T = level.terrain!;
   const rg = T.region(playerBody.x, playerBody.z);
@@ -66,17 +87,22 @@ export const mapHud = () => {
     if (bc.width !== S) {
       bc.width = S;
       bc.height = S;
+      lastBigKey = '';
     }
 
-    const bx = ctx2d(bc);
+    if (mapKey !== lastBigKey || maps.big !== lastBig) {
+      const bx = ctx2d(bc);
 
-    bx.setTransform(1, 0, 0, 1, 0, 0);
-    bx.clearRect(0, 0, S, S);
-    drawMap(bx, S, maps.big);
-    byId('bmt').textContent = hdr
-      + '   ·   You are in: '
-      + (rg === 255 ? 'open sea' : T.regions[rg].name)
-      + '   ·   M to close';
+      lastBigKey = mapKey;
+      lastBig = maps.big;
+      bx.setTransform(1, 0, 0, 1, 0, 0);
+      bx.clearRect(0, 0, S, S);
+      drawMap(bx, S, maps.big);
+    }
+
+    const where = rg === 255 ? 'open sea' : T.regions[rg].name;
+
+    writeDom(byId('bmt'), 'text', hdr + '   ·   You are in: ' + where + '   ·   M to close');
   }
 
   // ----- zone strip (one line): time left, the safe area along the line from you to its centre, and the distance to
@@ -86,8 +112,8 @@ export const mapHud = () => {
     const tl = ph === Phase.Start ? Math.max(0, match.phaseEnd - clock.time) : zone.timeLeft;
     const ti = Math.max(0, Math.ceil(tl));
 
-    byId('ztv').textContent = ph === ZonePhase.Final ? '--:--' : pad2(Math.floor(ti / 60)) + ':' + pad2(ti % 60);
-    byId('ztv').style.color = ph === ZonePhase.Shrink ? '#ff7a6a' : '#fff';
+    writeDom(byId('ztv'), 'text', ph === ZonePhase.Final ? '--:--' : pad2(Math.floor(ti / 60)) + ':' + pad2(ti % 60));
+    writeDom(byId('ztv'), 'color', ph === ZonePhase.Shrink ? '#ff7a6a' : '#fff');
   }
 
   const dx = zone.cx - playerBody.x;
@@ -114,15 +140,16 @@ export const mapHud = () => {
     sw = mw;
   }
 
-  byId('zsafe').style.left = sl + '%';
-  byId('zsafe').style.width = sw + '%';
-  byId('zrun').style.left = pc(0) + '%';
+  // whole tenths of a percent: finer steps are invisible and would rewrite the styles every frame
+  writeDom(byId('zsafe'), 'left', sl.toFixed(1) + '%');
+  writeDom(byId('zsafe'), 'width', sw.toFixed(1) + '%');
+  writeDom(byId('zrun'), 'left', pc(0).toFixed(1) + '%');
   {
     const out = dC > zone.radius;
     const d = Math.round(Math.abs(dC - zone.radius));
     const zd = byId('zdist');
 
-    zd.textContent = d + 'm';
-    zd.style.color = out ? '#ff8a7a' : '#fff';
+    writeDom(zd, 'text', d + 'm');
+    writeDom(zd, 'color', out ? '#ff8a7a' : '#fff');
   }
 };

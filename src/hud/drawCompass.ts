@@ -6,6 +6,9 @@ import { level } from '../world/level/state';
 
 let compassCtx: CanvasRenderingContext2D | null = null;
 
+/** What the compass last drew. */
+let lastKey = '';
+
 export const drawCompass = () => {
   const c = byId<HTMLCanvasElement>('cmp');
   const dpr = Math.min(devicePixelRatio || 1, 2);
@@ -16,7 +19,18 @@ export const drawCompass = () => {
     c.width = W * dpr;
     c.height = Hh * dpr;
     compassCtx = ctx2d(c);
+    lastKey = '';
   }
+
+  // redrawn only when the heading or the zone marker changes
+  const key = player.yaw + ',' + (level.terrain ? zone.cx + ',' + zone.cz + ',' + zone.radius : '') + ','
+    + playerBody.x + ',' + playerBody.z;
+
+  if (key === lastKey) {
+    return;
+  }
+
+  lastKey = key;
 
   const x = compassCtx;
 

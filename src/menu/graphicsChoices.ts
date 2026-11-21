@@ -25,3 +25,8 @@ export const ANTIALIAS_CHOICES: [boolean, string][] = [
   [false, 'Off'],
   [true, 'On'],
 ];
+
+export const FPS_CHOICES: [boolean, string][] = [
+  [false, 'Off'],
+  [true, 'On'],
+];

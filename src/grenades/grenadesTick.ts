@@ -3,6 +3,7 @@ import { clock } from '../sim/state';
 import { detonate } from './detonate';
 import { flyingGrenades, smokes } from './state';
 import { stepGrenade } from './stepGrenade';
+import { disposeObject } from '../utils/three/disposeObject';
 
 export const grenadesTick = (dt: number) => {
   for (let i = flyingGrenades.length - 1; i >= 0; i--) {
@@ -13,6 +14,7 @@ export const grenadesTick = (dt: number) => {
 
     if (clock.time >= n.fuseAt) {
       scene.remove(n.mesh);
+      disposeObject(n.mesh);
       flyingGrenades.splice(i, 1);
       detonate(n);
     }
@@ -21,6 +23,7 @@ export const grenadesTick = (dt: number) => {
   for (let i = smokes.length - 1; i >= 0; i--) {
     if (clock.time >= smokes[i].until) {
       scene.remove(smokes[i].mesh);
+      disposeObject(smokes[i].mesh);
       smokes.splice(i, 1);
     }
   }

@@ -1,10 +1,9 @@
 import * as THREE from 'three';
 import { panes } from '../doors/state';
-import { mapGroup } from './mapGroup';
-import { glassMat, unitGeo } from './materials';
 import { boxes } from './state';
 import type { Box, MapGlass } from '../../types';
 
+/** Adds a pane's collision box and its slot in `panes`; flushGlass draws it. */
 export const addGlass = (g: MapGlass) => {
   const [x, z, w, d, h, y] = g;
   const b: Box = {
@@ -15,11 +14,10 @@ export const addGlass = (g: MapGlass) => {
   };
 
   boxes.push(b);
-
-  const m = new THREE.Mesh(unitGeo, glassMat);
-
-  m.scale.set(w, h, d);
-  m.position.set(x, y + h / 2, z);
-  mapGroup.add(m);
-  panes.push({ box: b, mesh: m });
+  panes.push({
+    box: b,
+    matrix: new THREE.Matrix4().makeScale(w, h, d).setPosition(x, y + h / 2, z),
+    mesh: null,
+    index: 0,
+  });
 };

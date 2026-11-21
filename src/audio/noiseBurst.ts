@@ -1,4 +1,5 @@
 import { audio } from './state';
+import { noiseBuffer } from './noiseBuffer';
 
 /** Filtered noise burst. */
 export const noiseBurst = (vol: number, dur: number, freq: number) => {
@@ -7,12 +8,7 @@ export const noiseBurst = (vol: number, dur: number, freq: number) => {
   }
 
   const n = audio.ctx.sampleRate * dur | 0;
-  const b = audio.ctx.createBuffer(1, n, audio.ctx.sampleRate);
-  const d = b.getChannelData(0);
-
-  for (let i = 0; i < n; i++) {
-    d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
-  }
+  const b = noiseBuffer(audio.ctx, n, 3);
 
   const s = audio.ctx.createBufferSource();
   const f = audio.ctx.createBiquadFilter();

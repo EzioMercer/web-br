@@ -7,6 +7,7 @@ import { SAVE_KEY, settings } from './state';
 type Saved = {
   sens?: number;
   vol?: number;
+  fps?: boolean;
   diff?: string;
   gfx?: { preset?: string; custom?: Partial<GraphicsOptions> };
 };
@@ -23,6 +24,10 @@ export const loadSettings = () => {
 
     if (typeof s.vol === 'number') {
       settings.footstepVolume = s.vol;
+    }
+
+    if (typeof s.fps === 'boolean') {
+      settings.showFps = s.fps;
     }
 
     if (s.diff && DIFFICULTIES[s.diff]) {

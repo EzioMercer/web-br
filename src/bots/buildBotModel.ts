@@ -3,6 +3,7 @@ import { srgbTex } from '../render/srgbTex';
 import type { Bot } from './types';
 import { boxMesh } from '../utils/three/boxMesh';
 import { lambert } from '../utils/three/lambert';
+import { mergeMeshes } from '../utils/three/mergeMeshes';
 
 const PALETTE = [0x6b5a3a, 0x3b3f45, 0x5a3a32, 0x39503f, 0x4a4a2e];
 
@@ -53,6 +54,8 @@ export const buildBotModel = (
     add(K, 0.19, 0.06, 0.2, 0, -0.12, 0.02, vest);
     legs.push(L);
     knees.push(K);
+    mergeMeshes(L);
+    mergeMeshes(K);
 
     const A = new THREE.Group();
 
@@ -68,7 +71,12 @@ export const buildBotModel = (
     A.add(F);
     add(F, 0.11, 0.28, 0.13, 0, -0.14, 0, c);
     add(F, 0.11, 0.09, 0.11, 0, -0.31, 0, dk);
+    mergeMeshes(A);
+    mergeMeshes(F);
   }
+
+  // each rigid part in one draw call: the legs, knees and arms move on their own, so they stay separate
+  mergeMeshes(U);
 
   const gunG = new THREE.Group();
 

@@ -1,7 +1,5 @@
 import * as THREE from 'three';
 import { doors } from '../doors/state';
-import { mapGroup } from './mapGroup';
-import { doorMats, unitGeo } from './materials';
 import { boxes } from './state';
 import { Axis } from '../../types';
 import { doorAngle } from '../doors/doorAngle';
@@ -25,19 +23,18 @@ export const addDoor = (o: MapDoor) => {
 
   grp.position.set(ax === Axis.X ? m + hinge * w / 2 : c, y, ax === Axis.X ? c : m + hinge * w / 2);
 
-  const mat = doorMats[o.color] || (doorMats[o.color] = new THREE.MeshLambertMaterial({ color: o.color }));
-  const mesh = new THREE.Mesh(unitGeo, mat);
+  // the panel and its knob, placed relative to the hinge; not in the scene: flushDoors draws them as instances
+  const mesh = new THREE.Object3D();
 
   mesh.scale.set(w, h, 0.12);
   mesh.position.set(w / 2, h / 2, 0);
   grp.add(mesh);
 
-  const kn = new THREE.Mesh(unitGeo, doorMats.k || (doorMats.k = new THREE.MeshLambertMaterial({ color: 0xc9a227 })));
+  const kn = new THREE.Object3D();
 
   kn.scale.set(0.1, 0.1, 0.2);
   kn.position.set(w - 0.2, h * 0.45, 0);
   grp.add(kn);
-  mapGroup.add(grp);
 
   const d: Door = {
     box: b,
@@ -52,6 +49,9 @@ export const addDoor = (o: MapDoor) => {
     z,
     y,
     reachSq: (w / 2 + 1.5) * (w / 2 + 1.5),
+    color: o.color,
+    width: w,
+    drawn: null,
   };
 
   grp.rotation.y = doorAngle(d);

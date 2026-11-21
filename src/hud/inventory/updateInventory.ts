@@ -15,6 +15,7 @@ import { byId } from '../../utils/byId';
 import { slotAt } from './slotAt';
 import { inventory } from './state';
 import { GrenadeId, WeaponId } from '../../types';
+import { writeDom } from '../../utils/dom/writeDom';
 
 /** Grenades: id, name, number key. */
 const GRENADES: [GrenadeId, string, number][] = [
@@ -76,9 +77,9 @@ export const updateInventory = () => {
   const cur = byId('ivcur');
   const ghost = byId('ivdrag');
 
-  el.style.display = show ? 'block' : 'none';
-  cur.style.display = show && inventory.cursor ? 'block' : 'none';
-  ghost.style.display = show && inventory.drag ? 'block' : 'none';
+  writeDom(el, 'display', show ? 'block' : 'none');
+  writeDom(cur, 'display', show && inventory.cursor ? 'block' : 'none');
+  writeDom(ghost, 'display', show && inventory.drag ? 'block' : 'none');
 
   if (!show) {
     last = '';

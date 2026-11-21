@@ -7,6 +7,8 @@ export const settings = {
   /** Mouse sensitivity multiplier. */
   sensitivity: 1,
   footstepVolume: 0.6,
+  /** Frame rate counter in the corner of the screen. */
+  showFps: false,
 };
 
 export const SAVE_KEY = 'web-br.settings';

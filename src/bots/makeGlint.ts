@@ -25,6 +25,7 @@ export const makeGlint = () => {
     g.fillRect(31, 0, 2, 64);
     glintTexture = new THREE.CanvasTexture(c);
     glintTexture.colorSpace = THREE.SRGBColorSpace;
+    glintTexture.userData.keep = true;
   }
 
   const s = new THREE.Sprite(

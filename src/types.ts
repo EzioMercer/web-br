@@ -167,6 +167,10 @@ export interface Door {
   reachSq: number;
   /** The player closed it: don't auto-open for them until they walk away. */
   closedByPlayer?: boolean;
+  color: number;
+  width: number;
+  /** Where it is drawn: its tile's instanced meshes for panels and knobs, and its instance (see flushDoors). */
+  drawn: { panels: THREE.InstancedMesh; knobs: THREE.InstancedMesh; index: number } | null;
 }
 
 /** Pickup kinds: weapon, armor, ammo, grenade, optic, health. */

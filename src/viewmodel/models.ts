@@ -9,6 +9,7 @@ import { makeOptic } from './makeOptic';
 import { darkMat, gunMetal, lensGlass, oliveMat, woodMat } from './materials';
 import { WeaponId } from '../types';
 import type { OpticId } from '../types';
+import { keep } from '../utils/three/keep';
 
 /** First-person weapon models, attached to the camera. */
 export const gunRig = new THREE.Group();
@@ -253,5 +254,8 @@ gunRig.position.set(0.2, -0.2, -0.45);
 
 // drawn in a pass of its own after the world (renderView)
 gunRig.traverse(o => o.layers.set(VIEWMODEL_LAYER));
+
+// pickups show copies of these guns that share their geometry and materials: freeing a pickup must not free them
+keep(gunRig);
 
 camera.add(gunRig);

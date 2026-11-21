@@ -1,5 +1,6 @@
 import { footstepBus } from './footstepBus';
 import { audio } from './state';
+import { noiseBuffer } from './noiseBuffer';
 
 export const stepNoise = (vol: number, dur: number, f: number, att: number, at?: number) => {
   if (!audio.ctx || vol <= 0) {
@@ -8,12 +9,7 @@ export const stepNoise = (vol: number, dur: number, f: number, att: number, at?:
 
   const t = audio.ctx.currentTime + (at || 0);
   const n = Math.max(8, audio.ctx.sampleRate * dur | 0);
-  const b = audio.ctx.createBuffer(1, n, audio.ctx.sampleRate);
-  const d = b.getChannelData(0);
-
-  for (let i = 0; i < n; i++) {
-    d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
-  }
+  const b = noiseBuffer(audio.ctx, n, 2);
 
   const src = audio.ctx.createBufferSource();
   const f1 = audio.ctx.createBiquadFilter();

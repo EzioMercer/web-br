@@ -7,6 +7,7 @@ import { loadout } from '../loadout/state';
 import { player } from '../player/state';
 import { clock } from '../sim/state';
 import { byId } from '../utils/byId';
+import { writeDom } from '../utils/dom/writeDom';
 import { CLASS_ICONS, WEAPON_CLASS } from '../data/weaponClasses';
 import { GrenadeId, WeaponClass, WeaponId } from '../types';
 
@@ -22,10 +23,10 @@ let lastWeaponKey: string | null = null;
 let lastChips = '';
 
 export const updateHud = () => {
-  byId('hpf').style.width = Math.max(0, Math.min(100, player.health)) + '%';
-  byId('hpn').textContent = String(Math.ceil(player.health));
-  byId('arf').style.width = Math.max(0, Math.min(100, player.armor)) + '%';
-  byId('arn').textContent = String(Math.ceil(player.armor));
+  writeDom(byId('hpf'), 'width', Math.max(0, Math.min(100, player.health)) + '%');
+  writeDom(byId('hpn'), 'text', String(Math.ceil(player.health)));
+  writeDom(byId('arf'), 'width', Math.max(0, Math.min(100, player.armor)) + '%');
+  writeDom(byId('arn'), 'text', String(Math.ceil(player.armor)));
   byId('hp').classList.toggle('low', player.health < 30 && !player.dead);
 
   const wk = loadout.weaponId + (currentOptic() ? loadout.owned[loadout.weaponId].optic : '');
@@ -38,11 +39,11 @@ export const updateHud = () => {
 
   const mel = Boolean(loadout.weapon.melee);
 
-  byId('mag').textContent = mel ? '—' : String(loadout.ammo);
-  byId('rsv').textContent = mel ? '' : '/ ' + reserve();
-  byId('rlt').textContent = loadout.reloading
+  writeDom(byId('mag'), 'text', mel ? '—' : String(loadout.ammo));
+  writeDom(byId('rsv'), 'text', mel ? '' : '/ ' + reserve());
+  writeDom(byId('rlt'), 'text', loadout.reloading
     ? 'RELOADING'
-    : (loadout.weapon.boltAction && clock.time < loadout.boltCycleEnd ? 'CHAMBERING' : '');
+    : (loadout.weapon.boltAction && clock.time < loadout.boltCycleEnd ? 'CHAMBERING' : ''));
 
   const gk = carriedGuns();
   let h = '';

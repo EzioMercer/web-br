@@ -10,6 +10,9 @@ export const GRID_STEP = 4;
 
 export const GRID_N = Math.round(2 * ISLAND_HALF / GRID_STEP) + 1;
 
+/** Terrain tile size in grid cells (see terrainMesh): 32 cells of 4 m make 128 m tiles. */
+export const TERRAIN_TILE_CELLS = 32;
+
 /** Mountains: centre, radius and peak height (m). */
 export const MOUNTAINS = [
   { x: -170, z: -200, radius: 170, height: 84, name: 'Mount Karst' },

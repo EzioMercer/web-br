@@ -13,6 +13,8 @@ const glassSound = () => {
   stepThump(900, 500, 0.06, 0.04);
 };
 
+const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
+
 export const breakGlass = (b: Box) => {
   if (b.disabled) {
     return;
@@ -22,7 +24,12 @@ export const breakGlass = (b: Box) => {
 
   const g = panes[b.glassIndex!];
 
-  g.mesh.visible = false;
+  // a zero matrix folds the pane to a point: nothing left to draw
+  if (g.mesh) {
+    g.mesh.setMatrixAt(g.index, ZERO);
+    g.mesh.instanceMatrix.needsUpdate = true;
+  }
+
   glassSound();
 
   const cx = (b.min[0] + b.max[0]) / 2;

@@ -5,8 +5,9 @@ import { GraphicsPreset } from '../graphics/types';
 import type { GraphicsOptions } from '../graphics/types';
 import { saveSettings } from '../settings/saveSettings';
 import { byId } from '../utils/byId';
-import { ANTIALIAS_CHOICES, PRESET_CHOICES, SHADOW_CHOICES, VIEW_CHOICES } from './graphicsChoices';
+import { ANTIALIAS_CHOICES, FPS_CHOICES, PRESET_CHOICES, SHADOW_CHOICES, VIEW_CHOICES } from './graphicsChoices';
 import { showGraphicsOptions } from './showGraphicsOptions';
+import { settings } from '../settings/state';
 
 /** Fills the Graphics tab with its buttons and hooks them up. */
 export const setupGraphicsTab = () => {
@@ -48,6 +49,12 @@ export const setupGraphicsTab = () => {
   buttons('gview', VIEW_CHOICES, v => setOption('viewDistance', v));
   buttons('gshadow', SHADOW_CHOICES, v => setOption('shadows', v));
   buttons('gaa', ANTIALIAS_CHOICES, v => setOption('antialias', v));
+  // not a graphics option: it leaves the preset as it is
+  buttons('gfps', FPS_CHOICES, (v) => {
+    settings.showFps = v;
+    showGraphicsOptions();
+    saveSettings();
+  });
 
   const res = byId<HTMLInputElement>('gres');
 

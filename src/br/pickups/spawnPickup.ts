@@ -16,6 +16,7 @@ import { pickups } from './state';
 import { AmmoType, PickupKind } from '../../types';
 import type { GrenadeId, OpticId, OwnedWeapon, Pickup } from '../../types';
 import type { WeaponId } from '../../types';
+import { mergeMeshes } from '../../utils/three/mergeMeshes';
 
 /**
  * Places a pickup of kind `t` (`id` is the weapon, ammo, grenade or optic id) at (x, z), on the floor unless `y0` is
@@ -108,6 +109,8 @@ export const spawnPickup = (x: number, z: number, t: PickupKind, id: string | nu
     it.position.y = 0.55;
   }
 
+  // the item's parts in a few draw calls (one per material) instead of one per part
+  mergeMeshes(it, true);
   g.add(it);
 
   // how far the item reaches from the axis it spins round
