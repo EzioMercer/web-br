@@ -29,7 +29,8 @@ export const createRenderer = (antialias: boolean) => {
     replaceGlCanvas();
   }
 
-  renderer = new THREE.WebGLRenderer({ canvas: glCanvas, antialias });
+  // on laptops with two GPUs, ask for the strong one: the default is often the power-saving integrated GPU
+  renderer = new THREE.WebGLRenderer({ canvas: glCanvas, antialias, powerPreference: 'high-performance' });
   renderer.shadowMap.type = THREE.PCFShadowMap;
   resize();
 

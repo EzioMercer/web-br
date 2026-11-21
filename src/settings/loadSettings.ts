@@ -8,6 +8,7 @@ type Saved = {
   sens?: number;
   vol?: number;
   fps?: boolean;
+  fpsMax?: number;
   diff?: string;
   gfx?: { preset?: string; custom?: Partial<GraphicsOptions> };
 };
@@ -28,6 +29,10 @@ export const loadSettings = () => {
 
     if (typeof s.fps === 'boolean') {
       settings.showFps = s.fps;
+    }
+
+    if (s.fpsMax === 0 || s.fpsMax === 30 || s.fpsMax === 60) {
+      settings.fpsLimit = s.fpsMax;
     }
 
     if (s.diff && DIFFICULTIES[s.diff]) {

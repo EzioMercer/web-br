@@ -36,8 +36,14 @@ import { OpticId } from '../types';
 import type { WeaponId } from '../types';
 import { disposeObject } from '../utils/three/disposeObject';
 import { updateFps } from '../hud/updateFps';
+import { bulletMarksTick } from '../effects/bulletMark';
+import { tracersTick } from '../effects/tracer';
+import { settings } from '../settings/state';
 
 let lastFrame = performance.now();
+
+/** When the next frame is due under the frame rate limit (ms). */
+let nextDue = 0;
 
 let accumulator = 0;
 
@@ -55,6 +61,19 @@ let slideRoll = 0;
 /** Render loop: runs the fixed-step simulation, then updates the camera, viewmodel, effects and HUD. */
 export const frame = (now: number) => {
   requestAnimationFrame(frame);
+
+  // frame rate limit: skip screen refreshes until the next frame is due
+  if (settings.fpsLimit) {
+    const interval = 1000 / settings.fpsLimit;
+
+    // a little early is on time: screen refreshes do not come at exact intervals
+    if (now < nextDue - interval * 0.2) {
+      return;
+    }
+
+    // due times keep a steady rhythm; after a long stall, start again from now
+    nextDue = Math.max(nextDue + interval, now);
+  }
 
   const dt = Math.min((now - lastFrame) / 1000, 0.1);
 
@@ -193,6 +212,9 @@ export const frame = (now: number) => {
   }
   muzzleFlashMesh.visible = screenFx.muzzleFlash > 0;
 
+  tracersTick(dt);
+  bulletMarksTick(dt);
+
   for (let i = transientFx.length - 1; i >= 0; i--) {
     const f = transientFx[i];
 
@@ -228,6 +250,7 @@ export const frame = (now: number) => {
 
   waterMeshes.forEach((w, i) => {
     w.position.y = -0.05 + Math.sin(clock.time * 1.3 + i * 2) * 0.02;
+    w.updateMatrixWorld();
   });
 
   for (let i = shards.length - 1; i >= 0; i--) {

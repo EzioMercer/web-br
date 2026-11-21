@@ -1,4 +1,6 @@
 import { gpuName } from './gpuName';
+import { isDedicatedGpu } from './isDedicatedGpu';
+import { isSoftwareGpu } from './isSoftwareGpu';
 import { GraphicsPreset } from './types';
 import type { QualityTier } from './types';
 
@@ -10,7 +12,7 @@ export const detectTier = (): QualityTier => {
   const mobile = matchMedia('(pointer: coarse)').matches && navigator.maxTouchPoints > 0;
 
   // No GPU: the browser draws on the CPU.
-  if (/swiftshader|llvmpipe|softpipe|software|basic render/.test(gpu)) {
+  if (isSoftwareGpu(gpu)) {
     return GraphicsPreset.Low;
   }
 
@@ -26,7 +28,7 @@ export const detectTier = (): QualityTier => {
   }
 
   // Dedicated graphics cards and Apple silicon.
-  if (/nvidia|geforce|quadro|radeon (rx|pro)|apple (gpu|m\d)/.test(gpu)) {
+  if (isDedicatedGpu(gpu)) {
     return GraphicsPreset.High;
   }
 

@@ -5,7 +5,14 @@ import { GraphicsPreset } from '../graphics/types';
 import type { GraphicsOptions } from '../graphics/types';
 import { saveSettings } from '../settings/saveSettings';
 import { byId } from '../utils/byId';
-import { ANTIALIAS_CHOICES, FPS_CHOICES, PRESET_CHOICES, SHADOW_CHOICES, VIEW_CHOICES } from './graphicsChoices';
+import {
+  ANTIALIAS_CHOICES,
+  FPS_CHOICES,
+  FPS_LIMIT_CHOICES,
+  PRESET_CHOICES,
+  SHADOW_CHOICES,
+  VIEW_CHOICES,
+} from './graphicsChoices';
 import { showGraphicsOptions } from './showGraphicsOptions';
 import { settings } from '../settings/state';
 
@@ -49,7 +56,12 @@ export const setupGraphicsTab = () => {
   buttons('gview', VIEW_CHOICES, v => setOption('viewDistance', v));
   buttons('gshadow', SHADOW_CHOICES, v => setOption('shadows', v));
   buttons('gaa', ANTIALIAS_CHOICES, v => setOption('antialias', v));
-  // not a graphics option: it leaves the preset as it is
+  // not graphics options: they leave the preset as it is
+  buttons('gfpsmax', FPS_LIMIT_CHOICES, (v) => {
+    settings.fpsLimit = v;
+    showGraphicsOptions();
+    saveSettings();
+  });
   buttons('gfps', FPS_CHOICES, (v) => {
     settings.showFps = v;
     showGraphicsOptions();

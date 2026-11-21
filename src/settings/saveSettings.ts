@@ -9,7 +9,14 @@ export const saveSettings = () => {
 
     localStorage.setItem(
       SAVE_KEY,
-      JSON.stringify({ sens: settings.sensitivity, vol: settings.footstepVolume, fps: settings.showFps, diff, gfx }),
+      JSON.stringify({
+        sens: settings.sensitivity,
+        vol: settings.footstepVolume,
+        fps: settings.showFps,
+        fpsMax: settings.fpsLimit,
+        diff,
+        gfx,
+      }),
     );
   } catch { /* Storage unavailable: settings last for this page only. */ }
 };

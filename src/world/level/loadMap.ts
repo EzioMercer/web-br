@@ -65,6 +65,10 @@ export const loadMap = () => {
   flushBoxes();
   flushGlass();
   flushDoors();
+
+  // the map does not move: its matrices are worked out once here, not every frame (the sea bobs and updates its own)
+  mapGroup.matrixWorldAutoUpdate = false;
+  mapGroup.updateMatrixWorld(true);
   buildGrid();
   buildMinimap(m);
 };

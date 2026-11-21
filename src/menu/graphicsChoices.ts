@@ -26,6 +26,12 @@ export const ANTIALIAS_CHOICES: [boolean, string][] = [
   [true, 'On'],
 ];
 
+export const FPS_LIMIT_CHOICES: [number, string][] = [
+  [30, '30'],
+  [60, '60'],
+  [0, 'Unlimited'],
+];
+
 export const FPS_CHOICES: [boolean, string][] = [
   [false, 'Off'],
   [true, 'On'],

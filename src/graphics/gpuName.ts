@@ -1,7 +1,7 @@
-/** The GPU's name as the browser reports it ('' if it is hidden). */
-export const gpuName = () => {
+const probe = () => {
   try {
-    const gl = document.createElement('canvas').getContext('webgl');
+    // the same GPU preference as the game's renderer, so this names the GPU the game will run on
+    const gl = document.createElement('canvas').getContext('webgl', { powerPreference: 'high-performance' });
 
     if (!gl) {
       return '';
@@ -16,4 +16,12 @@ export const gpuName = () => {
   } catch {
     return '';
   }
+};
+
+let cached: string | null = null;
+
+/** The GPU's name as the browser reports it ('' if it is hidden). */
+export const gpuName = () => {
+  cached ??= probe();
+  return cached;
 };

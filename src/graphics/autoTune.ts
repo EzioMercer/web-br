@@ -3,6 +3,7 @@ import { applyGraphics } from './applyGraphics';
 import { graphics } from './state';
 import { TIER_ORDER } from './tiers';
 import { GraphicsPreset } from './types';
+import { settings } from '../settings/state';
 
 /** Average frame rate Auto keeps: below it, it steps down a tier. */
 const MIN_FPS = 40;
@@ -52,7 +53,10 @@ export const autoTune = () => {
   since = now;
   frames = 0;
 
-  if (fps < MIN_FPS && i > 0) {
+  // a frame rate limit below MIN_FPS is the player's choice, not a slow device
+  const floor = settings.fpsLimit ? Math.min(MIN_FPS, settings.fpsLimit * 0.9) : MIN_FPS;
+
+  if (fps < floor && i > 0) {
     graphics.autoTier = TIER_ORDER[i - 1];
     // Antialiasing follows on the next match: a new renderer mid-match would drop the mouse lock.
     applyGraphics(false);

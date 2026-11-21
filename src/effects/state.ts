@@ -13,7 +13,7 @@ export const screenFx = {
   flashbang: 0,
 };
 
-/** Short-lived effects: tracers (fade over `max` seconds) and bullet marks (`max` 0, they don't fade). */
+/** Short-lived effects: bullet streaks and explosion flashes (fade over `max` seconds; `max` 0: they don't fade). */
 export const transientFx: {
   mesh: THREE.Line<THREE.BufferGeometry, THREE.Material> | THREE.Mesh<THREE.BufferGeometry, THREE.Material>;
   life: number;

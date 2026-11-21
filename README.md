@@ -25,6 +25,9 @@ There is no Prettier. Formatting comes from `@stylistic/eslint-plugin` rules in 
 Every push to `master` triggers `.github/workflows/deploy.yml`, which builds the project and publishes `dist/` to GitHub Pages.
 In the repo settings, **Pages → Build and deployment → Source** must be set to **GitHub Actions**.
 
+After the first visit the game also starts offline: a service worker (`src/offline/sw.js`) keeps the build's files and
+the fonts in the browser's cache. Each build gets its own cache; the old one is deleted when the new version takes over.
+
 ## Code layout
 
 Each file exports at most one function, named like the file (`physics/castRay.ts` exports `castRay`).
@@ -45,6 +48,7 @@ src/
   input/        keyboard and mouse state, pointer lock, event listeners
   menu/         main menu and settings dialog
   settings/     user settings, saved in localStorage
+  offline/      service worker that keeps the game playable offline (vite.config.ts fills in the build's files)
   player/       health, view, spawning, damage
   loadout/      carried weapons, ammo, optics, reload and weapon switching
   combat/       shooting, knife, kills, loot drops
