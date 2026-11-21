@@ -1,5 +1,6 @@
 import { WEAPONS } from '../data/weapons';
 import { carriedGuns } from './carriedGuns';
+import { fitBagOptic } from './fitBagOptic';
 import { loadout } from './state';
 import type { OwnedWeapon } from '../types';
 import { loadAmmo } from './loadAmmo';
@@ -40,6 +41,7 @@ export const giveWeapon = (id: WeaponId, st?: OwnedWeapon, drop?: WeaponId) => {
     loadout.owned[id] = got;
   }
 
+  fitBagOptic(id);
   loadout.weaponId = id;
   loadout.weapon = w;
   loadAmmo(id);

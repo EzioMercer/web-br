@@ -21,3 +21,6 @@ export const BOT_COUNT = 19;
 
 /** Render layer of the first-person weapon, drawn after the world so it never sinks into walls. */
 export const VIEWMODEL_LAYER = 1;
+
+/** Spare optics the player can carry without a gun to put them on. */
+export const OPTIC_BAG_SLOTS = 5;

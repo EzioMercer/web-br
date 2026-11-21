@@ -19,11 +19,15 @@ export const takePickup = (k: Pickup) => {
     grenadeCount[k.itemId as GrenadeId]++;
   } else if (k.kind === PickupKind.Optic) {
     const tg = opticTarget();
+    const free = loadout.opticBag.indexOf(null);
 
-    if (tg) {
+    if (tg && !loadout.owned[tg].optic) {
       loadout.owned[tg].optic = k.itemId as OpticId;
-
       feedMessage('Attached ' + k.name + ' to ' + WEAPONS[tg].name);
+    } else if (free >= 0) {
+      // no gun free for it: keep it in the bag until one turns up
+      loadout.opticBag[free] = k.itemId as OpticId;
+      feedMessage('Stored ' + k.name);
     }
 
     return;

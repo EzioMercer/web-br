@@ -189,6 +189,8 @@ export interface Pickup {
   itemId: string | null;
   name: string;
   weaponState?: OwnedWeapon;
+  /** Dropped by the player: picked up with E only, not by walking over it. */
+  manual?: boolean;
 }
 
 export interface Circle {

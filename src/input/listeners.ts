@@ -1,10 +1,15 @@
 import { unlockAudio } from '../audio/unlockAudio';
 import { gunInSlot } from '../br/pickups/gunInSlot';
 import { looting } from '../br/pickups/state';
+import { removePickup } from '../br/pickups/removePickup';
 import { swapPickup } from '../br/pickups/swapPickup';
+import { takePickup } from '../br/pickups/takePickup';
 import { MOUSE_SENS } from '../config';
 import { grenadeCount, grenadeThrow } from '../grenades/state';
 import { throwGrenade } from '../grenades/throwGrenade';
+import { endDrag } from '../hud/inventory/endDrag';
+import { setCursor } from '../hud/inventory/setCursor';
+import { startDrag } from '../hud/inventory/startDrag';
 import { inventory } from '../hud/inventory/state';
 import { openBigMap } from '../hud/minimap/openBigMap';
 import { maps } from '../hud/minimap/state';
@@ -44,6 +49,12 @@ addEventListener('mousemove', (e) => {
     return;
   }
 
+  if (inventory.cursor) {
+    inventory.x = Math.max(0, Math.min(innerWidth - 1, inventory.x + e.movementX));
+    inventory.y = Math.max(0, Math.min(innerHeight - 1, inventory.y + e.movementY));
+    return;
+  }
+
   const s = MOUSE_SENS * settings.sensitivity * (loadout.scoped
     ? (loadout.weapon.sniper ? 0.3 : (currentOptic()?.sensitivity ?? 0.85))
     : 1);
@@ -53,6 +64,15 @@ addEventListener('mousemove', (e) => {
 });
 
 addEventListener('mousedown', (e) => {
+  if (input.playing && inventory.cursor) {
+    // the cursor is for the inventory: no shooting or aiming
+    if (e.button === 0) {
+      startDrag();
+    }
+
+    return;
+  }
+
   if (input.playing && e.button === 0) {
     input.fireHeld = true;
 
@@ -75,6 +95,10 @@ addEventListener('mousedown', (e) => {
 addEventListener('mouseup', (e) => {
   if (e.button === 0) {
     input.fireHeld = false;
+
+    if (inventory.drag) {
+      endDrag();
+    }
 
     if (grenadeThrow.held && loadout.grenade && !player.dead && input.playing) {
       throwGrenade();
@@ -108,9 +132,16 @@ addEventListener('keydown', (e) => {
   if (e.code === 'Tab') {
     if (!e.repeat) {
       inventory.open = !inventory.open;
+      setCursor(inventory.open && Boolean(keys.ControlLeft || keys.ControlRight));
     }
 
     return;
+  }
+
+  if ((e.code === 'ControlLeft' || e.code === 'ControlRight') && inventory.open && !player.dead) {
+    setCursor(true);
+    input.fireHeld = false;
+    loadout.scoped = false;
   }
 
   if (e.code === 'KeyM') {
@@ -135,6 +166,10 @@ addEventListener('keydown', (e) => {
   if (e.code === 'KeyE' && !player.dead) {
     if (looting.swapTarget) {
       swapPickup(looting.swapTarget);
+    } else if (looting.takeTarget) {
+      takePickup(looting.takeTarget);
+      removePickup(looting.takeTarget);
+      looting.takeTarget = null;
     } else {
       useDoor();
     }
@@ -158,10 +193,15 @@ addEventListener('keydown', (e) => {
 
 addEventListener('keyup', (e) => {
   keys[e.code] = false;
+
+  if ((e.code === 'ControlLeft' || e.code === 'ControlRight') && !keys.ControlLeft && !keys.ControlRight) {
+    setCursor(false);
+  }
 });
 
 addEventListener('blur', () => {
   input.fireHeld = false;
+  setCursor(false);
   grenadeThrow.held = false;
 
   for (const k in keys) {

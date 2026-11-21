@@ -14,12 +14,12 @@ import { clearSpot } from './clearSpot';
 import { makeLabel } from './makeLabel';
 import { pickups } from './state';
 import { AmmoType, PickupKind } from '../../types';
-import type { GrenadeId, OpticId, OwnedWeapon } from '../../types';
+import type { GrenadeId, OpticId, OwnedWeapon, Pickup } from '../../types';
 import type { WeaponId } from '../../types';
 
 /**
  * Places a pickup of kind `t` (`id` is the weapon, ammo, grenade or optic id) at (x, z), on the floor unless `y0` is
- * given.
+ * given. Returns the pickup.
  */
 export const spawnPickup = (x: number, z: number, t: PickupKind, id: string | null, st?: OwnedWeapon, y0?: number) => {
   const col = t === PickupKind.Weapon
@@ -157,5 +157,9 @@ export const spawnPickup = (x: number, z: number, t: PickupKind, id: string | nu
 
   g.position.set(px, py, pz);
   scene.add(g);
-  pickups.push({ mesh: g, label: lab, x: px, z: pz, y: py, kind: t, itemId: id, name: n, weaponState: st });
+
+  const pk: Pickup = { mesh: g, label: lab, x: px, z: pz, y: py, kind: t, itemId: id, name: n, weaponState: st };
+
+  pickups.push(pk);
+  return pk;
 };

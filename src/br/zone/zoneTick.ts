@@ -83,8 +83,10 @@ export const zoneTick = (dt: number) => {
 
   looting.prompt = '';
   looting.swapTarget = null;
+  looting.takeTarget = null;
 
   let nd = 2.2;
+  let td = 2.2;
   let hint = '';
 
   for (let i = pickups.length - 1; i >= 0; i--) {
@@ -113,10 +115,11 @@ export const zoneTick = (dt: number) => {
     } else if (k.kind === PickupKind.Optic) {
       const tg = opticTarget();
 
-      if (!tg) {
-        hint = 'Optics fit rifles, SMGs and shotguns – not pistols or snipers';
-      } else if (!loadout.owned[tg].optic) {
+      // onto a gun without one, else into the bag, else E swaps it for the optic on the gun
+      if ((tg && !loadout.owned[tg].optic) || loadout.opticBag.includes(null)) {
         ok = true;
+      } else if (!tg) {
+        hint = 'Optic bag full – Tab, hold Ctrl and drag an optic out to make room';
       } else if (d < nd) {
         looting.swapTarget = k;
         nd = d;
@@ -131,7 +134,13 @@ export const zoneTick = (dt: number) => {
       ok = player.health < 100;
     }
 
-    if (ok) {
+    if (ok && k.manual) {
+      // something the player dropped stays down until they press E for it
+      if (d < td) {
+        looting.takeTarget = k;
+        td = d;
+      }
+    } else if (ok) {
       takePickup(k);
       removePickup(k);
     }
@@ -144,6 +153,8 @@ export const zoneTick = (dt: number) => {
         + WEAPONS[loadout.weaponId !== WeaponId.Knife ? loadout.weaponId : carriedGuns()[1]].name
         + ' for '
         + looting.swapTarget.name;
+  } else if (looting.takeTarget) {
+    looting.prompt = 'Press E to pick up ' + looting.takeTarget.name;
   } else if (hint) {
     looting.prompt = hint;
   } else if (doorFocus.door && !loadout.grenade) {

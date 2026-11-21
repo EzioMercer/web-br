@@ -6,6 +6,7 @@ import { fireWeapon } from '../combat/fireWeapon';
 import { PLAYER_HEIGHT } from '../config';
 import { ripple } from '../effects/ripple';
 import { grenadesTick } from '../grenades/grenadesTick';
+import { inventory } from '../hud/inventory/state';
 import { input, keys } from '../input/state';
 import { reload } from '../loadout/reload';
 import { reserve } from '../loadout/reserve';
@@ -36,7 +37,8 @@ export const tick = (dt: number) => {
   matchTick(dt);
 
   if (!player.dead) {
-    const cr = keys.ControlLeft || keys.KeyC;
+    // with the inventory open Ctrl brings up its cursor instead of crouching (C still crouches)
+    const cr = (keys.ControlLeft && !inventory.open) || keys.KeyC;
 
     if (cr
       && !wasCrouching

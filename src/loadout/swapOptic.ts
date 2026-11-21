@@ -21,7 +21,8 @@ export const swapOptic = (k: Pickup) => {
   loadout.owned[tg].optic = k.itemId as OpticId;
 
   if (old) {
-    spawnPickup(k.x, k.z, PickupKind.Optic, old, undefined, k.y);
+    // left on the ground: E picks it up again, walking over it does not
+    spawnPickup(k.x, k.z, PickupKind.Optic, old, undefined, k.y).manual = true;
   }
 
   removePickup(k);

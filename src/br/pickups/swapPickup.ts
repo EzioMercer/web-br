@@ -26,7 +26,7 @@ export const swapPickup = (k: Pickup) => {
     optic: loadout.owned[drop].optic,
   };
 
-  spawnPickup(k.x, k.z, PickupKind.Weapon, drop, st, k.y);
+  spawnPickup(k.x, k.z, PickupKind.Weapon, drop, st, k.y).manual = true;
   giveWeapon(k.itemId as WeaponId, k.weaponState, drop);
   removePickup(k);
   looting.swapTarget = null;
