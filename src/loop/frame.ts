@@ -19,6 +19,7 @@ import { loadout } from '../loadout/state';
 import { player, playerBody, playerVel } from '../player/state';
 import { camera } from '../render/camera';
 import { followSun } from '../render/followSun';
+import { updateInventory } from '../hud/inventory/updateInventory';
 import { renderer } from '../render/renderer';
 import { renderView } from '../render/renderView';
 import { scene } from '../render/scene';
@@ -261,6 +262,7 @@ export const frame = (now: number) => {
 
   byId('xh').style.setProperty('--g', (shotSpread(sp) * ppr * 0.9 + 3).toFixed(1) + 'px');
   updateHud();
+  updateInventory();
   drawCompass();
   screenFx.damageDir = Math.max(0, screenFx.damageDir - dt);
   byId('dd').style.opacity = String(Math.min(1, screenFx.damageDir * 1.4));

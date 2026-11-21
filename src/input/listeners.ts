@@ -5,9 +5,11 @@ import { swapPickup } from '../br/pickups/swapPickup';
 import { MOUSE_SENS } from '../config';
 import { grenadeCount, grenadeThrow } from '../grenades/state';
 import { throwGrenade } from '../grenades/throwGrenade';
+import { inventory } from '../hud/inventory/state';
 import { openBigMap } from '../hud/minimap/openBigMap';
 import { maps } from '../hud/minimap/state';
 import { canAim } from '../loadout/canAim';
+import { carriedGuns } from '../loadout/carriedGuns';
 import { currentOptic } from '../loadout/currentOptic';
 import { reload } from '../loadout/reload';
 import { loadout } from '../loadout/state';
@@ -23,7 +25,12 @@ import { setPlaying } from './setPlaying';
 import { input, keys } from './state';
 import { GrenadeId, WeaponId } from '../types';
 
+/** Last wheel event, delta summed since the last step, and end of the pause after a step. */
 let lastWheel = 0;
+
+let wheelSum = 0;
+
+let wheelQuietUntil = 0;
 
 byId('go').addEventListener('click', () => {
   unlockAudio();
@@ -94,8 +101,16 @@ addEventListener('keydown', (e) => {
 
   keys[e.code] = true;
 
-  if (e.code === 'Space' || e.ctrlKey || e.code.startsWith('Arrow')) {
+  if (e.code === 'Space' || e.code === 'Tab' || e.ctrlKey || e.code.startsWith('Arrow')) {
     e.preventDefault();
+  }
+
+  if (e.code === 'Tab') {
+    if (!e.repeat) {
+      inventory.open = !inventory.open;
+    }
+
+    return;
   }
 
   if (e.code === 'KeyM') {
@@ -161,22 +176,39 @@ addEventListener('wheel', (e) => {
 
   const n = performance.now();
 
-  if (n - lastWheel < 140) {
-    return;
+  // a notch of a mouse wheel is about 100 px; a trackpad sends many small deltas. Add them up and step once per notch,
+  // and ignore the tail of a fast flick for a moment so a single notch never moves two slots.
+  if (n - lastWheel > 250) {
+    wheelSum = 0;
   }
 
   lastWheel = n;
+
+  if (n < wheelQuietUntil) {
+    return;
+  }
+
+  wheelSum += e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 800 : 1);
+
+  if (Math.abs(wheelSum) < 50) {
+    return;
+  }
+
+  const step = wheelSum > 0 ? 1 : -1;
+
+  wheelSum = 0;
+  wheelQuietUntil = n + 120;
 
   if (loadout.grenade) {
     loadout.grenade = null;
     return;
   }
 
-  const ks = Object.keys(loadout.owned) as WeaponId[];
+  // slot order: 1, 2, 3 (knife). Down goes 1 to 3, up 3 to 1, stopping at the ends.
+  const ks = [...carriedGuns(), WeaponId.Knife].filter(k => loadout.owned[k]);
+  const i = ks.indexOf(loadout.weaponId) + step;
 
-  if (ks.length < 2) {
-    return;
+  if (i >= 0 && i < ks.length) {
+    switchWeapon(ks[i]);
   }
-
-  switchWeapon(ks[(ks.indexOf(loadout.weaponId) + (e.deltaY > 0 ? 1 : -1) + ks.length) % ks.length]);
 }, { passive: true });

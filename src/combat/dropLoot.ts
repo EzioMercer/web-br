@@ -21,14 +21,14 @@ export const dropLoot = (b: Bot) => {
         w,
         {
           ammo: Math.max(4, Math.round(W.magSize * (0.35 + Math.random() * 0.65))),
-          reserve: W.magSize * (1 + Math.floor(Math.random() * 2)),
           optic: takesOptic(w) && Math.random() < 0.3 ? OPTIC_IDS[Math.random() * 3 | 0] : undefined,
         },
       ],
     );
   }
 
-  if (!W.melee && Math.random() < 0.75) {
+  // its spare rounds, now that ammo no longer travels with the gun
+  if (!W.melee) {
     items.push([PickupKind.Ammo, W.ammoType!]);
   }
 

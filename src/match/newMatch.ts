@@ -5,21 +5,24 @@ import { bullets } from '../combat/state';
 import { WEAPONS } from '../data/weapons';
 import { screenFx } from '../effects/state';
 import { flyingGrenades, grenadeCount, smokes } from '../grenades/state';
+import { emptyAmmoBag } from '../loadout/emptyAmmoBag';
 import { loadout } from '../loadout/state';
 import { spawnPlayer } from '../player/spawnPlayer';
 import { player } from '../player/state';
 import { clock } from '../sim/state';
 import { match } from './state';
 import { clearMeshes } from '../render/clearMeshes';
-import { GrenadeId, Phase, WeaponId } from '../types';
+import { AmmoType, GrenadeId, Phase, WeaponId } from '../types';
 import type { OwnedWeapon } from '../types';
 
 /** Resets the loadout, the zone and everyone's position, then counts down to the start. */
 export const newMatch = () => {
   loadout.owned = {
-    [WeaponId.Usp]: { ammo: 12, reserve: 12 },
-    [WeaponId.Knife]: { ammo: 1, reserve: 0 },
+    [WeaponId.Usp]: { ammo: 12 },
+    [WeaponId.Knife]: { ammo: 1 },
   } as Record<WeaponId, OwnedWeapon>;
+  loadout.ammoBag = emptyAmmoBag();
+  loadout.ammoBag[AmmoType.Pistol] = 12;
   loadout.weaponId = WeaponId.Usp;
   loadout.weapon = WEAPONS[WeaponId.Usp];
   loadout.scoped = false;

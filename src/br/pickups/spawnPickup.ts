@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { AMMO_NAMES } from '../../data/ammo';
 import { GRENADE_COLORS, GRENADE_NAMES } from '../../data/grenades';
 import { OPTICS } from '../../data/optics';
 import { WEAPONS } from '../../data/weapons';
@@ -15,14 +16,6 @@ import { pickups } from './state';
 import { AmmoType, PickupKind } from '../../types';
 import type { GrenadeId, OpticId, OwnedWeapon } from '../../types';
 import type { WeaponId } from '../../types';
-
-const AMMO_NAMES: Partial<Record<AmmoType, string>> = {
-  [AmmoType.Pistol]: 'Pistol ammo',
-  [AmmoType.Smg]: 'SMG ammo',
-  [AmmoType.Rifle]: 'Rifle ammo',
-  [AmmoType.Shotgun]: 'Shotgun shells',
-  [AmmoType.Sniper]: 'Sniper ammo',
-};
 
 /**
  * Places a pickup of kind `t` (`id` is the weapon, ammo, grenade or optic id) at (x, z), on the floor unless `y0` is

@@ -124,7 +124,7 @@ export const zoneTick = (dt: number) => {
     } else if (k.kind === PickupKind.Armor) {
       ok = player.armor < 100;
     } else if (k.kind === PickupKind.Ammo) {
-      ok = (Object.keys(loadout.owned) as WeaponId[]).some(q => WEAPONS[q].ammoType === k.itemId);
+      ok = true; // ammo goes in the bag whatever guns are carried
     } else if (k.kind === PickupKind.Grenade) {
       ok = grenadeCount[k.itemId as GrenadeId] < 2;
     } else {

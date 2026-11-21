@@ -127,9 +127,9 @@ export interface Difficulty {
 }
 
 /** Ammo (and optic) the player holds for one weapon. */
+/** A gun carried (or lying on the ground): rounds in its magazine and its optic. Spare rounds are in the ammo bag. */
 export interface OwnedWeapon {
   ammo: number;
-  reserve: number;
   optic?: OpticId;
 }
 
@@ -298,4 +298,14 @@ export interface Sphere {
   y: number;
   z: number;
   radius: number;
+}
+
+/** Weapon class, for HUD icons and the inventory. */
+export enum WeaponClass {
+  Pistol = 'p',
+  Smg = 's',
+  Rifle = 'r',
+  Shotgun = 'g',
+  Sniper = 'n',
+  Knife = 'k',
 }

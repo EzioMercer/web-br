@@ -127,3 +127,35 @@ body.br #prompt{left:50%;top:auto;bottom:calc(150px + env(safe-area-inset-bottom
 .ctl td{padding:7px 8px;border-top:1px solid rgba(255,255,255,.07)}
 .ctl tbody tr:nth-child(odd){background:rgba(255,255,255,.03)}
 kbd{display:inline-block;min-width:16px;margin-left:5px;padding:1px 8px;font-family:inherit;font-weight:700;font-size:15px;text-align:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);border-bottom-width:3px;border-radius:3px}
+
+/* Inventory (Tab) */
+#inv{display:none;left:calc(18px + env(safe-area-inset-left,0px));top:calc(72px + env(safe-area-inset-top,0px));width:min(400px,calc(100vw - 36px));max-height:calc(100vh - 190px);overflow:hidden;padding:10px 12px 12px;box-sizing:border-box;z-index:3;text-shadow:none}
+.ivh{display:flex;align-items:center;justify-content:space-between;font-size:20px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}
+.ivh .key{font-size:13px;letter-spacing:.08em;padding:1px 7px;border:1px solid rgba(255,255,255,.35);color:rgba(241,234,216,.75)}
+.ivw{--c1:#4a5560;--c2:#2c3238;margin-bottom:8px;background:linear-gradient(180deg,var(--c1),var(--c2));border:1px solid rgba(255,255,255,.14);clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+.ivw.cr{--c1:#8a3d5e;--c2:#4e2236}.ivw.cn{--c1:#b8841c;--c2:#6e4c0c}.ivw.cs{--c1:#2f638f;--c2:#1a3650}.ivw.cg{--c1:#8a5530;--c2:#4c2e18}.ivw.cp{--c1:#55606a;--c2:#2c3238}
+.ivw.on{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+.ivw.empty{background:rgba(255,255,255,.05);border-style:dashed;color:rgba(241,234,216,.45)}
+.ivt{display:flex;align-items:center;gap:8px;padding:4px 10px;background:rgba(0,0,0,.28);font-size:19px}
+.ivt i,.sm i{font-style:normal;color:var(--amber);font-size:14px;min-width:10px}
+.ivt b{flex:1}.ivt span{font-size:13px;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
+.ivw.on .ivt{background:linear-gradient(90deg,rgba(242,177,52,.55),rgba(0,0,0,.25))}
+.ivb{display:flex;align-items:center;justify-content:space-between;padding:4px 12px 0}
+.ivb svg{width:150px;height:50px;color:#efe8d6;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+.ivm{text-align:right;font-size:16px;opacity:.9;line-height:1}.ivm b{font-size:32px}.ivm small{display:block;font-size:13px;opacity:.75;margin-top:3px}
+.ivs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px 12px 2px}
+.ivst small{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+.ivst span{display:block;height:4px;background:rgba(0,0,0,.35)}.ivst i{display:block;height:100%;background:#efe8d6}
+.ivsls{display:flex;gap:6px;padding:6px 10px 8px}
+.ivsl{flex:1;padding:3px 8px;font-size:15px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ivsl small{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.65}
+.ivsl.none{border-style:dashed;color:rgba(241,234,216,.5)}.ivsl.fixed{color:rgba(241,234,216,.65)}
+.ivsec{font-size:12px;letter-spacing:.18em;text-transform:uppercase;opacity:.65;margin:10px 0 4px}
+.ivam{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.am{padding:4px 6px 3px;text-align:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-top:3px solid #8a8f94}
+.am small{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;opacity:.8}.am b{font-size:22px;line-height:1.1}
+.am.apst{border-top-color:#9aa4ab}.am.asmg{border-top-color:#4a8fd0}.am.arif{border-top-color:#c0507a}.am.ashl{border-top-color:#d0703a}.am.asnp{border-top-color:#e0a828}
+.am.on{background:rgba(242,177,52,.16);border-color:rgba(242,177,52,.55)}.am.zero b{opacity:.4}
+.ivsm{display:flex;flex-wrap:wrap;gap:5px}
+.sm{display:flex;align-items:center;gap:6px;padding:3px 9px;font-size:15px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+.sm b{margin-left:2px;color:var(--amber)}.sm.zero{opacity:.45}.sm.on{background:var(--amber);color:#15120a;border-color:var(--amber)}.sm.on i,.sm.on b{color:#15120a}

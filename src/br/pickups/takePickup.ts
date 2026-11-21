@@ -1,3 +1,4 @@
+import { AMMO_PER_PICKUP } from '../../data/ammo';
 import { WEAPONS } from '../../data/weapons';
 import { grenadeCount } from '../../grenades/state';
 import { feedMessage } from '../../hud/feedMessage';
@@ -6,7 +7,7 @@ import { opticTarget } from '../../loadout/opticTarget';
 import { loadout } from '../../loadout/state';
 import { player } from '../../player/state';
 import { PickupKind } from '../../types';
-import type { GrenadeId, OpticId, Pickup } from '../../types';
+import type { AmmoType, GrenadeId, OpticId, Pickup } from '../../types';
 import type { WeaponId } from '../../types';
 
 export const takePickup = (k: Pickup) => {
@@ -27,21 +28,9 @@ export const takePickup = (k: Pickup) => {
 
     return;
   } else if (k.kind === PickupKind.Ammo) {
-    let add = 0;
+    const add = AMMO_PER_PICKUP[k.itemId as AmmoType] ?? 0;
 
-    for (const q of Object.keys(loadout.owned) as WeaponId[]) {
-      if (WEAPONS[q].ammoType === k.itemId) {
-        // one magazine of sniper rounds, two of anything else
-        add = WEAPONS[q].magSize * (WEAPONS[q].sniper ? 1 : 2);
-
-        if (q === loadout.weaponId) {
-          loadout.reserve += add;
-        } else {
-          loadout.owned[q].reserve += add;
-        }
-      }
-    }
-
+    loadout.ammoBag[k.itemId as AmmoType] += add;
     feedMessage('Picked up ' + k.name + ' (+' + add + ' rounds)');
     return;
   } else {

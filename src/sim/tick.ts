@@ -8,9 +8,9 @@ import { ripple } from '../effects/ripple';
 import { grenadesTick } from '../grenades/grenadesTick';
 import { input, keys } from '../input/state';
 import { reload } from '../loadout/reload';
+import { reserve } from '../loadout/reserve';
 import { loadout } from '../loadout/state';
 import { matchTick } from '../match/matchTick';
-import { match } from '../match/state';
 import { accelerate } from '../physics/accelerate';
 import { boxesNear } from '../physics/boxesNear';
 import { moveBody } from '../physics/moveBody';
@@ -21,7 +21,7 @@ import { doorsTick } from '../world/doors/doorsTick';
 import { surfaceAt } from '../world/level/surfaceAt';
 import { waterDepth } from '../world/level/waterDepth';
 import { clock, slide } from './state';
-import { Phase } from '../types';
+import { AmmoType } from '../types';
 import { Surface } from '../audio/types';
 
 let stepDist = 0;
@@ -172,10 +172,10 @@ export const tick = (dt: number) => {
     }
 
     if (loadout.reloading && clock.time >= loadout.reloadEnd) {
-      const n = Math.min(loadout.weapon.magSize - loadout.ammo, loadout.reserve);
+      const n = Math.min(loadout.weapon.magSize - loadout.ammo, reserve());
 
       loadout.ammo += n;
-      loadout.reserve -= n;
+      loadout.ammoBag[loadout.weapon.ammoType ?? AmmoType.None] -= n;
       loadout.reloading = false;
     }
 
@@ -195,8 +195,6 @@ export const tick = (dt: number) => {
   bulletsTick(dt);
   grenadesTick(dt);
   doorsTick(dt);
-
-  if (match.phase !== Phase.Start) {
-    botsTick(dt);
-  }
+  // bots move from the moment they land, the countdown included
+  botsTick(dt);
 };

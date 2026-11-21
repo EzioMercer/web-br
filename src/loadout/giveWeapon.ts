@@ -4,31 +4,40 @@ import { loadout } from './state';
 import type { OwnedWeapon } from '../types';
 import { loadAmmo } from './loadAmmo';
 import { stashAmmo } from './stashAmmo';
-import { WeaponId } from '../types';
+import { AmmoType, WeaponId } from '../types';
 
 /**
- * Gives weapon `id` (with ammo and optic `st` if dropped by someone) and switches to it, dropping `drop` if both
- * slots are full.
+ * Gives weapon `id` (with the magazine and optic `st` if dropped by someone) and switches to it. With both slots full,
+ * it takes the slot of `drop` (default: the gun in hand), so the slot numbers of the other guns do not change.
  */
 export const giveWeapon = (id: WeaponId, st?: OwnedWeapon, drop?: WeaponId) => {
   const w = WEAPONS[id];
+  const got: OwnedWeapon = { ammo: st ? st.ammo : w.magSize, optic: st?.optic };
 
   stashAmmo();
 
   if (loadout.owned[id]) {
-    loadout.owned[id].reserve += w.magSize;
+    // a second copy: its rounds go in the bag, and its optic if ours has none
+    loadout.ammoBag[w.ammoType ?? AmmoType.None] += got.ammo;
 
-    if (st && st.optic && !loadout.owned[id].optic) {
-      loadout.owned[id].optic = st.optic;
+    if (got.optic && !loadout.owned[id].optic) {
+      loadout.owned[id].optic = got.optic;
     }
+  } else if (carriedGuns().length >= 2) {
+    const out = drop || (loadout.weaponId !== WeaponId.Knife ? loadout.weaponId : carriedGuns()[1]);
+    const owned = {} as Record<WeaponId, OwnedWeapon>;
+
+    for (const k of Object.keys(loadout.owned) as WeaponId[]) {
+      if (k === out) {
+        owned[id] = got;
+      } else {
+        owned[k] = loadout.owned[k];
+      }
+    }
+
+    loadout.owned = owned;
   } else {
-    if (carriedGuns().length >= 2) {
-      delete loadout.owned[drop || (loadout.weaponId !== WeaponId.Knife ? loadout.weaponId : carriedGuns()[1])];
-    }
-
-    loadout.owned[id] = st
-      ? { ammo: st.ammo, reserve: st.reserve, optic: st.optic }
-      : { ammo: w.magSize, reserve: w.magSize };
+    loadout.owned[id] = got;
   }
 
   loadout.weaponId = id;

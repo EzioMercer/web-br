@@ -35,6 +35,7 @@ const CONTROLS: [string, string[]][] = [
   ['Smoke grenade', ['6']],
   ['Switch weapon', ['Mouse wheel']],
   ['Loot / swap / doors', ['E']],
+  ['Inventory', ['Tab']],
   ['Big map', ['M']],
   ['Pause', ['Esc']],
 ];

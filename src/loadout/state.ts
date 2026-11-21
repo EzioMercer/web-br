@@ -1,4 +1,5 @@
 import { WEAPONS } from '../data/weapons';
+import { emptyAmmoBag } from './emptyAmmoBag';
 import { WeaponId } from '../types';
 import type { GrenadeId, OwnedWeapon, Weapon } from '../types';
 
@@ -7,12 +8,13 @@ export const loadout = {
   weaponId: WeaponId.Usp,
   weapon: WEAPONS[WeaponId.Usp] as Weapon,
   owned: {
-    [WeaponId.Usp]: { ammo: 12, reserve: 36 },
-    [WeaponId.Knife]: { ammo: 1, reserve: 0 },
+    [WeaponId.Usp]: { ammo: 12 },
+    [WeaponId.Knife]: { ammo: 1 },
   } as Record<WeaponId, OwnedWeapon>,
-  /** Rounds in the magazine and in reserve for the weapon in hand. */
+  /** Spare rounds per ammo type, shared by every gun that fires them and kept when a gun is dropped. */
+  ammoBag: emptyAmmoBag(),
+  /** Rounds in the magazine of the weapon in hand. */
   ammo: 12,
-  reserve: 36,
   scoped: false,
   reloading: false,
   reloadEnd: 0,

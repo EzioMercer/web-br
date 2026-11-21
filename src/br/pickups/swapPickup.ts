@@ -20,13 +20,11 @@ export const swapPickup = (k: Pickup) => {
   }
 
   const drop = loadout.weaponId !== WeaponId.Knife ? loadout.weaponId : carriedGuns()[1];
-  const st: OwnedWeapon = drop === loadout.weaponId
-    ? {
-        ammo: loadout.ammo,
-        reserve: loadout.reserve,
-        optic: loadout.owned[loadout.weaponId] && loadout.owned[loadout.weaponId].optic,
-      }
-    : { ammo: loadout.owned[drop].ammo, reserve: loadout.owned[drop].reserve, optic: loadout.owned[drop].optic };
+  // the dropped gun keeps its magazine and optic; spare rounds stay in the ammo bag
+  const st: OwnedWeapon = {
+    ammo: drop === loadout.weaponId ? loadout.ammo : loadout.owned[drop].ammo,
+    optic: loadout.owned[drop].optic,
+  };
 
   spawnPickup(k.x, k.z, PickupKind.Weapon, drop, st, k.y);
   giveWeapon(k.itemId as WeaponId, k.weaponState, drop);
