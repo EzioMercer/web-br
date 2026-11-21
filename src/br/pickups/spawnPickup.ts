@@ -9,6 +9,7 @@ import { lambert } from '../../utils/three/lambert';
 import { makeOptic } from '../../viewmodel/makeOptic';
 import { viewModels } from '../../viewmodel/models';
 import { floorY } from '../../world/level/floorY';
+import { clearSpot } from './clearSpot';
 import { makeLabel } from './makeLabel';
 import { pickups } from './state';
 import { AmmoType, PickupKind } from '../../types';
@@ -61,6 +62,18 @@ export const spawnPickup = (x: number, z: number, t: PickupKind, id: string | nu
     m.position.set(0, 0, 0);
     m.rotation.set(0, 0, 0);
     m.scale.setScalar(WEAPONS[k as WeaponId].slot === 2 ? 2.4 : 1.4);
+    m.traverse((o) => {
+      // drawn with the world, not in the first-person pass
+      o.layers.set(0);
+
+      // the copy takes whatever optic the player's gun shows right now: show only the one this gun carries
+      if (o.name.startsWith('opt_')) {
+        o.visible = o.name === 'opt_' + (st?.optic ?? '');
+      }
+    });
+    // spin round the middle of the gun, not its grip
+    m.updateMatrixWorld(true);
+    m.position.sub(new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()).setY(0));
     it.add(m);
     it.position.y = 0.95;
   } else if (t === PickupKind.Armor) {
@@ -104,6 +117,22 @@ export const spawnPickup = (x: number, z: number, t: PickupKind, id: string | nu
 
   g.add(it);
 
+  // how far the item reaches from the axis it spins round
+  let reach = 0.3;
+
+  it.updateMatrixWorld(true);
+
+  const ib = new THREE.Box3().setFromObject(it);
+
+  if (!ib.isEmpty()) {
+    reach = Math.max(
+      Math.hypot(ib.min.x, ib.min.z),
+      Math.hypot(ib.min.x, ib.max.z),
+      Math.hypot(ib.max.x, ib.min.z),
+      Math.hypot(ib.max.x, ib.max.z),
+    );
+  }
+
   const bm = new THREE.Mesh(
     new THREE.CylinderGeometry(0.05, 0.05, 12, 6),
     new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.35 }),
@@ -131,9 +160,9 @@ export const spawnPickup = (x: number, z: number, t: PickupKind, id: string | nu
   lab.visible = false;
   g.add(lab);
 
-  const gy = y0 === undefined ? floorY(x, z) : y0;
+  const [px, py, pz] = clearSpot(x, z, y0 === undefined ? floorY(x, z) : y0, reach + 0.05);
 
-  g.position.set(x, gy, z);
+  g.position.set(px, py, pz);
   scene.add(g);
-  pickups.push({ mesh: g, label: lab, x, z, y: gy, kind: t, itemId: id, name: n, weaponState: st });
+  pickups.push({ mesh: g, label: lab, x: px, z: pz, y: py, kind: t, itemId: id, name: n, weaponState: st });
 };

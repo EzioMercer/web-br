@@ -18,3 +18,6 @@ export const WATER_LEVEL = 0;
 
 /** Bots in a match. */
 export const BOT_COUNT = 19;
+
+/** Render layer of the first-person weapon, drawn after the world so it never sinks into walls. */
+export const VIEWMODEL_LAYER = 1;

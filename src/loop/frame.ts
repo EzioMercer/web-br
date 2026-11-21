@@ -20,6 +20,7 @@ import { player, playerBody, playerVel } from '../player/state';
 import { camera } from '../render/camera';
 import { followSun } from '../render/followSun';
 import { renderer } from '../render/renderer';
+import { renderView } from '../render/renderView';
 import { scene } from '../render/scene';
 import { isSliding } from '../sim/isSliding';
 import { clock } from '../sim/state';
@@ -272,6 +273,6 @@ export const frame = (now: number) => {
   // The main menu covers the screen with its own backdrop, so the 3D scene is not drawn behind it.
   if (!input.inMenu && renderer) {
     followSun();
-    renderer.render(scene, camera);
+    renderView(renderer);
   }
 };

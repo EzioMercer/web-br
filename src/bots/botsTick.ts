@@ -12,6 +12,7 @@ import { settings } from '../settings/state';
 import { clock } from '../sim/state';
 import { surfaceAt } from '../world/level/surfaceAt';
 import { waterDepth } from '../world/level/waterDepth';
+import { botLoot } from './botLoot';
 import { botSees } from './botSees';
 import { botShoot } from './botShoot';
 import { engageRange } from './engageRange';
@@ -105,6 +106,10 @@ const roam = (b: Bot) => {
 
   b.mode = BotMode.Roam;
   b.crouch = 0;
+
+  if (!b.running && botLoot(b, WALK * settings.difficulty.speed)) {
+    return true;
+  }
 
   if (wd < 1.5 && b.toOverwatch && !badT) {
     b.toOverwatch = false;

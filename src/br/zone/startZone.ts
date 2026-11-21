@@ -8,6 +8,7 @@ import { applyZonePhase } from './applyZonePhase';
 import { ZONE_STAGES } from './constants';
 import { landingSpot } from './landingSpot';
 import { schedule, zone } from './state';
+import { zoneMesh } from './zoneMesh';
 import { AmmoType, GrenadeId, OpticId, PickupKind } from '../../types';
 import type { Circle, Vec2 } from '../../types';
 
@@ -47,6 +48,9 @@ export const startZone = (): Vec2 => {
   zone.radius = R0;
   schedule.startTime = 0;
   applyZonePhase(0);
+  // the wall of the last match's final circle must not linger through the countdown
+  zoneMesh.position.set(0, 150, 0);
+  zoneMesh.scale.set(R0, 1, R0);
 
   // sniper rounds are the scarcest ammo
   const AT = [

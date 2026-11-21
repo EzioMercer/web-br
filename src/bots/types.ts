@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Velocity, WeaponId } from '../types';
+import type { Pickup, Velocity, WeaponId } from '../types';
 
 /** What a bot is doing. */
 export enum BotMode {
@@ -73,6 +73,12 @@ export interface Bot {
   /** Cached result of the last sight check, and when to check again. */
   sees: boolean;
   nextSightAt: number;
+  /** Gun pickup it is walking to, the time it gives up on it, and when it next looks around for one. */
+  lootTarget: Pickup | null;
+  lootUntil: number;
+  nextLootAt: number;
+  /** When it next turns up with a better gun looted out of sight. */
+  upgradeAt: number;
   /** Walking to a high spot to hold with a sniper rifle. */
   toOverwatch: boolean;
   /** Scope glint shown while it aims a sniper rifle at the player. */

@@ -12,15 +12,15 @@ export const makeGlint = () => {
     const g = c.getContext('2d')!;
     const rg = g.createRadialGradient(32, 32, 0, 32, 32, 32);
 
-    // a white-hot core in a warm halo, so it stands out on sky, grass and white walls alike
+    // a white-hot core in a soft white halo, like sunlight off a lens
     rg.addColorStop(0, 'rgba(255,255,255,1)');
-    rg.addColorStop(0.16, 'rgba(255,252,225,1)');
-    rg.addColorStop(0.3, 'rgba(255,170,40,0.9)');
-    rg.addColorStop(0.6, 'rgba(255,120,20,0.35)');
-    rg.addColorStop(1, 'rgba(255,100,0,0)');
+    rg.addColorStop(0.18, 'rgba(255,255,255,1)');
+    rg.addColorStop(0.32, 'rgba(240,246,255,0.85)');
+    rg.addColorStop(0.6, 'rgba(225,235,255,0.3)');
+    rg.addColorStop(1, 'rgba(220,230,255,0)');
     g.fillStyle = rg;
     g.fillRect(0, 0, 64, 64);
-    g.fillStyle = 'rgba(255,235,170,0.85)';
+    g.fillStyle = 'rgba(255,255,255,0.9)';
     g.fillRect(0, 31, 64, 2);
     g.fillRect(31, 0, 2, 64);
     glintTexture = new THREE.CanvasTexture(c);

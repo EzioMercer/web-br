@@ -4,27 +4,12 @@ import { settings } from '../settings/state';
 import { floorY } from '../world/level/floorY';
 import { pickWaypoint } from './pickWaypoint';
 import { setBotWeapon } from './setBotWeapon';
-import { WeaponId } from '../types';
+import { clock } from '../sim/state';
+import { BOT_START_WEAPONS } from './constants';
 import { BotMode } from './types';
 import type { Bot } from './types';
 
-const BOT_WEAPONS: WeaponId[] = [
-  WeaponId.Ak47,
-  WeaponId.Ak47,
-  WeaponId.M4a1,
-  WeaponId.M4a1,
-  WeaponId.Mp5,
-  WeaponId.P90,
-  WeaponId.Awp,
-  WeaponId.Scout,
-  WeaponId.Svd,
-  WeaponId.M3,
-  WeaponId.Glock18,
-  WeaponId.DesertEagle,
-  WeaponId.Usp,
-];
-
-/** Drops bot `b` at a random spot with full health and a random weapon. */
+/** Drops bot `b` at a random spot with full health and a starting gun (pistol mostly). */
 export const respawnBot = (b: Bot) => {
   const w = botDropSpot();
 
@@ -51,6 +36,10 @@ export const respawnBot = (b: Bot) => {
   b.height = PLAYER_HEIGHT;
   b.nextCrouchAt = 0;
   b.labelUntil = 0;
-  setBotWeapon(b, BOT_WEAPONS[Math.random() * BOT_WEAPONS.length | 0]);
+  b.lootTarget = null;
+  b.nextLootAt = 0;
+  // the first guns found out of sight come 50 to 125 s in (the countdown is 5 s)
+  b.upgradeAt = clock.time + 50 + Math.random() * 75;
+  setBotWeapon(b, BOT_START_WEAPONS[Math.random() * BOT_START_WEAPONS.length | 0]);
   pickWaypoint(b);
 };

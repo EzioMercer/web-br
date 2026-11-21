@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { VIEWMODEL_LAYER } from '../config';
 import { OPTIC_IDS } from '../data/optics';
 import { camera } from '../render/camera';
 import { boxMesh } from '../utils/three/boxMesh';
@@ -249,5 +250,8 @@ muzzleFlashMesh.visible = false;
 gunRig.add(muzzleFlashMesh);
 
 gunRig.position.set(0.2, -0.2, -0.45);
+
+// drawn in a pass of its own after the world (renderView)
+gunRig.traverse(o => o.layers.set(VIEWMODEL_LAYER));
 
 camera.add(gunRig);
