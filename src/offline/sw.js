@@ -67,11 +67,15 @@ self.addEventListener('fetch', (e) => {
 
   const url = new URL(req.url);
 
-  // the page: from the network when online, so a new version arrives; from the cache when offline
+  // the page: from the server when online, so a new version arrives; from the cache when offline. 'no-cache' asks the
+  // server every time: the host lets browsers reuse the page for 10 minutes, which would bring back the old version
   if (req.mode === 'navigate') {
     e.respondWith((async () => {
       try {
-        return await fetch(req);
+        const r = await fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' });
+
+        // a navigation can't be answered with a followed redirect: send the browser there instead
+        return r.redirected ? Response.redirect(r.url, 302) : r;
       } catch {
         return (await caches.match(scoped('index.html'), { ignoreVary: true })) || Response.error();
       }
