@@ -103,8 +103,9 @@ Generation is data only, with no three.js. `world/gen/genWorld.ts` fills `gen.bo
 - **Trees:** `plantTrees` adds each tree with `placeTree`: a model (`gen.trees`), plus hidden map boxes (not drawn)
   for the trunk's collision and for the crown's `'leaves'`, which block bot sight. Crown shapes are in
   `src/data/trees.ts`, so the leaf boxes match what is drawn. `flushTrees` draws one InstancedMesh per kind and
-  tile from the low-poly models in `treeGeometry`. Every frame, `treeDetail` swaps far tiles to a model with about a third of the triangles. Tree
-  details (size, turn, lean) use `hashRand`, not `rand`, so they don't shift what is generated after the trees.
+  tile from the low-poly models in `treeGeometry`. Every frame, `treeDetail` swaps far tiles to a model with about
+  a third of the triangles. Tree details (size, turn, lean) use `hashRand`, not `rand`, so they don't shift what is
+  generated after the trees.
 - **Collision:** `physics/` uses a grid of boxes (`buildGrid`, `boxesNear`). Rays use `castRay` and `lineOfSight`.
 
 ## Performance rules (measured; keep them)
