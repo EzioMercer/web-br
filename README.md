@@ -63,7 +63,7 @@ src/
   world/
     terrain/    height field, regions, terrain mesh and raycast
     gen/        island generator: buildings/, sites/, wilderness/, parts/, place/, random/
-    level/      loading the island into the scene: boxes, glass, doors, water
+    level/      loading the island into the scene: boxes, trees, glass, doors, water
     doors/      doors and breakable glass
 ```
 

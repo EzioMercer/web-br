@@ -100,11 +100,16 @@ Generation is data only, with no three.js. `world/gen/genWorld.ts` fills `gen.bo
   `world/level/state.ts`), so frustum and shadow culling skip whole tiles. The terrain is drawn in 128 m tiles too
   (`terrainMesh`). The map group's matrices are static: `matrixWorldAutoUpdate` is off, and they are updated once
   after loading.
+- **Trees:** `plantTrees` adds a model with `placeTree` (`gen.trees`) and the trunk's collision as a hidden
+  `placeBox` (collides, not drawn). `flushTrees` draws one InstancedMesh per kind and tile from the low-poly models
+  in `treeGeometry`. Every frame, `treeDetail` swaps far tiles to a model with about a third of the triangles. Tree
+  details (size, turn, lean) use `hashRand`, not `rand`, so they don't shift what is generated after the trees.
 - **Collision:** `physics/` uses a grid of boxes (`buildGrid`, `boxesNear`). Rays use `castRay` and `lineOfSight`.
 
 ## Performance rules (measured; keep them)
 
-- Static map geometry always goes through `placeBox`, `placeGlass` and `placeDoor`, so it is instanced per tile.
+- Static map geometry always goes through `placeBox`, `placeGlass`, `placeDoor` and `placeTree`, so it is instanced
+  per tile.
   Never add a separate mesh for map geometry.
 - Merge models of many parts with `mergeMeshes`. The bot and pickup models do this already.
 - No allocation in code that runs per frame or per simulation step. Use `utils/hypot`, not `Math.hypot`, which

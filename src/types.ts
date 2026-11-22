@@ -223,7 +223,10 @@ export interface MapBg {
 
 // ---- map data
 
-/** Map box: centre x and z, width (along x), depth (along z), height, color, base y (default 0), no collision. */
+/**
+ * Map box: centre x and z, width (along x), depth (along z), height, color, base y (default 0), no collision, and
+ * hidden (collides but is not drawn: something else draws it, as a tree's model draws its trunk).
+ */
 export type MapBox = [
 x: number,
 z: number,
@@ -233,6 +236,30 @@ height: number,
 color: number,
 y?: number,
 noCollision?: boolean,
+hidden?: boolean,
+];
+
+/** Kind of tree, which picks its model. */
+export enum TreeKind {
+  Pine = 'pine',
+  Broadleaf = 'broadleaf',
+}
+
+/**
+ * Tree model: trunk x and z, ground y, kind, size (1 is a full-grown tree), height (times size), turn about the
+ * vertical (rad), lean about x and z (rad) and foliage colour. Only drawn: its trunk collides as a hidden map box.
+ */
+export type MapTree = [
+x: number,
+z: number,
+y: number,
+kind: TreeKind,
+size: number,
+height: number,
+turn: number,
+leanX: number,
+leanZ: number,
+color: number,
 ];
 
 /** Glass pane: centre x and z, width, depth, height, base y. */

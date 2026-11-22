@@ -116,7 +116,7 @@
     }
 
     if (top.isCamera) return 'gun';
-    if (o.isInstancedMesh) return 'boxes';
+    if (o.isInstancedMesh) return o.name === 'trees' ? 'trees' : 'boxes';
     if (catCache.has(top)) return catCache.get(top);
 
     let c = 'other';

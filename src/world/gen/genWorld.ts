@@ -28,6 +28,7 @@ export const genWorld = () => {
   gen.seed = 4242;
   gen.boxes = [];
   gen.glass = [];
+  gen.trees = [];
   gen.doors = [];
   gen.loot = [];
   gen.footprints = [];
@@ -62,6 +63,7 @@ export const genWorld = () => {
     mesh: terrainMesh(gen.terrain),
     boxes: gen.boxes,
     glass: gen.glass,
+    trees: gen.trees,
     doors: gen.doors,
     loot: gen.loot,
     footprints: gen.footprints,

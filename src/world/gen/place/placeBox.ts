@@ -9,4 +9,5 @@ export const placeBox = (
   c: number,
   y?: number,
   nc?: boolean,
-) => gen.boxes.push([x, z, w, d, h, c, y, nc]);
+  hidden?: boolean,
+) => gen.boxes.push(hidden ? [x, z, w, d, h, c, y, nc, hidden] : [x, z, w, d, h, c, y, nc]);

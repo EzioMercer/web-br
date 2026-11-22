@@ -8,10 +8,11 @@ import { addGlass } from './addGlass';
 import { flushBoxes } from './flushBoxes';
 import { flushDoors } from './flushDoors';
 import { flushGlass } from './flushGlass';
+import { flushTrees } from './flushTrees';
 import { getIsland } from './getIsland';
 import { mapGroup } from './mapGroup';
 import { queueBox } from './queueBox';
-import { boxes, level, tileMeshes, waterMeshes } from './state';
+import { boxes, level, tileMeshes, treeTiles, waterMeshes } from './state';
 import { clearMeshes } from '../../render/clearMeshes';
 
 /** The sea: one plane, made once and reused by every match. */
@@ -39,6 +40,7 @@ export const loadMap = () => {
   }
 
   tileMeshes.length = 0;
+  treeTiles.length = 0;
   clearMeshes(shards);
   boxes.length = 0;
   waterMeshes.length = 0;
@@ -63,6 +65,7 @@ export const loadMap = () => {
   }
 
   flushBoxes();
+  flushTrees(m.trees);
   flushGlass();
   flushDoors();
 

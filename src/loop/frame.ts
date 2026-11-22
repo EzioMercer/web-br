@@ -32,6 +32,7 @@ import { animateViewModel } from '../viewmodel/animateViewModel';
 import { gunRig, heldGrenade, muzzleFlashMesh, muzzleZ, opticMeshes, sightTip, viewModels } from '../viewmodel/models';
 import { shards } from '../world/doors/state';
 import { waterMeshes } from '../world/level/state';
+import { treeDetail } from '../world/level/treeDetail';
 import { OpticId } from '../types';
 import type { WeaponId } from '../types';
 import { disposeObject } from '../utils/three/disposeObject';
@@ -297,6 +298,7 @@ export const frame = (now: number) => {
   // The main menu covers the screen with its own backdrop, so the 3D scene is not drawn behind it.
   if (!input.inMenu && renderer) {
     followSun();
+    treeDetail();
     renderView(renderer);
   }
 };
