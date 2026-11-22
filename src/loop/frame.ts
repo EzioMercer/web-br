@@ -7,6 +7,7 @@ import { ripples, screenFx, transientFx } from '../effects/state';
 import { autoTune } from '../graphics/autoTune';
 import { grenadeThrow } from '../grenades/state';
 import { updateAimPath } from '../grenades/updateAimPath';
+import { updateSmokes } from '../grenades/updateSmokes';
 import { drawCompass } from '../hud/drawCompass';
 import { drawSoundMarks } from '../hud/soundMarks/drawSoundMarks';
 import { mapHud } from '../hud/mapHud';
@@ -152,7 +153,8 @@ export const frame = (now: number) => {
     );
   }
 
-  updateAimPath();
+  updateAimPath(dt);
+  updateSmokes();
   animateViewModel();
   muzzleFlashMesh.position.z = muzzleZ[loadout.weaponId];
 

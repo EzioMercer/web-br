@@ -6,6 +6,7 @@ import { swapPickup } from '../br/pickups/swapPickup';
 import { takePickup } from '../br/pickups/takePickup';
 import { MOUSE_SENS } from '../config';
 import { grenadeCount, grenadeThrow } from '../grenades/state';
+import { MIN_THROW_POWER, THROW_POWER_STEP } from '../grenades/constants';
 import { throwGrenade } from '../grenades/throwGrenade';
 import { endDrag } from '../hud/inventory/endDrag';
 import { setCursor } from '../hud/inventory/setCursor';
@@ -82,7 +83,9 @@ addEventListener('mousedown', (e) => {
   }
 
   if (input.playing && e.button === 2 && loadout.grenade && !player.dead) {
-    grenadeThrow.lob = !grenadeThrow.lob;
+    // right-click puts an aimed grenade back without throwing it
+    grenadeThrow.held = false;
+    input.fireHeld = false;
   } else if (input.playing
     && e.button === 2
     && canAim()
@@ -252,6 +255,12 @@ addEventListener('wheel', (e) => {
 
   wheelSum = 0;
   wheelQuietUntil = n + 120;
+
+  // while aiming a throw the wheel sets its power (up: harder); otherwise it puts the grenade away
+  if (loadout.grenade && grenadeThrow.held) {
+    grenadeThrow.power = Math.max(MIN_THROW_POWER, Math.min(1, grenadeThrow.power - step * THROW_POWER_STEP));
+    return;
+  }
 
   if (loadout.grenade) {
     loadout.grenade = null;

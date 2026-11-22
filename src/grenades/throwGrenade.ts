@@ -28,7 +28,13 @@ export const throwGrenade = () => {
   );
 
   scene.add(m);
-  flyingGrenades.push({ ...throwStart(), type: t, mesh: m, fuseAt: clock.time + fuseTime(t) });
+  flyingGrenades.push({
+    ...throwStart({ x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 }),
+    type: t,
+    landed: false,
+    mesh: m,
+    fuseAt: clock.time + fuseTime(t),
+  });
   noiseBurst(0.15, 0.05, 3000);
   screenFx.gunKick = -0.05;
 };

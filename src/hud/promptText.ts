@@ -10,10 +10,12 @@ export const promptText = () => {
     return '';
   }
 
+  if (loadout.grenade && grenadeThrow.held) {
+    return 'Throw power <b>' + Math.round(grenadeThrow.power * 100) + '%</b> · Wheel ± · Right-click: cancel';
+  }
+
   if (loadout.grenade) {
-    return GRENADE_NAMES[loadout.grenade]
-      + ' ready – hold click to aim, release to throw · Right-click: '
-      + (grenadeThrow.lob ? 'far throw' : 'short toss');
+    return GRENADE_NAMES[loadout.grenade] + ' ready – hold click to aim, release to throw';
   }
 
   return looting.prompt;

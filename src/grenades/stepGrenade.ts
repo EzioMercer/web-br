@@ -1,9 +1,9 @@
 import { insideBox } from '../physics/insideBox';
 import { floorY } from '../world/level/floorY';
-import type { Grenade } from './types';
+import type { GrenadeBody } from './types';
 
 /** Moves a grenade one step, bouncing off walls and the floor. Returns true if it touched something. */
-export const stepGrenade = (n: Omit<Grenade, 'type' | 'mesh' | 'fuseAt'>, dt: number) => {
+export const stepGrenade = (n: GrenadeBody, dt: number) => {
   let fl = false;
 
   n.vy -= 18 * dt;

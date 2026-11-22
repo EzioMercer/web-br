@@ -14,6 +14,8 @@ import { clock } from '../sim/state';
 import { breakGlass } from '../world/doors/breakGlass';
 import { panes } from '../world/doors/state';
 import { smokes } from './state';
+import { makeSmokeCloud } from './makeSmokeCloud';
+import { SMOKE_LIFE } from './constants';
 import type { Vec3 } from '../types';
 import type { Grenade } from './types';
 import { eyePos } from '../player/eyePos';
@@ -25,16 +27,20 @@ export const detonate = (n: Grenade) => {
   const o: Vec3 = [n.x, n.y + 0.2, n.z];
 
   if (n.type === GrenadeId.Smoke) {
-    const y = Math.max(n.y, 0.1) + 1.6;
-    const m = new THREE.Mesh(
-      new THREE.SphereGeometry(3.6, 16, 12),
-      new THREE.MeshLambertMaterial({ color: 0xb9bec2, transparent: true, opacity: 0.95, side: THREE.DoubleSide }),
-    );
+    const gy = Math.max(n.y - 0.07, 0);
+    const { mesh, puffs } = makeSmokeCloud(n.x, gy, n.z);
 
-    m.position.set(n.x, y, n.z);
-    scene.add(m);
-    smokes.push({ x: n.x, y, z: n.z, radius: 3.6, until: clock.time + 15, mesh: m });
-    noiseBurst(0.2, 0.4, 900);
+    smokes.push({
+      x: n.x,
+      y: gy + 1.6,
+      z: n.z,
+      radius: 0,
+      born: clock.time,
+      until: clock.time + SMOKE_LIFE,
+      mesh,
+      puffs,
+    });
+    noiseBurst(0.18, 1.8, 1400);
     return;
   }
 

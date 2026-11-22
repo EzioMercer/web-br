@@ -8,9 +8,20 @@ import { grenadeCount, grenadeThrow } from './state';
 import { stepGrenade } from './stepGrenade';
 import { throwStart } from './throwStart';
 import { hypot } from '../utils/hypot';
+import type { GrenadeBody } from './types';
 
 /** Points on the grenade aim preview. */
-const AIM_POINTS = 70;
+const AIM_POINTS = 80;
+
+/** Simulation step of the preview: the same as the game's, so the preview lands where the grenade will. */
+const STEP = 1 / 120;
+
+/** Longest flight the preview follows (s): the longest fuse. */
+const MAX_FLIGHT = 6;
+
+const simPos = new Float32Array((Math.ceil(MAX_FLIGHT / STEP) + 1) * 3);
+
+const sim: GrenadeBody = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 };
 
 const aimPos = new Float32Array(AIM_POINTS * 3);
 
@@ -32,12 +43,11 @@ aimGeo.setAttribute('position', aimAttr);
 
 aimGeo.setIndex(aimIndex);
 
-const aimMesh = new THREE.Mesh(
-  aimGeo,
-  new THREE.MeshBasicMaterial(
-    { color: 0xffe27a, depthTest: false, transparent: true, opacity: 0.92, side: THREE.DoubleSide },
-  ),
+const aimMat = new THREE.MeshBasicMaterial(
+  { color: 0xffe27a, depthTest: false, transparent: true, opacity: 0.92, side: THREE.DoubleSide },
 );
+
+const aimMesh = new THREE.Mesh(aimGeo, aimMat);
 
 aimMesh.frustumCulled = false;
 
@@ -47,51 +57,61 @@ aimMesh.visible = false;
 
 scene.add(aimMesh);
 
-// the path the grenade will take: a line to where it will be when the fuse runs out, and a ring on the spot
-export const updateAimPath = () => {
+/** Ring on the spot where the grenade lands (or goes off, if the fuse runs out in the air). */
+const landRing = new THREE.Mesh(new THREE.RingGeometry(0.4, 0.62, 32), aimMat);
+
+landRing.rotation.x = -Math.PI / 2;
+
+landRing.renderOrder = 6;
+
+landRing.visible = false;
+
+scene.add(landRing);
+
+// the path the grenade will take, up to where it first lands or the fuse runs out, with a ring on that spot
+export const updateAimPath = (dt: number) => {
+  grenadeThrow.strength += (grenadeThrow.power - grenadeThrow.strength) * Math.min(1, dt * 14);
+
   if (!loadout.grenade || player.dead || !grenadeCount[loadout.grenade] || !grenadeThrow.held) {
     aimMesh.visible = false;
+    landRing.visible = false;
     return;
   }
 
-  const n = throwStart();
-  const dt = 1 / 120;
-  const steps = Math.round(fuseTime(loadout.grenade) / dt);
-  const every = Math.max(1, Math.ceil(steps / (AIM_POINTS - 2)));
-  let k = 1;
-  let px: number;
-  let py: number;
-  let pz: number;
+  const n = throwStart(sim);
+  const steps = Math.round(Math.min(MAX_FLIGHT, fuseTime(loadout.grenade)) / STEP);
+  let last = 0;
 
-  aimPos[0] = n.x;
-  aimPos[1] = n.y;
-  aimPos[2] = n.z;
+  simPos[0] = n.x;
+  simPos[1] = n.y;
+  simPos[2] = n.z;
 
   for (let i = 1; i <= steps; i++) {
-    px = n.x;
-    py = n.y;
-    pz = n.z;
+    const hit = stepGrenade(n, STEP);
 
-    const hit = stepGrenade(n, dt);
+    simPos[i * 3] = n.x;
+    simPos[i * 3 + 1] = n.y;
+    simPos[i * 3 + 2] = n.z;
+    last = i;
 
     if (hit) {
-      if (k < AIM_POINTS && hypot(px - aimPos[k * 3 - 3], py - aimPos[k * 3 - 2], pz - aimPos[k * 3 - 1]) > 0.02) {
-        aimPos[k * 3] = px;
-        aimPos[k * 3 + 1] = py;
-        aimPos[k * 3 + 2] = pz;
-        k++;
-      }
-
       break;
-    } // the path ends where the grenade first touches something
-
-    if ((i % every === 0 || i === steps) && k < AIM_POINTS) {
-      aimPos[k * 3] = n.x;
-      aimPos[k * 3 + 1] = n.y;
-      aimPos[k * 3 + 2] = n.z;
-      k++;
     }
   }
+
+  // spread the points evenly over the flight, so a short toss and a long throw are both smooth
+  const k = Math.min(AIM_POINTS, last + 1);
+
+  for (let i = 0; i < k; i++) {
+    const j = Math.round(i * last / Math.max(1, k - 1)) * 3;
+
+    aimPos[i * 3] = simPos[j];
+    aimPos[i * 3 + 1] = simPos[j + 1];
+    aimPos[i * 3 + 2] = simPos[j + 2];
+  }
+
+  landRing.position.set(simPos[last * 3], simPos[last * 3 + 1] - 0.05, simPos[last * 3 + 2]);
+  landRing.visible = true;
 
   // a flat ribbon that always faces the camera and keeps the same width on screen
   const cx = camera.position.x;
