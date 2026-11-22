@@ -1,5 +1,5 @@
 import { grenadeThrow } from '../grenades/state';
-import { setCursor } from '../hud/inventory/setCursor';
+import { inventory } from '../hud/inventory/state';
 import { openSettings } from '../menu/openSettings';
 import { byId } from '../utils/byId';
 import { input, keys } from './state';
@@ -19,7 +19,7 @@ export const setPlaying = (v: boolean) => {
 
   if (!v) {
     input.fireHeld = false;
-    setCursor(false);
+    inventory.drag = null;
 
     for (const k in keys) {
       keys[k] = false;

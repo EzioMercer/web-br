@@ -1,6 +1,6 @@
 import { dropOptic } from '../../loadout/dropOptic';
 import { moveOptic } from '../../loadout/moveOptic';
-import { slotAt } from './slotAt';
+import { hitAt } from './hitAt';
 import { inventory } from './state';
 
 /**
@@ -16,7 +16,7 @@ export const endDrag = () => {
     return;
   }
 
-  const to = slotAt(inventory.x, inventory.y);
+  const to = hitAt(inventory.x, inventory.y, 'slot');
   const r = document.getElementById('inv')!.getBoundingClientRect();
   const outside = inventory.x < r.left || inventory.x > r.right || inventory.y < r.top || inventory.y > r.bottom;
 

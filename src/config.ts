@@ -24,3 +24,14 @@ export const VIEWMODEL_LAYER = 1;
 
 /** Spare optics the player can carry without a gun to put them on. */
 export const OPTIC_BAG_SLOTS = 5;
+
+/** Medkits and Kevlar vests the player can carry. */
+export const MAX_MEDKITS = 3;
+
+export const MAX_VESTS = 2;
+
+/** Health a medkit gives back. */
+export const MEDKIT_HEAL = 50;
+
+/** Grenades of each kind the player can carry. */
+export const MAX_GRENADES = 2;

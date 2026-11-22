@@ -1,4 +1,5 @@
 import { bots } from '../../bots/state';
+import { MAX_GRENADES, MAX_MEDKITS, MAX_VESTS } from '../../config';
 import { layBodyDown } from '../../combat/layBodyDown';
 import { OPTICS } from '../../data/optics';
 import { WEAPONS } from '../../data/weapons';
@@ -8,7 +9,7 @@ import { opticTarget } from '../../loadout/opticTarget';
 import { loadout } from '../../loadout/state';
 import { endMatch } from '../../match/endMatch';
 import { damagePlayer } from '../../player/damagePlayer';
-import { player, playerBody } from '../../player/state';
+import { player, playerBody, supplies } from '../../player/state';
 import { clock } from '../../sim/state';
 import { doorFocus } from '../../world/doors/state';
 import { looting, pickups } from '../pickups/state';
@@ -104,46 +105,66 @@ export const zoneTick = (dt: number) => {
       continue;
     }
 
-    let ok = false;
+    // Walking over an item picks it up only when it fills an empty place (a free gun slot, a gun without an optic) or
+    // is ammo, a medkit or a vest; anything else waits for E.
+    let auto = false;
+    let take = false;
+    let swap = false;
 
     if (k.kind === PickupKind.Weapon) {
-      if (carriedGuns().length < 2 || loadout.owned[k.itemId as WeaponId]) {
-        ok = true;
-      } else if (d < nd) {
-        looting.swapTarget = k;
-        nd = d;
+      if (loadout.owned[k.itemId as WeaponId]) {
+        take = true; // a second copy: E takes its rounds (and its optic if ours has none)
+      } else if (carriedGuns().length < 2) {
+        auto = true;
+      } else {
+        swap = true;
       }
     } else if (k.kind === PickupKind.Optic) {
       const tg = opticTarget();
 
-      // onto a gun without one, else into the bag, else E swaps it for the optic on the gun
-      if ((tg && !loadout.owned[tg].optic) || loadout.opticBag.includes(null)) {
-        ok = true;
-      } else if (!tg) {
-        hint = 'Optic bag full – Tab, hold Alt and drag an optic out to make room';
-      } else if (d < nd) {
-        looting.swapTarget = k;
-        nd = d;
+      // onto a gun without one by itself; with E into the bag, else E swaps it for the optic on the gun
+      if (tg && !loadout.owned[tg].optic) {
+        auto = true;
+      } else if (loadout.opticBag.includes(null)) {
+        take = true;
+      } else if (tg) {
+        swap = true;
+      } else {
+        hint = 'Optic bag full – Tab and drag an optic out to make room';
       }
     } else if (k.kind === PickupKind.Armor) {
-      ok = player.armor < 100;
+      auto = supplies.vests < MAX_VESTS;
+      hint = auto ? hint : 'Carrying the most vests (' + MAX_VESTS + ')';
+    } else if (k.kind === PickupKind.Health) {
+      auto = supplies.medkits < MAX_MEDKITS;
+      hint = auto ? hint : 'Carrying the most medkits (' + MAX_MEDKITS + ')';
     } else if (k.kind === PickupKind.Ammo) {
-      ok = true; // ammo goes in the bag whatever guns are carried
-    } else if (k.kind === PickupKind.Grenade) {
-      ok = grenadeCount[k.itemId as GrenadeId] < 2;
+      auto = true; // ammo goes in the bag whatever guns are carried
+    } else if (grenadeCount[k.itemId as GrenadeId] < MAX_GRENADES) {
+      take = true;
     } else {
-      ok = player.health < 100;
+      hint = 'Carrying the most ' + k.name + 's (' + MAX_GRENADES + ')';
     }
 
-    if (ok && k.manual) {
-      // something the player dropped stays down until they press E for it
-      if (d < td) {
-        looting.takeTarget = k;
-        td = d;
-      }
-    } else if (ok) {
+    if (auto && !k.manual) {
       takePickup(k);
       removePickup(k);
+    } else if ((auto || take) && d < td) {
+      // something the player dropped stays down until they press E for it
+      looting.takeTarget = k;
+      td = d;
+    } else if (swap && d < nd) {
+      looting.swapTarget = k;
+      nd = d;
+    }
+  }
+
+  // E acts on the nearest item
+  if (looting.swapTarget && looting.takeTarget) {
+    if (nd < td) {
+      looting.takeTarget = null;
+    } else {
+      looting.swapTarget = null;
     }
   }
 
@@ -155,7 +176,11 @@ export const zoneTick = (dt: number) => {
         + ' for '
         + looting.swapTarget.name;
   } else if (looting.takeTarget) {
-    looting.prompt = 'Press E to pick up ' + looting.takeTarget.name;
+    const k = looting.takeTarget;
+
+    looting.prompt = k.kind === PickupKind.Weapon && loadout.owned[k.itemId as WeaponId]
+      ? 'Press E to take the rounds from ' + k.name
+      : 'Press E to pick up ' + k.name;
   } else if (hint) {
     looting.prompt = hint;
   } else if (doorFocus.door && !loadout.grenade) {

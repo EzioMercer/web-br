@@ -5,7 +5,7 @@ import { feedMessage } from '../../hud/feedMessage';
 import { giveWeapon } from '../../loadout/giveWeapon';
 import { opticTarget } from '../../loadout/opticTarget';
 import { loadout } from '../../loadout/state';
-import { player } from '../../player/state';
+import { supplies } from '../../player/state';
 import { PickupKind } from '../../types';
 import type { AmmoType, GrenadeId, OpticId, Pickup } from '../../types';
 import type { WeaponId } from '../../types';
@@ -14,7 +14,8 @@ export const takePickup = (k: Pickup) => {
   if (k.kind === PickupKind.Weapon) {
     giveWeapon(k.itemId as WeaponId, k.weaponState);
   } else if (k.kind === PickupKind.Armor) {
-    player.armor = 100;
+    // kept for later: 8 (or a click in the inventory) puts it on
+    supplies.vests++;
   } else if (k.kind === PickupKind.Grenade) {
     grenadeCount[k.itemId as GrenadeId]++;
   } else if (k.kind === PickupKind.Optic) {
@@ -38,7 +39,8 @@ export const takePickup = (k: Pickup) => {
     feedMessage('Picked up ' + k.name + ' (+' + add + ' rounds)');
     return;
   } else {
-    player.health = Math.min(100, player.health + 50);
+    // kept for later: 7 (or a click in the inventory) uses it
+    supplies.medkits++;
   }
 
   feedMessage('Picked up ' + k.name);

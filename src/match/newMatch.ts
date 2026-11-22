@@ -9,7 +9,7 @@ import { flyingGrenades, grenadeCount, smokes } from '../grenades/state';
 import { emptyAmmoBag } from '../loadout/emptyAmmoBag';
 import { loadout } from '../loadout/state';
 import { spawnPlayer } from '../player/spawnPlayer';
-import { player } from '../player/state';
+import { player, supplies } from '../player/state';
 import { clock } from '../sim/state';
 import { match } from './state';
 import { clearMeshes } from '../render/clearMeshes';
@@ -29,6 +29,7 @@ export const newMatch = () => {
   loadout.weapon = WEAPONS[WeaponId.Usp];
   loadout.scoped = false;
   player.armor = 0;
+  supplies.medkits = supplies.vests = 0;
   grenadeCount[GrenadeId.HighExplosive] = grenadeCount[GrenadeId.Flashbang] = grenadeCount[GrenadeId.Smoke] = 0;
   loadout.grenade = null;
   clearMeshes(flyingGrenades);

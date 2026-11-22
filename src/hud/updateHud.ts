@@ -4,7 +4,7 @@ import { carriedGuns } from '../loadout/carriedGuns';
 import { currentOptic } from '../loadout/currentOptic';
 import { reserve } from '../loadout/reserve';
 import { loadout } from '../loadout/state';
-import { player } from '../player/state';
+import { player, supplies } from '../player/state';
 import { clock } from '../sim/state';
 import { byId } from '../utils/byId';
 import { writeDom } from '../utils/dom/writeDom';
@@ -28,6 +28,11 @@ export const updateHud = () => {
   writeDom(byId('arf'), 'width', Math.max(0, Math.min(100, player.armor)) + '%');
   writeDom(byId('arn'), 'text', String(Math.ceil(player.armor)));
   byId('hp').classList.toggle('low', player.health < 30 && !player.dead);
+  // medkits and vests carried, with the key that uses them
+  writeDom(byId('mkn'), 'html', '<i>7</i>×' + supplies.medkits);
+  writeDom(byId('mkn'), 'class', 'kit' + (supplies.medkits ? '' : ' zero'));
+  writeDom(byId('vsn'), 'html', '<i>8</i>×' + supplies.vests);
+  writeDom(byId('vsn'), 'class', 'kit' + (supplies.vests ? '' : ' zero'));
 
   const wk = loadout.weaponId + (currentOptic() ? loadout.owned[loadout.weaponId].optic : '');
 

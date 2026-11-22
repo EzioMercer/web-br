@@ -9,8 +9,8 @@ import { grenadeCount, grenadeThrow } from '../grenades/state';
 import { MIN_THROW_POWER, THROW_POWER_STEP } from '../grenades/constants';
 import { throwGrenade } from '../grenades/throwGrenade';
 import { endDrag } from '../hud/inventory/endDrag';
-import { setCursor } from '../hud/inventory/setCursor';
-import { startDrag } from '../hud/inventory/startDrag';
+import { openInventory } from '../hud/inventory/openInventory';
+import { pressInventory } from '../hud/inventory/pressInventory';
 import { inventory } from '../hud/inventory/state';
 import { openBigMap } from '../hud/minimap/openBigMap';
 import { maps } from '../hud/minimap/state';
@@ -21,6 +21,8 @@ import { reload } from '../loadout/reload';
 import { loadout } from '../loadout/state';
 import { switchWeapon } from '../loadout/switchWeapon';
 import { player } from '../player/state';
+import { useMedkit } from '../player/useMedkit';
+import { useVest } from '../player/useVest';
 import { glCanvas } from '../render/glCanvas';
 import { settings } from '../settings/state';
 import { clock } from '../sim/state';
@@ -30,6 +32,12 @@ import { lockMouse } from './lockMouse';
 import { setPlaying } from './setPlaying';
 import { input, keys } from './state';
 import { GrenadeId, WeaponId } from '../types';
+
+/**
+ * Inventory cursor speed per pixel of mouse movement. Pointer lock reports the mouse without the system's pointer
+ * acceleration, so 1:1 feels slow across a large screen.
+ */
+const CURSOR_SPEED = 1.35;
 
 /** Last wheel event, delta summed since the last step, and end of the pause after a step. */
 let lastWheel = 0;
@@ -50,9 +58,13 @@ addEventListener('mousemove', (e) => {
     return;
   }
 
-  if (inventory.cursor) {
-    inventory.x = Math.max(0, Math.min(innerWidth - 1, inventory.x + e.movementX));
-    inventory.y = Math.max(0, Math.min(innerHeight - 1, inventory.y + e.movementY));
+  if (inventory.open) {
+    // not placed yet: updateInventory puts it on the panel on the next frame
+    if (inventory.x >= 0) {
+      inventory.x = Math.max(0, Math.min(innerWidth - 1, inventory.x + e.movementX * CURSOR_SPEED));
+      inventory.y = Math.max(0, Math.min(innerHeight - 1, inventory.y + e.movementY * CURSOR_SPEED));
+    }
+
     return;
   }
 
@@ -65,10 +77,10 @@ addEventListener('mousemove', (e) => {
 });
 
 addEventListener('mousedown', (e) => {
-  if (input.playing && inventory.cursor) {
+  if (input.playing && inventory.open) {
     // the cursor is for the inventory: no shooting or aiming
-    if (e.button === 0) {
-      startDrag();
+    if (!player.dead) {
+      pressInventory(e.button);
     }
 
     return;
@@ -142,18 +154,10 @@ addEventListener('keydown', (e) => {
 
   if (e.code === 'Tab') {
     if (!e.repeat) {
-      inventory.open = !inventory.open;
-      setCursor(inventory.open && Boolean(keys.AltLeft || keys.AltRight));
+      openInventory(!inventory.open);
     }
 
     return;
-  }
-
-  // Alt only drives the cursor while the inventory is open; otherwise it does nothing
-  if ((e.code === 'AltLeft' || e.code === 'AltRight') && inventory.open && !player.dead) {
-    setCursor(true);
-    input.fireHeld = false;
-    loadout.scoped = false;
   }
 
   if (e.code === 'KeyM') {
@@ -187,6 +191,14 @@ addEventListener('keydown', (e) => {
     }
   }
 
+  if (e.code === 'Digit7') {
+    useMedkit();
+  }
+
+  if (e.code === 'Digit8') {
+    useVest();
+  }
+
   if (e.code === 'Digit3') {
     loadout.grenade = null;
     switchWeapon(WeaponId.Knife);
@@ -210,15 +222,11 @@ addEventListener('keyup', (e) => {
   if (e.code === 'AltLeft' || e.code === 'AltRight') {
     e.preventDefault();
   }
-
-  if ((e.code === 'AltLeft' || e.code === 'AltRight') && !keys.AltLeft && !keys.AltRight) {
-    setCursor(false);
-  }
 });
 
 addEventListener('blur', () => {
   input.fireHeld = false;
-  setCursor(false);
+  inventory.drag = null;
   grenadeThrow.held = false;
 
   for (const k in keys) {

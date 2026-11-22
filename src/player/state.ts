@@ -18,3 +18,6 @@ export const player = {
 export const playerBody: Required<Body> = { x: 0, y: 0, z: 26, onGround: true, height: 1.8 };
 
 export const playerVel: Velocity = { x: 0, y: 0, z: 0 };
+
+/** Medkits and Kevlar vests carried: picked up by walking over them, used with 7 and 8 or a click in the inventory. */
+export const supplies = { medkits: 0, vests: 0 };
