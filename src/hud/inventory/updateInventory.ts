@@ -70,7 +70,7 @@ let last = '';
 
 /**
  * Draws the inventory panel while it is open (both gun slots, spare optics, the ammo bag, knife, grenades and armor),
- * and the cursor and dragged optic while Ctrl is held.
+ * and the cursor and dragged optic while Alt is held.
  */
 export const updateInventory = () => {
   const el = byId('inv');
@@ -120,7 +120,7 @@ export const updateInventory = () => {
   h += '<div class="sm' + (player.armor > 0 ? '' : ' zero') + '">Armor<b>' + Math.ceil(player.armor) + '</b></div>';
   h += '</div><div class="ivhint">' + (inventory.cursor
     ? 'Drag an optic onto another slot to swap, or out of this panel to drop it'
-    : 'Hold Ctrl for the cursor') + '</div>';
+    : 'Hold Alt for the cursor') + '</div>';
 
   if (h !== last) {
     el.innerHTML = h;

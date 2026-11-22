@@ -120,7 +120,7 @@ export const zoneTick = (dt: number) => {
       if ((tg && !loadout.owned[tg].optic) || loadout.opticBag.includes(null)) {
         ok = true;
       } else if (!tg) {
-        hint = 'Optic bag full – Tab, hold Ctrl and drag an optic out to make room';
+        hint = 'Optic bag full – Tab, hold Alt and drag an optic out to make room';
       } else if (d < nd) {
         looting.swapTarget = k;
         nd = d;

@@ -37,8 +37,8 @@ export const tick = (dt: number) => {
   matchTick(dt);
 
   if (!player.dead) {
-    // C crouches; Ctrl is kept for the inventory cursor
-    const cr = keys.KeyC;
+    // C or Ctrl crouches; Alt is kept for the inventory cursor
+    const cr = keys.KeyC || keys.ControlLeft || keys.ControlRight;
 
     if (cr
       && !wasCrouching

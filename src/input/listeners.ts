@@ -110,6 +110,14 @@ addEventListener('mouseup', (e) => {
 
 addEventListener('contextmenu', e => e.preventDefault());
 
+// Ctrl crouches, and the browser closes the tab on Ctrl+W (crouch-walking forward) without letting the page block it.
+// Asking before leaving mid-match turns that into a "Leave site?" prompt instead of a lost match.
+addEventListener('beforeunload', (e) => {
+  if (input.playing && !player.dead) {
+    e.preventDefault();
+  }
+});
+
 addEventListener('keydown', (e) => {
   if (e.code === 'Escape') {
     if (input.playing && !document.pointerLockElement) {
@@ -125,20 +133,21 @@ addEventListener('keydown', (e) => {
 
   keys[e.code] = true;
 
-  if (e.code === 'Space' || e.code === 'Tab' || e.ctrlKey || e.code.startsWith('Arrow')) {
+  if (e.code === 'Space' || e.code === 'Tab' || e.ctrlKey || e.altKey || e.code.startsWith('Arrow')) {
     e.preventDefault();
   }
 
   if (e.code === 'Tab') {
     if (!e.repeat) {
       inventory.open = !inventory.open;
-      setCursor(inventory.open && Boolean(keys.ControlLeft || keys.ControlRight));
+      setCursor(inventory.open && Boolean(keys.AltLeft || keys.AltRight));
     }
 
     return;
   }
 
-  if ((e.code === 'ControlLeft' || e.code === 'ControlRight') && inventory.open && !player.dead) {
+  // Alt only drives the cursor while the inventory is open; otherwise it does nothing
+  if ((e.code === 'AltLeft' || e.code === 'AltRight') && inventory.open && !player.dead) {
     setCursor(true);
     input.fireHeld = false;
     loadout.scoped = false;
@@ -194,7 +203,12 @@ addEventListener('keydown', (e) => {
 addEventListener('keyup', (e) => {
   keys[e.code] = false;
 
-  if ((e.code === 'ControlLeft' || e.code === 'ControlRight') && !keys.ControlLeft && !keys.ControlRight) {
+  // a lone Alt press would otherwise focus the browser's menu bar (Firefox on Windows/Linux)
+  if (e.code === 'AltLeft' || e.code === 'AltRight') {
+    e.preventDefault();
+  }
+
+  if ((e.code === 'AltLeft' || e.code === 'AltRight') && !keys.AltLeft && !keys.AltRight) {
     setCursor(false);
   }
 });
