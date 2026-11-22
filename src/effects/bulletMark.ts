@@ -40,6 +40,17 @@ export const bulletMark = (p: Vec3) => {
   life[i] = LIFE;
 };
 
+/** Removes every mark at once (a new round). */
+export const clearBulletMarks = () => {
+  life.fill(0);
+
+  for (let i = 0; i < MAX; i++) {
+    marks.setMatrixAt(i, HIDDEN);
+  }
+
+  marks.instanceMatrix.needsUpdate = true;
+};
+
 /** Removes the marks whose time is up (render loop). */
 export const bulletMarksTick = (dt: number) => {
   for (let i = 0; i < MAX; i++) {

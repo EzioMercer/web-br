@@ -1,3 +1,4 @@
+import { player } from '../../player/state';
 import { settings } from '../../settings/state';
 import { byId } from '../../utils/byId';
 import { SOUND_MARK_LIFE, soundMarks } from './state';
@@ -19,7 +20,8 @@ const SHOT_ICON = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 1l2
  * added, so a running bot leaves one mark, not a trail.
  */
 export const soundMark = (x: number, z: number, shot: boolean, strength: number, src: object | null) => {
-  if (!settings.soundMarks) {
+  // nothing to turn towards once the player is out: the bots walking round the body would only clutter the screen
+  if (!settings.soundMarks || player.dead) {
     return;
   }
 

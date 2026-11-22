@@ -30,6 +30,11 @@ reuse, and the rules that keep the game fast.
 `SIM_STEP` = 1/120 s), then the camera, viewmodel, effects and HUD, then `render/renderView.ts` (world, then the
 gun in its own pass). The match flow is in `match/`, with zone timing in `br/zone/constants.ts`.
 
+**New round:** every round, from the menu or the automatic next one, starts in `match/newMatch.ts`. Nothing may
+carry over from the last round: anything new that a round changes must be put back there. HUD state (marks,
+flashes, feed, open panels) goes in `hud/resetHud.ts`; map state (doors, glass, bullet marks, effects) goes in
+`world/level/resetMap.ts`, which restores the map in place instead of building it again.
+
 **UI:** all markup is in `index.html` (HUD, menu, settings dialog), with styles in `src/style.css`.
 - Look elements up with `utils/byId`.
 - Anything written every frame goes through `utils/dom/writeDom`, which writes only on change.

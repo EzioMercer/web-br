@@ -4,19 +4,24 @@ import { startZone } from '../br/zone/startZone';
 import { bullets } from '../combat/state';
 import { BAG_SLOTS } from '../config';
 import { WEAPONS } from '../data/weapons';
-import { screenFx } from '../effects/state';
 import { flyingGrenades, grenadeCount, smokes } from '../grenades/state';
 import { emptyAmmoBag } from '../loadout/emptyAmmoBag';
 import { loadout } from '../loadout/state';
 import { spawnPlayer } from '../player/spawnPlayer';
 import { player } from '../player/state';
 import { clock } from '../sim/state';
+import { resetHud } from '../hud/resetHud';
+import { resetMap } from '../world/level/resetMap';
 import { match } from './state';
 import { clearMeshes } from '../render/clearMeshes';
 import { AmmoType, GrenadeId, Phase, WeaponId } from '../types';
 import type { BagItem, OwnedWeapon } from '../types';
 
-/** Resets the loadout, the zone and everyone's position, then counts down to the start. */
+/**
+ * Starts a round, from the menu or after the last one ended: resets the loadout, the HUD, the map (doors, glass,
+ * marks), the zone and loot, and everyone's position, then counts down to the start. Anything a round changes must be
+ * put back here (the HUD in `resetHud`, the map in `resetMap`), so no round inherits the last one's state.
+ */
 export const newMatch = () => {
   loadout.owned = {
     [WeaponId.Usp]: { ammo: 12 },
@@ -35,7 +40,8 @@ export const newMatch = () => {
   clearMeshes(smokes);
   clearMeshes(bullets.map(b => ({ mesh: b.streak })));
   bullets.length = 0;
-  screenFx.flashbang = 0;
+  resetHud();
+  resetMap();
   spawnPlayer(startZone());
 
   for (const b of bots) {
