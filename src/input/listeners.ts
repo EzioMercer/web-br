@@ -190,11 +190,11 @@ addEventListener('keydown', (e) => {
     }
   }
 
-  if (e.code === 'Digit7') {
+  if (e.code === 'KeyH') {
     useSupply(Supply.Medkit);
   }
 
-  if (e.code === 'Digit8') {
+  if (e.code === 'KeyG') {
     useSupply(Supply.Vest);
   }
 

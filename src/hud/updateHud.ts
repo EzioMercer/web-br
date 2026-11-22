@@ -38,9 +38,9 @@ export const updateHud = () => {
     vs += it === Supply.Vest ? 1 : 0;
   }
 
-  writeDom(byId('mkn'), 'html', '<i>7</i>×' + mk);
+  writeDom(byId('mkn'), 'html', '<i>H</i>×' + mk);
   writeDom(byId('mkn'), 'class', 'kit' + (mk ? '' : ' zero'));
-  writeDom(byId('vsn'), 'html', '<i>8</i>×' + vs);
+  writeDom(byId('vsn'), 'html', '<i>G</i>×' + vs);
   writeDom(byId('vsn'), 'class', 'kit' + (vs ? '' : ' zero'));
 
   const wk = loadout.weaponId + (currentOptic() ? loadout.owned[loadout.weaponId].optic : '');

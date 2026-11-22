@@ -13,7 +13,7 @@ export const takePickup = (k: Pickup) => {
   if (k.kind === PickupKind.Weapon) {
     giveWeapon(k.itemId as WeaponId, k.weaponState);
   } else if (k.kind === PickupKind.Armor) {
-    // into the bag for later: 8 (or a click in the inventory) puts it on
+    // into the bag for later: G (or a click in the inventory) puts it on
     loadout.bag[loadout.bag.indexOf(null)] = Supply.Vest;
   } else if (k.kind === PickupKind.Grenade) {
     grenadeCount[k.itemId as GrenadeId]++;
@@ -38,7 +38,7 @@ export const takePickup = (k: Pickup) => {
     feedMessage('Picked up ' + k.name + ' (+' + add + ' rounds)');
     return;
   } else {
-    // into the bag for later: 7 (or a click in the inventory) uses it
+    // into the bag for later: H (or a click in the inventory) uses it
     loadout.bag[loadout.bag.indexOf(null)] = Supply.Medkit;
   }
 
