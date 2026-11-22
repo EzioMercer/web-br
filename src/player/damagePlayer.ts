@@ -1,7 +1,8 @@
 import { screenFx } from '../effects/state';
 import { input } from '../input/state';
 import { byId } from '../utils/byId';
-import { player, playerBody } from './state';
+import { bearingTo } from './bearingTo';
+import { player } from './state';
 import type { Bot } from '../bots/types';
 
 /** Damages the player by `d` (armor absorbs half, unless `raw`), from bot `by` if any. */
@@ -19,7 +20,7 @@ export const damagePlayer = (d: number, by?: Bot | null, raw?: boolean) => {
   if (by) {
     screenFx.damageDir = 1.4;
     byId('dd').style.transform = 'translate(-50%,-50%) rotate('
-      + ((Math.atan2(by.x - playerBody.x, -(by.z - playerBody.z)) + player.yaw) * 57.2958)
+      + (bearingTo(by.x, by.z) * 57.2958)
       + 'deg)';
   }
 

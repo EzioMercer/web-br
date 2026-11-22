@@ -1,7 +1,7 @@
 import { footstepBus } from './footstepBus';
 import { audio } from './state';
 
-export const stepThump = (f0: number, f1: number, dur: number, vol: number, at?: number) => {
+export const stepThump = (f0: number, f1: number, dur: number, vol: number, at?: number, out?: AudioNode) => {
   if (!audio.ctx || vol <= 0) {
     return;
   }
@@ -17,7 +17,7 @@ export const stepThump = (f0: number, f1: number, dur: number, vol: number, at?:
   g.gain.linearRampToValueAtTime(vol, t + 0.008);
   g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
   o.connect(g);
-  g.connect(footstepBus(audio.ctx));
+  g.connect(out || footstepBus(audio.ctx));
   o.start(t);
   o.stop(t + dur + 0.02);
 };

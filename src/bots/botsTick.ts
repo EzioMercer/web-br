@@ -1,4 +1,6 @@
 import { footstep } from '../audio/footstep';
+import { panFor } from '../audio/panFor';
+import { soundMark } from '../hud/soundMarks/soundMark';
 import { zone } from '../br/zone/state';
 import { ZonePhase } from '../br/zone/types';
 import { PLAYER_HEIGHT } from '../config';
@@ -297,7 +299,10 @@ export const botsTick = (dt: number) => {
         const d0 = hypot(b.x - playerBody.x, b.z - playerBody.z);
 
         if (d0 < 35) {
-          footstep(surfaceAt(b.x, b.z, b.y), Math.max(0, 1 - d0 / 35) * 0.9);
+          const loud = Math.max(0, 1 - d0 / 35);
+
+          footstep(surfaceAt(b.x, b.z, b.y), loud * 0.9, panFor(b.x, b.z));
+          soundMark(b.x, b.z, false, loud * 1.6, b);
 
           if (waterDepth(b.x, b.z, b.y) > 0) {
             ripple(b.x, b.z);

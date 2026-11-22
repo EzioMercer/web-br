@@ -1,8 +1,9 @@
+import { panner } from './panner';
 import { audio } from './state';
 import { noiseBuffer } from './noiseBuffer';
 
-/** Filtered noise burst. */
-export const noiseBurst = (vol: number, dur: number, freq: number) => {
+/** Filtered noise burst, panned left (-1) or right (1) by `pan`. */
+export const noiseBurst = (vol: number, dur: number, freq: number, pan = 0) => {
   if (!audio.ctx) {
     return;
   }
@@ -20,6 +21,6 @@ export const noiseBurst = (vol: number, dur: number, freq: number) => {
   g.gain.value = vol;
   s.connect(f);
   f.connect(g);
-  g.connect(audio.ctx.destination);
+  g.connect(panner(pan, audio.ctx.destination));
   s.start();
 };

@@ -7,6 +7,7 @@ import { SAVE_KEY, settings } from './state';
 type Saved = {
   sens?: number;
   vol?: number;
+  snd?: boolean;
   fps?: boolean;
   fpsMax?: number;
   diff?: string;
@@ -25,6 +26,10 @@ export const loadSettings = () => {
 
     if (typeof s.vol === 'number') {
       settings.footstepVolume = s.vol;
+    }
+
+    if (typeof s.snd === 'boolean') {
+      settings.soundMarks = s.snd;
     }
 
     if (typeof s.fps === 'boolean') {

@@ -9,6 +9,7 @@ import { settings } from '../settings/state';
 import { byId } from '../utils/byId';
 import { markOption } from '../utils/dom/markOption';
 import { optionButtons } from '../utils/dom/optionButtons';
+import { ON_OFF_CHOICES } from './graphicsChoices';
 import { openSettings } from './openSettings';
 import { selectTab } from './selectTab';
 import { setupGraphicsTab } from './setupGraphicsTab';
@@ -147,4 +148,10 @@ document.querySelectorAll<HTMLElement>('#settings .tab').forEach((t) => {
     show();
     saveSettings();
   };
+  optionButtons('msnd', ON_OFF_CHOICES, (v) => {
+    settings.soundMarks = v;
+    markOption('msnd', v);
+    saveSettings();
+  });
+  markOption('msnd', settings.soundMarks);
 }
