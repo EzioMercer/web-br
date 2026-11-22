@@ -122,7 +122,10 @@ export interface Difficulty {
   speed: number;
   health: number;
   fireDelay: number;
+  /** Half-width of a bot's view cone (rad). Kept under pi so there is always a blind spot behind it to sneak up on. */
   viewAngle: number;
+  /** How fast a bot turns (rad/s): it must swing round before it can shoot someone who comes from behind. */
+  turnRate: number;
   memory: number;
 }
 
@@ -223,7 +226,10 @@ export interface MapBg {
 
 // ---- map data
 
-/** Map box: centre x and z, width (along x), depth (along z), height, color, base y (default 0), no collision. */
+/**
+ * Map box: centre x and z, width (along x), depth (along z), height, color, base y (default 0), no collision.
+ * `'leaves'` is a tree crown: no collision either, but bots can't see through it.
+ */
 export type MapBox = [
 x: number,
 z: number,
@@ -232,7 +238,7 @@ depth: number,
 height: number,
 color: number,
 y?: number,
-noCollision?: boolean,
+noCollision?: boolean | 'leaves',
 ];
 
 /** Glass pane: centre x and z, width, depth, height, base y. */

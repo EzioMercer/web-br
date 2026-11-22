@@ -89,6 +89,8 @@ export interface Bot {
   reactAt: number;
   /** Seconds spent not moving toward the target. */
   stuck: number;
+  /** Heading it wants to face (rad); the body turns toward it at the difficulty's `turnRate`. */
+  faceYaw: number;
   /** Blinded by a flashbang until this time. */
   blindUntil: number;
   /** Running for the Battle Royale zone. */

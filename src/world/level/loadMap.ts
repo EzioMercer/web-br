@@ -11,7 +11,7 @@ import { flushGlass } from './flushGlass';
 import { getIsland } from './getIsland';
 import { mapGroup } from './mapGroup';
 import { queueBox } from './queueBox';
-import { boxes, level, tileMeshes, waterMeshes } from './state';
+import { boxes, leaves, level, tileMeshes, waterMeshes } from './state';
 import { clearMeshes } from '../../render/clearMeshes';
 
 /** The sea: one plane, made once and reused by every match. */
@@ -41,6 +41,7 @@ export const loadMap = () => {
   tileMeshes.length = 0;
   clearMeshes(shards);
   boxes.length = 0;
+  leaves.length = 0;
   waterMeshes.length = 0;
   doors.length = 0;
   panes.length = 0;

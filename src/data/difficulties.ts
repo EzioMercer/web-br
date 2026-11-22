@@ -10,6 +10,7 @@ export const DIFFICULTIES: Record<string, Difficulty> = {
     health: 1,
     fireDelay: 1.3,
     viewAngle: 0.8,
+    turnRate: 3,
     memory: 1,
   },
   normal: {
@@ -21,6 +22,7 @@ export const DIFFICULTIES: Record<string, Difficulty> = {
     health: 1,
     fireDelay: 0.85,
     viewAngle: 1.2,
+    turnRate: 4.5,
     memory: 1.5,
   },
   hard: {
@@ -32,6 +34,7 @@ export const DIFFICULTIES: Record<string, Difficulty> = {
     health: 1.3,
     fireDelay: 0.7,
     viewAngle: 1.8,
+    turnRate: 6,
     memory: 2.2,
   },
   insane: {
@@ -42,7 +45,8 @@ export const DIFFICULTIES: Record<string, Difficulty> = {
     speed: 1.35,
     health: 1.6,
     fireDelay: 0.55,
-    viewAngle: 4,
+    viewAngle: 2.4,
+    turnRate: 8,
     memory: 3,
   },
 };

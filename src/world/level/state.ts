@@ -11,6 +11,9 @@ export const waterMeshes: THREE.Mesh[] = [];
 /** Collision boxes of the current map. */
 export const boxes: Box[] = [];
 
+/** Tree crowns: nothing collides with them, but they hide the player from bots (see `leavesBlock`). */
+export const leaves: Box[] = [];
+
 /** Boxes waiting to be drawn as instanced meshes (see flushBoxes): x, y, z, w, h, d, color. */
 export const pendingBoxes: number[][] = [];
 

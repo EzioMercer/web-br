@@ -59,6 +59,7 @@ export const addBot = (i: number) => {
     nextShotAt: 0,
     reactAt: 0,
     stuck: 0,
+    faceYaw: 0,
     blindUntil: 0,
     running: false,
     detourUntil: 0,

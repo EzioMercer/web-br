@@ -27,9 +27,13 @@ import { Phase } from '../types';
 import type { Vec3 } from '../types';
 import type { Bot } from './types';
 import { hypot } from '../utils/hypot';
+import { wrapAngle } from '../utils/wrapAngle';
 
 /** Walking speed of a bot (m/s), before the difficulty multiplier. */
 const WALK = 3.4;
+
+/** How far off the player a bot may still be facing when it fires (rad). */
+const AIM_CONE = 0.3;
 
 /** Starts a hunt for the player's last known position. */
 const hunt = (b: Bot) => {
@@ -66,7 +70,7 @@ const fight = (b: Bot, dist: number, dx: number, dz: number, dt: number) => {
   const still = w.sniper && dist > 25;
 
   b.mode = BotMode.Fight;
-  b.mesh.rotation.y = Math.atan2(dx, dz);
+  b.faceYaw = Math.atan2(dx, dz);
 
   if (still) {
     b.vel.x = 0;
@@ -95,7 +99,11 @@ const fight = (b: Bot, dist: number, dx: number, dz: number, dt: number) => {
     b.crouch = Math.random() < (still ? 0.6 : 0.4) ? 1 : 0;
   }
 
-  if (clock.time >= b.reactAt && clock.time >= b.nextShotAt && (!w.melee || dist < 2.8)) {
+  // it has to have turned to face the player first
+  if (clock.time >= b.reactAt
+    && clock.time >= b.nextShotAt
+    && Math.abs(wrapAngle(b.faceYaw - b.mesh.rotation.y)) < AIM_CONE
+    && (!w.melee || dist < 2.8)) {
     botShoot(b, dist);
   }
 };
@@ -245,7 +253,7 @@ export const botsTick = (dt: number) => {
       b.vel.x = 0;
       b.vel.z = 0;
       b.crouch = 1;
-      b.mesh.rotation.y = Math.atan2(b.knownX - b.x, b.knownZ - b.z);
+      b.faceYaw = Math.atan2(b.knownX - b.x, b.knownZ - b.z);
 
       if (clock.time > b.modeUntil) {
         b.inCover = false;
@@ -270,7 +278,7 @@ export const botsTick = (dt: number) => {
       // holding high ground with a sniper rifle, scanning the area
       b.vel.x = 0;
       b.vel.z = 0;
-      b.mesh.rotation.y += dt * 0.45 * b.detourDir;
+      b.faceYaw = wrapAngle(b.faceYaw + dt * 0.45 * b.detourDir);
 
       if (clock.time > b.modeUntil) {
         pickWaypoint(b);
@@ -278,6 +286,14 @@ export const botsTick = (dt: number) => {
       }
     } else {
       moving = roam(b);
+    }
+
+    {
+      // turn toward where it wants to face, no faster than the difficulty allows
+      const turn = wrapAngle(b.faceYaw - b.mesh.rotation.y);
+      const step = settings.difficulty.turnRate * dt;
+
+      b.mesh.rotation.y = wrapAngle(b.mesh.rotation.y + Math.max(-step, Math.min(step, turn)));
     }
 
     b.vel.y -= 20 * dt; {

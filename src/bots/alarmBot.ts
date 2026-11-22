@@ -4,7 +4,7 @@ import { Alarm, BotMode } from './types';
 import type { Bot } from './types';
 import { hypot } from '../utils/hypot';
 
-/** Bot `b` learns roughly where the player is and turns that way; being shot at sends it looking for cover. */
+/** Bot `b` learns roughly where the player is and starts turning that way; being shot at sends it looking for cover. */
 export const alarmBot = (b: Bot, how: Alarm) => {
   const dist = hypot(playerBody.x - b.x, playerBody.z - b.z);
   const err = how === Alarm.Heard ? dist * 0.12 : how === Alarm.NearMiss ? 1 : 0;
@@ -12,7 +12,7 @@ export const alarmBot = (b: Bot, how: Alarm) => {
   b.knownX = playerBody.x + (Math.random() - 0.5) * 2 * err;
   b.knownY = playerBody.y;
   b.knownZ = playerBody.z + (Math.random() - 0.5) * 2 * err;
-  b.mesh.rotation.y = Math.atan2(b.knownX - b.x, b.knownZ - b.z);
+  b.faceYaw = Math.atan2(b.knownX - b.x, b.knownZ - b.z);
 
   if (how === Alarm.Heard) {
     b.heardAt = clock.time;

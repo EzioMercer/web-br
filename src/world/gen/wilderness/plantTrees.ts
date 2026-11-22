@@ -49,11 +49,11 @@ export const plantTrees = () => {
       placeBox(px, pz, 0.9, 0.9, 5, 0x6b4a2a, h - 0.6);
 
       if (pine) {
-        placeBox(px, pz, 4.6, 4.6, 2.2, gc, h + 2.4, true);
-        placeBox(px, pz, 2.8, 2.8, 2.2, gc, h + 4.4, true);
-        placeBox(px, pz, 1.2, 1.2, 1.4, gc, h + 6.4, true);
+        placeBox(px, pz, 4.6, 4.6, 2.2, gc, h + 2.4, 'leaves');
+        placeBox(px, pz, 2.8, 2.8, 2.2, gc, h + 4.4, 'leaves');
+        placeBox(px, pz, 1.2, 1.2, 1.4, gc, h + 6.4, 'leaves');
       } else {
-        placeBox(px, pz, 5.2, 5.2, 3, gc, h + 3.4, true);
+        placeBox(px, pz, 5.2, 5.2, 3, gc, h + 3.4, 'leaves');
       }
 
       treeCount++;

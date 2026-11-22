@@ -8,5 +8,5 @@ export const placeBox = (
   h: number,
   c: number,
   y?: number,
-  nc?: boolean,
+  nc?: boolean | 'leaves',
 ) => gen.boxes.push([x, z, w, d, h, c, y, nc]);

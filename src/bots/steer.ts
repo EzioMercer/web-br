@@ -40,6 +40,6 @@ export const steer = (b: Bot, tx: number, tz: number, speed: number) => {
 
   b.vel.x = ux * speed;
   b.vel.z = uz * speed;
-  b.mesh.rotation.y = Math.atan2(ux, uz);
+  b.faceYaw = Math.atan2(ux, uz);
   return wd;
 };
