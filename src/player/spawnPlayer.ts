@@ -19,6 +19,7 @@ export const spawnPlayer = (at: Vec2) => {
   player.health = 100;
   loadAmmo(loadout.weaponId);
   loadout.reloading = false;
+  loadout.shotQueued = false;
   player.dead = false;
   byId('msg').textContent = '';
 };

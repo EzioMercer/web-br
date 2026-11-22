@@ -46,6 +46,7 @@ export const giveWeapon = (id: WeaponId, st?: OwnedWeapon, drop?: WeaponId) => {
   loadout.weapon = w;
   loadAmmo(id);
   loadout.reloading = false;
+  loadout.shotQueued = false;
   loadout.scoped = false;
   loadout.grenade = null;
 };

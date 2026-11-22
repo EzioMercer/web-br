@@ -152,6 +152,20 @@ cloneModel(WeaponId.DesertEagle, WeaponId.Usp, 1.3, 0);
 
 cloneModel(WeaponId.M3, WeaponId.Ak47, 1.05, 0x2a1c10);
 
+/** Shotgun shell, pushed into the M3's loading port one at a time during a reload. */
+export const shotgunShell = new THREE.Group();
+
+cylinderMesh(shotgunShell, 0.011, 0.05, 0, 0, 0, lambert(0xa3261e));
+
+cylinderMesh(shotgunShell, 0.0115, 0.014, 0, 0, 0.031, lambert(0xc9a227));
+
+shotgunShell.visible = false;
+
+viewModels[WeaponId.M3].add(shotgunShell);
+
+// a pump shotgun has a tube under the barrel, not the box magazine of the rifle it is copied from
+magMeshes[WeaponId.M3].visible = false;
+
 cloneModel(WeaponId.Mp5, WeaponId.Ak47, 0.75, 0x1c1e20);
 
 cloneModel(WeaponId.P90, WeaponId.Ak47, 0.7, 0x1c1e20);

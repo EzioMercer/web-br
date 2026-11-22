@@ -17,6 +17,7 @@ export const switchWeapon = (id: WeaponId) => {
   loadAmmo(id);
   loadout.grenade = null;
   loadout.reloading = false;
+  loadout.shotQueued = false;
   loadout.scoped = false;
   loadout.nextShotAt = Math.max(clock.time + 0.4, WEAPONS[id].boltAction ? loadout.boltCycleEnd : 0);
 };

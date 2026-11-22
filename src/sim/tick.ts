@@ -8,7 +8,8 @@ import { ripple } from '../effects/ripple';
 import { grenadesTick } from '../grenades/grenadesTick';
 import { input, keys } from '../input/state';
 import { reload } from '../loadout/reload';
-import { reserve } from '../loadout/reserve';
+import { reloadTick } from '../loadout/reloadTick';
+import { interruptReload } from '../loadout/interruptReload';
 import { loadout } from '../loadout/state';
 import { matchTick } from '../match/matchTick';
 import { accelerate } from '../physics/accelerate';
@@ -21,7 +22,6 @@ import { doorsTick } from '../world/doors/doorsTick';
 import { surfaceAt } from '../world/level/surfaceAt';
 import { waterDepth } from '../world/level/waterDepth';
 import { clock, slide } from './state';
-import { AmmoType } from '../types';
 import { Surface } from '../audio/types';
 import { hypot } from '../utils/hypot';
 
@@ -173,15 +173,20 @@ export const tick = (dt: number) => {
       loadout.scoped = false;
     }
 
-    if (loadout.reloading && clock.time >= loadout.reloadEnd) {
-      const n = Math.min(loadout.weapon.magSize - loadout.ammo, reserve());
+    reloadTick();
 
-      loadout.ammo += n;
-      loadout.ammoBag[loadout.weapon.ammoType ?? AmmoType.None] -= n;
-      loadout.reloading = false;
+    // a click during a shell-by-shell reload cuts it short and fires as soon as the action is closed
+    if (input.fireHeld && loadout.reloading && loadout.weapon.singleLoad) {
+      interruptReload();
+      input.fireHeld = false;
     }
 
-    if (input.fireHeld && !loadout.grenade && !loadout.reloading && clock.time >= loadout.nextShotAt) {
+    if ((input.fireHeld || loadout.shotQueued)
+      && !loadout.grenade
+      && !loadout.reloading
+      && clock.time >= loadout.nextShotAt) {
+      loadout.shotQueued = false;
+
       if (loadout.ammo > 0) {
         fireWeapon();
 
@@ -190,6 +195,11 @@ export const tick = (dt: number) => {
         }
       } else {
         reload();
+
+        // the click that started the reload must not also cut it short after the first round
+        if (loadout.weapon.singleLoad) {
+          input.fireHeld = false;
+        }
       }
     }
   }

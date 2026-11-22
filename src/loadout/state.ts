@@ -2,6 +2,7 @@ import { OPTIC_BAG_SLOTS } from '../config';
 import { WEAPONS } from '../data/weapons';
 import { emptyAmmoBag } from './emptyAmmoBag';
 import { WeaponId } from '../types';
+import { ReloadPhase } from './types';
 import type { GrenadeId, OpticId, OwnedWeapon, Weapon } from '../types';
 
 /** The weapons the player carries and the state of the one in hand. */
@@ -20,7 +21,14 @@ export const loadout = {
   ammo: 12,
   scoped: false,
   reloading: false,
+  /** Step of the reload, and when it started and ends. */
+  reloadPhase: ReloadPhase.Round,
+  reloadFrom: 0,
   reloadEnd: 0,
+  /** A single-load reload stops after the round in hand (a shot was asked for while the magazine was empty). */
+  reloadStop: false,
+  /** A shot asked for during a single-load reload, fired once the action is closed. */
+  shotQueued: false,
   nextShotAt: 0,
   lastShotAt: -9,
   /** Selected grenade, if any. */

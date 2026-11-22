@@ -93,8 +93,13 @@ export interface Weapon {
   /** Recoil strength. */
   recoil: number;
   auto: boolean;
-  /** Reload time (s). */
+  /** Reload time (s): the whole magazine swap, or for `singleLoad` weapons the time to load one round. */
   reloadTime: number;
+  /**
+   * Loads one round at a time (pump shotguns, bolt actions): seconds to open the action before the first round and to
+   * close it after the last. Each round counts as soon as it is in, and firing cuts the reload short.
+   */
+  singleLoad?: { open: number; close: number };
   /** Slot: 1 primary, 2 secondary, 3 melee. */
   slot: number;
   ammoType?: AmmoType;
