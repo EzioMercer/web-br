@@ -19,6 +19,7 @@ import type { Grenade } from './types';
 import { eyePos } from '../player/eyePos';
 import { viewDir } from '../player/viewDir';
 import { GrenadeId } from '../types';
+import { hypot } from '../utils/hypot';
 
 export const detonate = (n: Grenade) => {
   const o: Vec3 = [n.x, n.y + 0.2, n.z];
@@ -37,7 +38,7 @@ export const detonate = (n: Grenade) => {
     return;
   }
 
-  const pd = Math.hypot(playerBody.x - o[0], playerBody.y + 1 - o[1], playerBody.z - o[2]);
+  const pd = hypot(playerBody.x - o[0], playerBody.y + 1 - o[1], playerBody.z - o[2]);
 
   if (n.type === GrenadeId.Flashbang) {
     noiseBurst(0.6, 0.25, 6000);
@@ -62,7 +63,7 @@ export const detonate = (n: Grenade) => {
     }
 
     for (const b of bots) {
-      if (b.health > 0 && Math.hypot(b.x - o[0], b.z - o[2]) < 30 && lineOfSight(o, [b.x, 1.4, b.z])) {
+      if (b.health > 0 && hypot(b.x - o[0], b.z - o[2]) < 30 && lineOfSight(o, [b.x, 1.4, b.z])) {
         b.blindUntil = clock.time + 4;
       }
     }
@@ -75,7 +76,7 @@ export const detonate = (n: Grenade) => {
 
   for (const q of panes) {
     if (!q.box.disabled
-      && Math.hypot((q.box.min[0] + q.box.max[0]) / 2 - o[0], (q.box.min[2] + q.box.max[2]) / 2 - o[2]) < 11) {
+      && hypot((q.box.min[0] + q.box.max[0]) / 2 - o[0], (q.box.min[2] + q.box.max[2]) / 2 - o[2]) < 11) {
       breakGlass(q.box);
     }
   }
@@ -94,7 +95,7 @@ export const detonate = (n: Grenade) => {
       continue;
     }
 
-    const bd = Math.hypot(b.x - o[0], 1 - o[1], b.z - o[2]);
+    const bd = hypot(b.x - o[0], 1 - o[1], b.z - o[2]);
 
     if (bd < 9 && lineOfSight(o, [b.x, b.y + 0.9, b.z])) {
       b.health -= Math.round(160 * (1 - bd / 9));

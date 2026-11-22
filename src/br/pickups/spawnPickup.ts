@@ -17,6 +17,7 @@ import { AmmoType, PickupKind } from '../../types';
 import type { GrenadeId, OpticId, OwnedWeapon, Pickup } from '../../types';
 import type { WeaponId } from '../../types';
 import { mergeMeshes } from '../../utils/three/mergeMeshes';
+import { hypot } from '../../utils/hypot';
 
 /**
  * Places a pickup of kind `t` (`id` is the weapon, ammo, grenade or optic id) at (x, z), on the floor unless `y0` is
@@ -122,10 +123,10 @@ export const spawnPickup = (x: number, z: number, t: PickupKind, id: string | nu
 
   if (!ib.isEmpty()) {
     reach = Math.max(
-      Math.hypot(ib.min.x, ib.min.z),
-      Math.hypot(ib.min.x, ib.max.z),
-      Math.hypot(ib.max.x, ib.min.z),
-      Math.hypot(ib.max.x, ib.max.z),
+      hypot(ib.min.x, ib.min.z),
+      hypot(ib.min.x, ib.max.z),
+      hypot(ib.max.x, ib.min.z),
+      hypot(ib.max.x, ib.max.z),
     );
   }
 

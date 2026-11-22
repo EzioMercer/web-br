@@ -7,6 +7,7 @@ import { fuseTime } from './fuseTime';
 import { grenadeCount, grenadeThrow } from './state';
 import { stepGrenade } from './stepGrenade';
 import { throwStart } from './throwStart';
+import { hypot } from '../utils/hypot';
 
 /** Points on the grenade aim preview. */
 const AIM_POINTS = 70;
@@ -74,7 +75,7 @@ export const updateAimPath = () => {
     const hit = stepGrenade(n, dt);
 
     if (hit) {
-      if (k < AIM_POINTS && Math.hypot(px - aimPos[k * 3 - 3], py - aimPos[k * 3 - 2], pz - aimPos[k * 3 - 1]) > 0.02) {
+      if (k < AIM_POINTS && hypot(px - aimPos[k * 3 - 3], py - aimPos[k * 3 - 2], pz - aimPos[k * 3 - 1]) > 0.02) {
         aimPos[k * 3] = px;
         aimPos[k * 3 + 1] = py;
         aimPos[k * 3 + 2] = pz;
@@ -111,11 +112,11 @@ export const updateAimPath = () => {
     const vx = aimPos[i * 3] - cx;
     const vy = aimPos[i * 3 + 1] - cy;
     const vz = aimPos[i * 3 + 2] - cz;
-    const dist = Math.hypot(vx, vy, vz) || 1;
+    const dist = hypot(vx, vy, vz) || 1;
     let sx = ty * vz - tz * vy;
     let sy = tz * vx - tx * vz;
     let sz = tx * vy - ty * vx;
-    const sl = Math.hypot(sx, sy, sz) || 1;
+    const sl = hypot(sx, sy, sz) || 1;
     const hw = Math.max(0.004, dist * wpp) / sl;
 
     sx *= hw;

@@ -5,6 +5,7 @@ import { clock } from '../sim/state';
 import { alarmBot } from './alarmBot';
 import { Alarm } from './types';
 import { bots } from './state';
+import { hypot } from '../utils/hypot';
 
 /** Bots in earshot of the player's shot (louder guns carry farther) may come looking. */
 export const hearShot = () => {
@@ -16,7 +17,7 @@ export const hearShot = () => {
       continue;
     }
 
-    const d = Math.hypot(b.x - playerBody.x, b.z - playerBody.z);
+    const d = hypot(b.x - playerBody.x, b.z - playerBody.z);
 
     if (d < loud && Math.random() < 1 - 0.6 * d / loud) {
       alarmBot(b, Alarm.Heard);

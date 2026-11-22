@@ -39,6 +39,7 @@ import { updateFps } from '../hud/updateFps';
 import { bulletMarksTick } from '../effects/bulletMark';
 import { tracersTick } from '../effects/tracer';
 import { settings } from '../settings/state';
+import { noteFrame } from '../graphics/refreshRate';
 
 let lastFrame = performance.now();
 
@@ -61,6 +62,7 @@ let slideRoll = 0;
 /** Render loop: runs the fixed-step simulation, then updates the camera, viewmodel, effects and HUD. */
 export const frame = (now: number) => {
   requestAnimationFrame(frame);
+  noteFrame(now);
 
   // frame rate limit: skip screen refreshes until the next frame is due
   if (settings.fpsLimit) {

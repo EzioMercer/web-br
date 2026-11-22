@@ -4,6 +4,7 @@ import { isFreeSpot } from '../physics/isFreeSpot';
 import { playerBody } from '../player/state';
 import { level } from '../world/level/state';
 import type { Bot } from './types';
+import { hypot } from '../utils/hypot';
 
 /**
  * A new walk target: somewhere dry in the (next) zone, sometimes near the player. Bots with sniper rifles often head
@@ -50,7 +51,7 @@ export const pickWaypoint = (b: Bot) => {
     }
   }
 
-  if (!b.running && Math.random() < 0.35 && Math.hypot(playerBody.x - b.x, playerBody.z - b.z) < 120) {
+  if (!b.running && Math.random() < 0.35 && hypot(playerBody.x - b.x, playerBody.z - b.z) < 120) {
     b.targetX = playerBody.x + (Math.random() - 0.5) * 12;
     b.targetZ = playerBody.z + (Math.random() - 0.5) * 12;
   }

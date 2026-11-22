@@ -19,6 +19,7 @@ import { zoneMesh } from './zoneMesh';
 import type { Circle, GrenadeId } from '../../types';
 import { removePickup } from '../pickups/removePickup';
 import { PickupKind, WeaponId } from '../../types';
+import { hypot } from '../../utils/hypot';
 
 export const zoneTick = (dt: number) => {
   if (!schedule.startTime) {
@@ -67,12 +68,12 @@ export const zoneTick = (dt: number) => {
 
   const dps = 1.5 + st * 1.5;
 
-  if (!player.dead && Math.hypot(playerBody.x - z.cx, playerBody.z - z.cz) > z.radius) {
+  if (!player.dead && hypot(playerBody.x - z.cx, playerBody.z - z.cz) > z.radius) {
     damagePlayer(dps * dt, null, true);
   }
 
   for (const b of bots) {
-    if (b.health > 0 && Math.hypot(b.x - z.cx, b.z - z.cz) > z.radius) {
+    if (b.health > 0 && hypot(b.x - z.cx, b.z - z.cz) > z.radius) {
       b.health -= dps * dt * 0.5;
 
       if (b.health <= 0 && !b.corpse) {
@@ -94,7 +95,7 @@ export const zoneTick = (dt: number) => {
 
     k.mesh.rotation.y += dt * 2;
 
-    const d = Math.hypot(playerBody.x - k.x, playerBody.z - k.z);
+    const d = hypot(playerBody.x - k.x, playerBody.z - k.z);
 
     k.label.visible = d < 18;
     k.mesh.visible = d < 170;

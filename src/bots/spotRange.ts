@@ -5,6 +5,7 @@ import { playerBody, playerVel } from '../player/state';
 import { clock } from '../sim/state';
 import { SPOT_LIMIT } from './constants';
 import type { Bot } from './types';
+import { hypot } from '../utils/hypot';
 
 /**
  * How far bot `b` can spot the player right now (m): farther through a sniper scope, when the player moves fast or
@@ -12,7 +13,7 @@ import type { Bot } from './types';
  */
 export const spotRange = (b: Bot) => {
   const w = WEAPONS[b.weaponId];
-  const sp = Math.hypot(playerVel.x, playerVel.z);
+  const sp = hypot(playerVel.x, playerVel.z);
   const above = playerBody.y - b.y;
   let r = 55 * (w.sniper ? 2.6 : w.range >= 45 ? 1.6 : 1);
 

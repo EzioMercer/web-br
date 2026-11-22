@@ -4,6 +4,7 @@ import { GraphicsPreset } from '../graphics/types';
 import { byId } from '../utils/byId';
 import { PRESET_CHOICES } from './graphicsChoices';
 import { settings } from '../settings/state';
+import { refreshRate } from '../graphics/refreshRate';
 
 /** Marks the button whose value is `v` in a row of option buttons. */
 const select = (id: string, v: unknown) => {
@@ -22,6 +23,11 @@ export const showGraphicsOptions = () => {
   select('gshadow', o.shadows);
   select('gaa', o.antialias);
   select('gfpsmax', settings.fpsLimit);
+
+  // as many as the browser gives: its screen's refresh rate, once measured
+  const hz = refreshRate();
+
+  byId('gfpsmax').querySelector<HTMLElement>('[data-v="0"]')!.textContent = hz ? 'Max · ' + hz : 'Max';
   select('gfps', settings.showFps);
   byId<HTMLInputElement>('gres').value = String(pct);
   byId('gresv').textContent = pct + '%';

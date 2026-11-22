@@ -12,6 +12,7 @@ import { bullets, spray } from './state';
 import type { Vec3 } from '../types';
 import { eyePos } from '../player/eyePos';
 import { WeaponId } from '../types';
+import { hypot } from '../utils/hypot';
 
 export const fireWeapon = () => {
   if (loadout.weapon.melee) {
@@ -29,7 +30,7 @@ export const fireWeapon = () => {
   loadout.lastShotAt = clock.time;
 
   const i = spray.index++;
-  const sp = Math.hypot(playerVel.x, playerVel.z);
+  const sp = hypot(playerVel.x, playerVel.z);
   const bP = player.recoilPitch;
   const bY = player.recoilYaw;
 

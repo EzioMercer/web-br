@@ -24,6 +24,7 @@ import { BotMode } from './types';
 import { Phase } from '../types';
 import type { Vec3 } from '../types';
 import type { Bot } from './types';
+import { hypot } from '../utils/hypot';
 
 /** Walking speed of a bot (m/s), before the difficulty multiplier. */
 const WALK = 3.4;
@@ -77,7 +78,7 @@ const fight = (b: Bot, dist: number, dx: number, dz: number, dt: number) => {
   }
 
   if (w.melee && dist > 1.6) {
-    const hd = Math.hypot(dx, dz) || 1;
+    const hd = hypot(dx, dz) || 1;
 
     b.vel.x = dx / hd * 4.2 * settings.difficulty.speed;
     b.vel.z = dz / hd * 4.2 * settings.difficulty.speed;
@@ -100,9 +101,9 @@ const fight = (b: Bot, dist: number, dx: number, dz: number, dt: number) => {
 /** Walks between waypoints; a sniper that reaches its high spot holds it for a while. */
 const roam = (b: Bot) => {
   const zt = zone.next || zone;
-  const wd = Math.hypot(b.targetX - b.x, b.targetZ - b.z);
-  const badT = Math.hypot(b.targetX - zone.cx, b.targetZ - zone.cz) > zone.radius
-    || (b.running && Math.hypot(b.targetX - zt.cx, b.targetZ - zt.cz) > zt.radius);
+  const wd = hypot(b.targetX - b.x, b.targetZ - b.z);
+  const badT = hypot(b.targetX - zone.cx, b.targetZ - zone.cz) > zone.radius
+    || (b.running && hypot(b.targetX - zt.cx, b.targetZ - zt.cz) > zt.radius);
 
   b.mode = BotMode.Roam;
   b.crouch = 0;
@@ -146,7 +147,7 @@ const updateGlint = (b: Bot, dist: number) => {
     const hy = b.y + 1.6 - 0.5 * b.crouchAmount;
     const e = eyePos();
     // drawn a little in front of the scope, toward the player, so the ground around the bot doesn't cut it off
-    const k = Math.min(s * 0.6, dist * 0.5) / (Math.hypot(e[0] - b.x, e[1] - hy, e[2] - b.z) || 1);
+    const k = Math.min(s * 0.6, dist * 0.5) / (hypot(e[0] - b.x, e[1] - hy, e[2] - b.z) || 1);
 
     b.glint.scale.set(s, s, 1);
     b.glint.position.set(b.x + (e[0] - b.x) * k, hy + (e[1] - hy) * k, b.z + (e[2] - b.z) * k);
@@ -176,8 +177,8 @@ export const botsTick = (dt: number) => {
 
     if (match.phase === Phase.Live) {
       const zt = zone.next || zone;
-      const dn = Math.hypot(b.x - zt.cx, b.z - zt.cz) - zt.radius;
-      const d0 = Math.hypot(b.x - zone.cx, b.z - zone.cz) - zone.radius;
+      const dn = hypot(b.x - zt.cx, b.z - zt.cz) - zt.radius;
+      const d0 = hypot(b.x - zone.cx, b.z - zone.cz) - zone.radius;
 
       run = d0 > -10
         || (zone.phase === ZonePhase.Shrink && dn > -6)
@@ -190,7 +191,7 @@ export const botsTick = (dt: number) => {
     const o: Vec3 = [b.x, ey, b.z];
     const dx = playerBody.x - b.x;
     const dz = playerBody.z - b.z;
-    const dist = Math.hypot(dx, playerBody.y + 1.2 - ey, dz);
+    const dist = hypot(dx, playerBody.y + 1.2 - ey, dz);
     const sees = botSees(b, o, dist);
 
     b.sees = sees;
@@ -259,7 +260,7 @@ export const botsTick = (dt: number) => {
 
       if ((left >= 0 && left < 2.5)
         || clock.time > b.modeUntil
-        || Math.hypot(b.knownX - zone.cx, b.knownZ - zone.cz) > zone.radius) {
+        || hypot(b.knownX - zone.cx, b.knownZ - zone.cz) > zone.radius) {
         b.alert = 0;
         moving = roam(b);
       }
@@ -288,12 +289,12 @@ export const botsTick = (dt: number) => {
     moveBody(b, b.vel, dt);
 
     if (b.onGround && !b.crouch) {
-      b.stepDist = (b.stepDist || 0) + Math.hypot(b.vel.x, b.vel.z) * dt;
+      b.stepDist = (b.stepDist || 0) + hypot(b.vel.x, b.vel.z) * dt;
 
       if (b.stepDist > 1.9) {
         b.stepDist = 0;
 
-        const d0 = Math.hypot(b.x - playerBody.x, b.z - playerBody.z);
+        const d0 = hypot(b.x - playerBody.x, b.z - playerBody.z);
 
         if (d0 < 35) {
           footstep(surfaceAt(b.x, b.z, b.y), Math.max(0, 1 - d0 / 35) * 0.9);
@@ -306,7 +307,7 @@ export const botsTick = (dt: number) => {
     }
 
     {
-      const spd = Math.hypot(b.vel.x, b.vel.z);
+      const spd = hypot(b.vel.x, b.vel.z);
 
       b.crouchAmount += ((b.crouch ? 1 : 0) - b.crouchAmount) * Math.min(1, dt * 10);
 
@@ -327,7 +328,7 @@ export const botsTick = (dt: number) => {
       });
     }
 
-    if (moving && Math.hypot(b.x - px, b.z - pz) < 0.3 * WALK * dt) {
+    if (moving && hypot(b.x - px, b.z - pz) < 0.3 * WALK * dt) {
       b.stuck += dt;
     } else {
       b.stuck = 0;

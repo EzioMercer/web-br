@@ -2,6 +2,7 @@ import { isFreeSpot } from '../../physics/isFreeSpot';
 import { playerBody } from '../../player/state';
 import { level } from '../../world/level/state';
 import type { Vec2 } from '../../types';
+import { hypot } from '../../utils/hypot';
 
 /** A random clear, dry, flat spot on the island, at least `minD` from the player if `fromP`. */
 export const landingSpot = (minD: number, fromP: boolean): Vec2 => {
@@ -16,7 +17,7 @@ export const landingSpot = (minD: number, fromP: boolean): Vec2 => {
     if (T.height(x, z) > 2
       && T.slope(x, z) < 0.35
       && [[0, 0], [3, 0], [-3, 0], [0, 3], [0, -3]].every(([p, q]) => isFreeSpot(x + p, z + q))
-      && (!fromP || Math.hypot(x - playerBody.x, z - playerBody.z) > minD)) {
+      && (!fromP || hypot(x - playerBody.x, z - playerBody.z) > minD)) {
       return [x, z];
     }
   }

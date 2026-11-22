@@ -10,6 +10,7 @@ import { clock } from '../sim/state';
 import { shatter } from '../world/doors/shatter';
 import type { Vec3 } from '../types';
 import type { Bot } from './types';
+import { hypot } from '../utils/hypot';
 
 /** Bot `b` fires one shot at the player, `dist` away. Long guns keep their accuracy far beyond short ones. */
 export const botShoot = (b: Bot, dist: number) => {
@@ -24,7 +25,7 @@ export const botShoot = (b: Bot, dist: number) => {
   const hc = settings.difficulty.accuracy
     * 0.7
     * Math.max(0.04, 1 - dist / (2 * w.range))
-    * (Math.hypot(playerVel.x, playerVel.z) > 3 ? 0.6 : 1)
+    * (hypot(playerVel.x, playerVel.z) > 3 ? 0.6 : 1)
     * (playerBody.height < PLAYER_HEIGHT ? 0.8 : 1)
     * (b.onGround ? 1 : 0.7);
   // nobody is a sure shot at long range
@@ -39,7 +40,7 @@ export const botShoot = (b: Bot, dist: number) => {
   const ex = tp[0] - o[0];
   const ey = tp[1] - o[1];
   const ez = tp[2] - o[2];
-  const el = Math.hypot(ex, ey, ez);
+  const el = hypot(ex, ey, ez);
   const wt = Math.min(el, castRay(o, [ex / el, ey / el, ez / el], el));
 
   shatter(o, [ex / el, ey / el, ez / el], el);

@@ -23,6 +23,7 @@ import { waterDepth } from '../world/level/waterDepth';
 import { clock, slide } from './state';
 import { AmmoType } from '../types';
 import { Surface } from '../audio/types';
+import { hypot } from '../utils/hypot';
 
 let stepDist = 0;
 
@@ -45,9 +46,9 @@ export const tick = (dt: number) => {
       && keys.ShiftLeft
       && clock.time >= slide.readyAt
       && playerBody.height >= PLAYER_HEIGHT
-      && Math.hypot(playerVel.x, playerVel.z) > 4.6
+      && hypot(playerVel.x, playerVel.z) > 4.6
       && waterDepth(playerBody.x, playerBody.z, playerBody.y) < 0.2) {
-      const s0 = Math.hypot(playerVel.x, playerVel.z);
+      const s0 = hypot(playerVel.x, playerVel.z);
 
       slide.start = clock.time;
       slide.end = clock.time + 0.95;
@@ -87,7 +88,7 @@ export const tick = (dt: number) => {
     const cy = Math.cos(player.yaw);
     let wx = -sy * f + cy * s;
     let wz = -cy * f - sy * s;
-    const wl = Math.hypot(wx, wz);
+    const wl = hypot(wx, wz);
 
     if (wl > 0) {
       wx /= wl;
@@ -112,7 +113,7 @@ export const tick = (dt: number) => {
       playerVel.x = slide.dir[0] * spd;
       playerVel.z = slide.dir[1] * spd;
     } else if (playerBody.onGround) {
-      const sp = Math.hypot(playerVel.x, playerVel.z);
+      const sp = hypot(playerVel.x, playerVel.z);
 
       if (sp > 0) {
         const k = Math.max(sp - Math.max(sp, 1.5) * 5 * dt, 0) / sp;
@@ -129,7 +130,7 @@ export const tick = (dt: number) => {
     playerVel.y -= 20 * dt;
     moveBody(playerBody, playerVel, dt);
 
-    if (sliding && Math.hypot(playerVel.x, playerVel.z) < 0.6) {
+    if (sliding && hypot(playerVel.x, playerVel.z) < 0.6) {
       slide.end = 0;
     }
 
@@ -145,7 +146,7 @@ export const tick = (dt: number) => {
       wasInWater = w2 > 0;
 
       if (playerBody.onGround) {
-        const sp = Math.hypot(playerVel.x, playerVel.z);
+        const sp = hypot(playerVel.x, playerVel.z);
 
         stepDist += sp * dt;
 

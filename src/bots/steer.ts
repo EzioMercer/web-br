@@ -1,5 +1,6 @@
 import { clock } from '../sim/state';
 import type { Bot } from './types';
+import { hypot } from '../utils/hypot';
 
 /**
  * Walks bot `b` toward (tx, tz) at `speed`, sidestepping and jumping when it gets stuck. Returns the distance left,
@@ -8,7 +9,7 @@ import type { Bot } from './types';
 export const steer = (b: Bot, tx: number, tz: number, speed: number) => {
   const wx = tx - b.x;
   const wz = tz - b.z;
-  const wd = Math.hypot(wx, wz);
+  const wd = hypot(wx, wz);
 
   if (b.stuck > 0.45) {
     b.detourUntil = clock.time + 1.5;

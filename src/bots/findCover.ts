@@ -4,6 +4,7 @@ import { lineOfSight } from '../physics/lineOfSight';
 import { floorY } from '../world/level/floorY';
 import type { Vec2, Vec3 } from '../types';
 import type { Bot } from './types';
+import { hypot } from '../utils/hypot';
 
 /** Golden angle, to spread the candidate spots around the bot. */
 const GOLDEN = 2.39996;
@@ -14,7 +15,7 @@ const GOLDEN = 2.39996;
  */
 export const findCover = (b: Bot, from: Vec3): Vec2 | null => {
   const zt = zone.next || zone;
-  const d0 = Math.hypot(b.x - from[0], b.z - from[2]);
+  const d0 = hypot(b.x - from[0], b.z - from[2]);
   const a0 = Math.random() * 6.283;
   let best: Vec2 | null = null;
   let bestScore = Infinity;
@@ -24,12 +25,12 @@ export const findCover = (b: Bot, from: Vec3): Vec2 | null => {
     const a = a0 + k * GOLDEN;
     const x = b.x + Math.cos(a) * r;
     const z = b.z + Math.sin(a) * r;
-    const closer = Math.max(0, d0 - Math.hypot(x - from[0], z - from[2]));
+    const closer = Math.max(0, d0 - hypot(x - from[0], z - from[2]));
     const score = r + closer * 2;
 
     if (score >= bestScore
-      || Math.hypot(x - zone.cx, z - zone.cz) > zone.radius - 3
-      || Math.hypot(x - zt.cx, z - zt.cz) > zt.radius + 10
+      || hypot(x - zone.cx, z - zone.cz) > zone.radius - 3
+      || hypot(x - zt.cx, z - zt.cz) > zt.radius + 10
       || !isFreeSpot(x, z)) {
       continue;
     }

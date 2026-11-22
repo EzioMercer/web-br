@@ -12,6 +12,7 @@ import { steer } from './steer';
 import { PickupKind } from '../types';
 import type { WeaponId } from '../types';
 import type { Bot } from './types';
+import { hypot } from '../utils/hypot';
 
 /** Gun `id` is better than what bot `b` holds, and not a sniper rifle while the match is young. */
 const wants = (b: Bot, id: WeaponId) => gunValue(id) > gunValue(b.weaponId)
@@ -27,7 +28,7 @@ export const botLoot = (b: Bot, speed: number) => {
   if (k) {
     if (!pickups.includes(k) || clock.time > b.lootUntil) {
       b.lootTarget = null;
-    } else if (Math.hypot(k.x - b.x, k.z - b.z) < 1.3 && Math.abs(k.y - b.y) < 1.5) {
+    } else if (hypot(k.x - b.x, k.z - b.z) < 1.3 && Math.abs(k.y - b.y) < 1.5) {
       if (wants(b, k.itemId as WeaponId)) {
         setBotWeapon(b, k.itemId as WeaponId);
         removePickup(k);
@@ -45,7 +46,7 @@ export const botLoot = (b: Bot, speed: number) => {
   if (clock.time > b.upgradeAt) {
     b.upgradeAt = clock.time + 60 + Math.random() * 90;
 
-    const far = Math.hypot(playerBody.x - b.x, playerBody.z - b.z) > 60;
+    const far = hypot(playerBody.x - b.x, playerBody.z - b.z) > 60;
     const pool = BOT_FOUND_WEAPONS.filter(id => wants(b, id));
 
     if (far && pool.length) {
@@ -67,9 +68,9 @@ export const botLoot = (b: Bot, speed: number) => {
       continue;
     }
 
-    const d = Math.hypot(q.x - b.x, q.z - b.z);
+    const d = hypot(q.x - b.x, q.z - b.z);
 
-    if (d < bd && Math.hypot(q.x - zone.cx, q.z - zone.cz) < zone.radius - 5 && wants(b, q.itemId as WeaponId)) {
+    if (d < bd && hypot(q.x - zone.cx, q.z - zone.cz) < zone.radius - 5 && wants(b, q.itemId as WeaponId)) {
       bd = d;
       best = q;
     }

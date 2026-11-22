@@ -7,6 +7,7 @@ import type { Body, Door } from '../../types';
 import { swingAwayFrom } from './swingAwayFrom';
 import { doorAngle } from './doorAngle';
 import { drawDoor } from './drawDoor';
+import { hypot } from '../../utils/hypot';
 
 let doorTimer = 0;
 
@@ -36,7 +37,7 @@ export const doorsTick = (dt: number) => {
   doorFocus.door = findDoor();
 
   for (const d of doors) {
-    if (d.closedByPlayer && Math.hypot(playerBody.x - d.x, playerBody.z - d.z) > Math.sqrt(d.reachSq) + 0.8) {
+    if (d.closedByPlayer && hypot(playerBody.x - d.x, playerBody.z - d.z) > Math.sqrt(d.reachSq) + 0.8) {
       d.closedByPlayer = false;
     }
 
@@ -81,5 +82,5 @@ export const doorsTick = (dt: number) => {
 
 /** Close enough to the player to hear. */
 const inEarshot = (d: Door) => {
-  return Math.hypot(d.x - playerBody.x, d.z - playerBody.z) < 30;
+  return hypot(d.x - playerBody.x, d.z - playerBody.z) < 30;
 };

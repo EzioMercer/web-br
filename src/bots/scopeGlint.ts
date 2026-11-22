@@ -3,6 +3,7 @@ import { loadout } from '../loadout/state';
 import { eyePos } from '../player/eyePos';
 import { viewDir } from '../player/viewDir';
 import type { Bot } from './types';
+import { hypot } from '../utils/hypot';
 
 /** cos(8 degrees): a bot this close to the middle of the player's scope sees the lens glint. */
 const GLINT_COS = Math.cos(8 * Math.PI / 180);
@@ -18,7 +19,7 @@ export const scopeGlint = (b: Bot) => {
   const dx = b.x - o[0];
   const dy = b.y + 1.4 - o[1];
   const dz = b.z - o[2];
-  const l = Math.hypot(dx, dy, dz) || 1;
+  const l = hypot(dx, dy, dz) || 1;
 
   return (dx * d[0] + dy * d[1] + dz * d[2]) / l > GLINT_COS;
 };

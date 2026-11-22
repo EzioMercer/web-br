@@ -2,6 +2,7 @@ import { player, playerBody } from '../../player/state';
 import { doors } from './state';
 import type { Door } from '../../types';
 import { viewDir } from '../../player/viewDir';
+import { hypot } from '../../utils/hypot';
 
 // the door you are facing (or standing right next to), for the E key and the on-screen prompt
 export const findDoor = () => {
@@ -12,12 +13,12 @@ export const findDoor = () => {
   let best: Door | null = null;
   let bs = 0;
   const [fx, , fz] = viewDir();
-  const fl = Math.hypot(fx, fz) || 1;
+  const fl = hypot(fx, fz) || 1;
 
   for (const d of doors) {
     const dx = d.x - playerBody.x;
     const dz = d.z - playerBody.z;
-    const dist = Math.hypot(dx, dz);
+    const dist = hypot(dx, dz);
 
     if (dist > 2.6 || Math.abs(playerBody.y - d.y) > 2.4) {
       continue;

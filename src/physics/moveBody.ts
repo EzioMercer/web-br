@@ -3,7 +3,23 @@ import { floorY } from '../world/level/floorY';
 import { level } from '../world/level/state';
 import { boxesNear } from './boxesNear';
 import { overlaps } from './overlaps';
-import type { Body, Velocity } from '../types';
+import type { Body, Box, Velocity } from '../types';
+
+/** Reused lists of nearby boxes: moveBody runs for everyone 120 times a second. */
+const outer: Box[] = [];
+
+const inner: Box[] = [];
+
+/** Whether body `p` overlaps any of `list` (a loop, not a closure per call). */
+const overlapsAny = (p: Body, list: Box[]) => {
+  for (const q of list) {
+    if (overlaps(p, q)) {
+      return true;
+    }
+  }
+
+  return false;
+};
 
 export const moveBody = (p: Body, v: Velocity, dt: number) => {
   const g0 = p.onGround;
@@ -12,14 +28,14 @@ export const moveBody = (p: Body, v: Velocity, dt: number) => {
 
   p.x += v.x * dt;
 
-  for (const b of boxesNear(p.x, p.z, PLAYER_RADIUS + 0.6)) {
+  for (const b of boxesNear(p.x, p.z, PLAYER_RADIUS + 0.6, outer)) {
     if (overlaps(p, b)) {
       if (p.onGround && b.max[1] - p.y <= 0.55) {
         const y0 = p.y;
 
         p.y = b.max[1] + 1e-4;
 
-        if (!boxesNear(p.x, p.z, PLAYER_RADIUS + 0.6).some(q => overlaps(p, q))) {
+        if (!overlapsAny(p, boxesNear(p.x, p.z, PLAYER_RADIUS + 0.6, inner))) {
           continue;
         }
 
@@ -48,14 +64,14 @@ export const moveBody = (p: Body, v: Velocity, dt: number) => {
 
   p.z += v.z * dt;
 
-  for (const b of boxesNear(p.x, p.z, PLAYER_RADIUS + 0.6)) {
+  for (const b of boxesNear(p.x, p.z, PLAYER_RADIUS + 0.6, outer)) {
     if (overlaps(p, b)) {
       if (p.onGround && b.max[1] - p.y <= 0.55) {
         const y0 = p.y;
 
         p.y = b.max[1] + 1e-4;
 
-        if (!boxesNear(p.x, p.z, PLAYER_RADIUS + 0.6).some(q => overlaps(p, q))) {
+        if (!overlapsAny(p, boxesNear(p.x, p.z, PLAYER_RADIUS + 0.6, inner))) {
           continue;
         }
 
@@ -83,7 +99,7 @@ export const moveBody = (p: Body, v: Velocity, dt: number) => {
   p.onGround = false;
   p.y += v.y * dt;
 
-  for (const b of boxesNear(p.x, p.z, PLAYER_RADIUS + 0.6)) {
+  for (const b of boxesNear(p.x, p.z, PLAYER_RADIUS + 0.6, outer)) {
     if (overlaps(p, b)) {
       if (v.y <= 0) {
         p.y = b.max[1] + 1e-4;

@@ -2,10 +2,11 @@ import { playerBody } from '../player/state';
 import { clock } from '../sim/state';
 import { Alarm, BotMode } from './types';
 import type { Bot } from './types';
+import { hypot } from '../utils/hypot';
 
 /** Bot `b` learns roughly where the player is and turns that way; being shot at sends it looking for cover. */
 export const alarmBot = (b: Bot, how: Alarm) => {
-  const dist = Math.hypot(playerBody.x - b.x, playerBody.z - b.z);
+  const dist = hypot(playerBody.x - b.x, playerBody.z - b.z);
   const err = how === Alarm.Heard ? dist * 0.12 : how === Alarm.NearMiss ? 1 : 0;
 
   b.knownX = playerBody.x + (Math.random() - 0.5) * 2 * err;
