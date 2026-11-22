@@ -12,6 +12,7 @@ export const saveSettings = () => {
       JSON.stringify({
         sens: settings.sensitivity,
         vol: settings.footstepVolume,
+        snd: settings.soundMarks,
         fps: settings.showFps,
         fpsMax: settings.fpsLimit,
         diff,

@@ -122,7 +122,10 @@ export interface Difficulty {
   speed: number;
   health: number;
   fireDelay: number;
+  /** Half-width of a bot's view cone (rad). Kept under pi so there is always a blind spot behind it to sneak up on. */
   viewAngle: number;
+  /** How fast a bot turns (rad/s): it must swing round before it can shoot someone who comes from behind. */
+  turnRate: number;
   memory: number;
 }
 
@@ -224,8 +227,9 @@ export interface MapBg {
 // ---- map data
 
 /**
- * Map box: centre x and z, width (along x), depth (along z), height, color, base y (default 0), no collision, and
- * hidden (collides but is not drawn: something else draws it, as a tree's model draws its trunk).
+ * Map box: centre x and z, width (along x), depth (along z), height, color, base y (default 0), no collision,
+ * and hidden (not drawn: something else draws it, as a tree's model draws its trunk and crown).
+ * `'leaves'` is a tree crown: no collision either, but bots can't see through it.
  */
 export type MapBox = [
 x: number,
@@ -235,7 +239,7 @@ depth: number,
 height: number,
 color: number,
 y?: number,
-noCollision?: boolean,
+noCollision?: boolean | 'leaves',
 hidden?: boolean,
 ];
 
@@ -247,7 +251,8 @@ export enum TreeKind {
 
 /**
  * Tree model: trunk x and z, ground y, kind, size (1 is a full-grown tree), height (times size), turn about the
- * vertical (rad), lean about x and z (rad) and foliage colour. Only drawn: its trunk collides as a hidden map box.
+ * vertical (rad), lean about x and z (rad) and foliage colour. Only drawn: placeTree adds hidden map boxes for its
+ * trunk and crown.
  */
 export type MapTree = [
 x: number,

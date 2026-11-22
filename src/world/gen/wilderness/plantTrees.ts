@@ -2,7 +2,6 @@ import { WATER_LEVEL } from '../../../config';
 import { TreeKind } from '../../../types';
 import { makeNoise } from '../../terrain/makeNoise';
 import { insideFootprint } from '../place/insideFootprint';
-import { placeBox } from '../place/placeBox';
 import { placeTree } from '../place/placeTree';
 import { hashRand } from '../random/hashRand';
 import { pick } from '../random/pick';
@@ -69,7 +68,8 @@ export const plantTrees = () => {
       const kind = h0 > 16 || rand() < 0.35 ? TreeKind.Pine : TreeKind.Broadleaf;
       const shade = pick([0, 1, 2]);
 
-      const r = (salt: number) => hashRand(px, pz, salt);
+      // this tree's own details, fixed by its grid cell
+      const r = (salt: number) => hashRand(x, z, salt);
 
       const sx = px + (r(1) - 0.5) * 2 * SCATTER;
       const sz = pz + (r(2) - 0.5) * 2 * SCATTER;
@@ -84,7 +84,6 @@ export const plantTrees = () => {
       const h = gen.terrain.height(px, pz);
 
       placed.push(px, pz);
-      placeBox(px, pz, 0.9, 0.9, 5, 0x6b4a2a, h - 0.6, false, true);
       placeTree(
         px,
         pz,

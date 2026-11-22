@@ -1,4 +1,6 @@
 import { noiseBurst } from '../audio/noiseBurst';
+import { panFor } from '../audio/panFor';
+import { soundMark } from '../hud/soundMarks/soundMark';
 import { PLAYER_HEIGHT } from '../config';
 import { WEAPONS } from '../data/weapons';
 import { tracer } from '../effects/tracer';
@@ -49,7 +51,9 @@ export const botShoot = (b: Bot, dist: number) => {
     (w.sniper ? 0.6 : 0.22) / (1 + dist * (w.sniper ? 0.03 : 0.12)),
     w.sniper ? 0.4 : 0.12,
     w.sniper ? 900 : 1500,
+    panFor(b.x, b.z),
   );
+  soundMark(b.x, b.z, true, 1, b);
 
   if (hit) {
     damagePlayer(

@@ -58,7 +58,8 @@ src/
   effects/      tracers, bullet marks, water ripples, screen effects
   audio/        Web Audio sound effects and footsteps
   viewmodel/    first-person weapon models and their animation
-  hud/          HUD, compass, kill feed; minimap/ for the minimap and big map
+  hud/          HUD, compass, kill feed; minimap/ for the minimap and big map, soundMarks/ for the marks
+                showing which way enemy footsteps and gunshots came from
   br/           Battle Royale: zone/ (safe zone schedule) and pickups/ (loot)
   world/
     terrain/    height field, regions, terrain mesh and raycast

@@ -1,3 +1,4 @@
+import type { MapBox } from '../../../types';
 import { gen } from '../state';
 
 export const placeBox = (
@@ -8,6 +9,6 @@ export const placeBox = (
   h: number,
   c: number,
   y?: number,
-  nc?: boolean,
+  nc?: MapBox[7],
   hidden?: boolean,
 ) => gen.boxes.push(hidden ? [x, z, w, d, h, c, y, nc, hidden] : [x, z, w, d, h, c, y, nc]);

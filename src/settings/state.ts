@@ -7,6 +7,8 @@ export const settings = {
   /** Mouse sensitivity multiplier. */
   sensitivity: 1,
   footstepVolume: 0.6,
+  /** Marks around the crosshair showing which way enemy footsteps and gunshots came from. */
+  soundMarks: true,
   /** Frame rate counter in the corner of the screen. */
   showFps: false,
   /** Frames per second at most (30 or 60), or 0 for as many as the browser gives (its screen's refresh rate). */

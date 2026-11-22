@@ -8,6 +8,7 @@ import { autoTune } from '../graphics/autoTune';
 import { grenadeThrow } from '../grenades/state';
 import { updateAimPath } from '../grenades/updateAimPath';
 import { drawCompass } from '../hud/drawCompass';
+import { drawSoundMarks } from '../hud/soundMarks/drawSoundMarks';
 import { mapHud } from '../hud/mapHud';
 import { promptText } from '../hud/promptText';
 import { updateHud } from '../hud/updateHud';
@@ -286,6 +287,7 @@ export const frame = (now: number) => {
   updateHud();
   updateInventory();
   drawCompass();
+  drawSoundMarks(dt);
   screenFx.damageDir = Math.max(0, screenFx.damageDir - dt);
   writeDom(byId('dd'), 'opacity', String(Math.min(1, screenFx.damageDir * 1.4)));
 

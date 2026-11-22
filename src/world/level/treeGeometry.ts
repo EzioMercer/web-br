@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { BROADLEAF_BLOBS, BROADLEAF_FAR_BLOBS, PINE_TIERS } from '../../data/trees';
 import { TreeKind } from '../../types';
 
 const BARK = new THREE.Color(0x5e4430);
@@ -15,29 +16,20 @@ const FOLIAGE_REF = { [TreeKind.Pine]: new THREE.Color(0x30613a), [TreeKind.Broa
 /** A part of the model: its geometry in place, how far its corners are pushed about (m), and whether it is bark. */
 type Part = [geometry: THREE.BufferGeometry, jitter: number, bark: boolean];
 
-/** Pine: tiers widest at the bottom (radius, base y, height). Far away, fewer sides and no undersides. */
+/** Pine: tiers of cones. Far away, fewer sides and no undersides. */
 const pine = (far: boolean): Part[] => [
   [new THREE.CylinderGeometry(0.17, 0.36, 3.2, far ? 4 : 6, 1, true).translate(0, 1, 0), 0, true],
-  ...[[2.6, 1.9, 3], [2.1, 3.3, 2.8], [1.55, 4.7, 2.5], [0.95, 6, 2.2]].map(([r, y, h], i): Part => [
+  ...PINE_TIERS.map(([r, y, h], i): Part => [
     new THREE.ConeGeometry(r, h, far ? 6 : 8, 1, far).rotateY(i * 0.37).translate(0, y + h / 2, 0),
     0.1 + 0.04 * r,
     false,
   ]),
 ];
 
-/** Broadleaf: a crown of rough blobs (x, y, z, radius). Far away, three bigger blobs stand in for the six. */
+/** Broadleaf: a crown of rough blobs. */
 const broadleaf = (far: boolean): Part[] => [
   [new THREE.CylinderGeometry(0.22, 0.38, 4.4, far ? 4 : 6, 1, true).translate(0, 1.6, 0), 0, true],
-  ...(far
-    ? [[0.15, 4.8, -0.1, 2.25], [1.05, 4.3, 0.55, 1.7], [-0.95, 4.3, -0.55, 1.75]]
-    : [
-        [0, 4.7, 0, 2],
-        [1.3, 4.2, 0.4, 1.5],
-        [-1.1, 4.3, -0.7, 1.55],
-        [0.25, 5.8, -0.25, 1.4],
-        [-0.4, 4.1, 1.2, 1.4],
-        [0.7, 4.3, -1.15, 1.35],
-      ]).map(([x, y, z, r], i): Part => [
+  ...(far ? BROADLEAF_FAR_BLOBS : BROADLEAF_BLOBS).map(([x, y, z, r], i): Part => [
     new THREE.IcosahedronGeometry(r, 0).rotateY(i * 1.1).rotateX(i * 0.7).translate(x, y, z),
     0.16 * r,
     false,

@@ -8,8 +8,8 @@ import { byId } from '../utils/byId';
 import { optionButtons } from '../utils/dom/optionButtons';
 import {
   ANTIALIAS_CHOICES,
-  FPS_CHOICES,
   FPS_LIMIT_CHOICES,
+  ON_OFF_CHOICES,
   PRESET_CHOICES,
   SHADOW_CHOICES,
   VIEW_CHOICES,
@@ -49,7 +49,7 @@ export const setupGraphicsTab = () => {
     showGraphicsOptions();
     saveSettings();
   });
-  optionButtons('gfps', FPS_CHOICES, (v) => {
+  optionButtons('gfps', ON_OFF_CHOICES, (v) => {
     settings.showFps = v;
     showGraphicsOptions();
     saveSettings();

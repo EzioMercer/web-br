@@ -2,7 +2,7 @@ import { footstepBus } from './footstepBus';
 import { audio } from './state';
 import { noiseBuffer } from './noiseBuffer';
 
-export const stepNoise = (vol: number, dur: number, f: number, att: number, at?: number) => {
+export const stepNoise = (vol: number, dur: number, f: number, att: number, at?: number, out?: AudioNode) => {
   if (!audio.ctx || vol <= 0) {
     return;
   }
@@ -30,6 +30,6 @@ export const stepNoise = (vol: number, dur: number, f: number, att: number, at?:
   src.connect(f1);
   f1.connect(f2);
   f2.connect(g);
-  g.connect(footstepBus(audio.ctx));
+  g.connect(out || footstepBus(audio.ctx));
   src.start(t);
 };

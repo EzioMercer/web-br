@@ -32,7 +32,7 @@ export const FPS_LIMIT_CHOICES: [number, string][] = [
   [0, 'Max'],
 ];
 
-export const FPS_CHOICES: [boolean, string][] = [
+export const ON_OFF_CHOICES: [boolean, string][] = [
   [false, 'Off'],
   [true, 'On'],
 ];
