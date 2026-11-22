@@ -37,7 +37,7 @@ const CONTROLS: [string, string[]][] = [
   ['HE grenade', ['4']],
   ['Flashbang', ['5']],
   ['Smoke grenade', ['6']],
-  ['Use a medkit (+50 health)', ['H']],
+  ['Use a medkit', ['H']],
   ['Put on a Kevlar vest', ['G']],
   ['Switch weapon', ['Mouse wheel']],
   ['Loot / swap / doors', ['E']],
