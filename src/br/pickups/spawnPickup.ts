@@ -24,17 +24,6 @@ import { hypot } from '../../utils/hypot';
  * given. Returns the pickup.
  */
 export const spawnPickup = (x: number, z: number, t: PickupKind, id: string | null, st?: OwnedWeapon, y0?: number) => {
-  const col = t === PickupKind.Weapon
-    ? 0xf2a23a
-    : t === PickupKind.Armor
-      ? 0x4a8cff
-      : t === PickupKind.Ammo
-        ? 0xd9d046
-        : t === PickupKind.Grenade
-          ? 0xe05a3a
-          : t === PickupKind.Optic
-            ? 0xb98cff
-            : 0x4ad66a;
   const g = new THREE.Group();
   const it = new THREE.Group();
   const k = id!;
@@ -129,14 +118,6 @@ export const spawnPickup = (x: number, z: number, t: PickupKind, id: string | nu
       hypot(ib.max.x, ib.max.z),
     );
   }
-
-  const bm = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.05, 0.05, 12, 6),
-    new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.35 }),
-  );
-
-  bm.position.y = 6;
-  g.add(bm);
 
   const lab = makeLabel(
     n,

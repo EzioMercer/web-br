@@ -68,7 +68,11 @@ export const fireWeapon = () => {
     const d: Vec3 = [d0[0] / l, d0[1] / l, d0[2] / l];
     const v = loadout.weapon.bulletSpeed;
     const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...o), new THREE.Vector3(...o)]);
-    const streak = new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0xffe08a, transparent: true }));
+    // no depth writes, as for bot tracers: the fading streak must not cut through the zone wall or glass
+    const streak = new THREE.Line(
+      g,
+      new THREE.LineBasicMaterial({ color: 0xffe08a, transparent: true, depthWrite: false }),
+    );
 
     scene.add(streak);
     bullets.push({

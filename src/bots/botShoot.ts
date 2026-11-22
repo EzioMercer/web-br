@@ -14,6 +14,9 @@ import type { Vec3 } from '../types';
 import type { Bot } from './types';
 import { hypot } from '../utils/hypot';
 
+/** How far short of the player a bot's tracer stops (m). */
+const TRACER_GAP = 5;
+
 /** Bot `b` fires one shot at the player, `dist` away. Long guns keep their accuracy far beyond short ones. */
 export const botShoot = (b: Bot, dist: number) => {
   const w = WEAPONS[b.weaponId];
@@ -44,9 +47,11 @@ export const botShoot = (b: Bot, dist: number) => {
   const ez = tp[2] - o[2];
   const el = hypot(ex, ey, ez);
   const wt = Math.min(el, castRay(o, [ex / el, ey / el, ez / el], el));
+  // the tracer stops short of the player: a line that ends next to the eye fans out over the whole screen
+  const tt = Math.min(wt, Math.max(el * 0.5, el - TRACER_GAP));
 
   shatter(o, [ex / el, ey / el, ez / el], el);
-  tracer(o, [o[0] + ex / el * wt, o[1] + ey / el * wt, o[2] + ez / el * wt], 0xff7a55);
+  tracer(o, [o[0] + ex / el * tt, o[1] + ey / el * tt, o[2] + ez / el * tt], 0xff7a55);
   noiseBurst(
     (w.sniper ? 0.6 : 0.22) / (1 + dist * (w.sniper ? 0.03 : 0.12)),
     w.sniper ? 0.4 : 0.12,
