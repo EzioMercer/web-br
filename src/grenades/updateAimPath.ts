@@ -57,24 +57,12 @@ aimMesh.visible = false;
 
 scene.add(aimMesh);
 
-/** Ring on the spot where the grenade lands (or goes off, if the fuse runs out in the air). */
-const landRing = new THREE.Mesh(new THREE.RingGeometry(0.4, 0.62, 32), aimMat);
-
-landRing.rotation.x = -Math.PI / 2;
-
-landRing.renderOrder = 6;
-
-landRing.visible = false;
-
-scene.add(landRing);
-
-// the path the grenade will take, up to where it first lands or the fuse runs out, with a ring on that spot
+// the path the grenade will take, up to where it first lands or the fuse runs out
 export const updateAimPath = (dt: number) => {
   grenadeThrow.strength += (grenadeThrow.power - grenadeThrow.strength) * Math.min(1, dt * 14);
 
   if (!loadout.grenade || player.dead || !grenadeCount[loadout.grenade] || !grenadeThrow.held) {
     aimMesh.visible = false;
-    landRing.visible = false;
     return;
   }
 
@@ -109,9 +97,6 @@ export const updateAimPath = (dt: number) => {
     aimPos[i * 3 + 1] = simPos[j + 1];
     aimPos[i * 3 + 2] = simPos[j + 2];
   }
-
-  landRing.position.set(simPos[last * 3], simPos[last * 3 + 1] - 0.05, simPos[last * 3 + 2]);
-  landRing.visible = true;
 
   // a flat ribbon that always faces the camera and keeps the same width on screen
   const cx = camera.position.x;
