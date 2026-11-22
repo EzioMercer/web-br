@@ -114,7 +114,8 @@ Generation is data only, with no three.js. `world/gen/genWorld.ts` fills `gen.bo
 - DOM: per-frame writes go through `writeDom`. Canvases (minimap, compass) redraw only when what they show changes.
 - Measured baseline (High preset, software GPU in CI):
   - about 150 draw calls and 120k triangles per frame
-  - GPU buffers, textures, three.js geometries and scene objects stay flat over a 7-minute match
+  - over a 7-minute match, scene objects stay flat, and GPU buffers, textures and three.js geometries grow only
+    when a map tile is first seen (three.js uploads on first draw); nothing leaks
   - the heap stays at 35-50 MB
 
 ## Measuring: `tools/bench`
