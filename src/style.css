@@ -171,8 +171,8 @@ kbd{display:inline-block;min-width:16px;margin-left:5px;padding:1px 8px;font-fam
 .ivst small{display:flex;justify-content:space-between}.ivst em{font-style:normal;opacity:.9;letter-spacing:.02em;text-transform:none}
 .ivsl.opt.full{cursor:grab;border-color:rgba(211,178,255,.45);background:rgba(120,80,170,.28)}
 .ivsl.opt.drag{opacity:.35}.ivsl.opt.hov{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}.ivsl.opt.bad{border-color:#e4583e;box-shadow:inset 0 0 0 1px #e4583e}
-.ivop{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.ivop .ivsl{font-size:13px;padding:3px 6px;white-space:normal;line-height:1.1;min-height:34px}
-.sm.use b{font-size:13px}.sm.use.ready{border-color:rgba(74,214,106,.45)}.sm.use.ready.hov{background:rgba(74,214,106,.28);border-color:#4ad66a}
+.ivop{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:10px}.ivop .ivsl{display:flex;align-items:center;justify-content:center;text-align:center;font-size:13px;padding:3px 4px;white-space:normal;line-height:1.1;min-height:38px}
+.ivsl.opt.full.medkit{border-color:rgba(143,255,168,.45);background:rgba(47,158,74,.28)}.ivsl.opt.full.vest{border-color:rgba(143,184,255,.45);background:rgba(47,95,184,.3)}
 .ivhint{margin-top:8px;font-size:13px;opacity:.6;letter-spacing:.04em}
 #inv.out{box-shadow:0 0 0 2px #e4583e,0 3px 14px rgba(0,0,0,.5)}
 /* Inventory cursor: an arrow whose tip is the click point, with a badge for what a click does */

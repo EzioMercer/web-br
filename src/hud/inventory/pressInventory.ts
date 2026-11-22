@@ -1,37 +1,19 @@
-import { dropOptic } from '../../loadout/dropOptic';
-import { opticAt } from '../../loadout/opticAt';
-import { useMedkit } from '../../player/useMedkit';
-import { useVest } from '../../player/useVest';
-import { hitAt } from './hitAt';
+import { dropItem } from '../../loadout/dropItem';
+import { itemAt } from '../../loadout/itemAt';
+import { slotAt } from './slotAt';
 import { inventory } from './state';
 
 /**
- * A mouse button pressed over the open inventory. Left picks up the optic under the cursor to drag it, or uses the
- * medkit or vest under it; right throws the optic under it on the ground.
+ * A mouse button pressed over the open inventory. Left picks up the item under the cursor to drag it (letting go on
+ * the same slot uses a medkit or vest, see `endDrag`); right throws it on the ground.
  */
 export const pressInventory = (button: number) => {
-  const s = hitAt(inventory.x, inventory.y, 'slot');
-  const o = s && opticAt(s) ? s : null;
+  const s = slotAt(inventory.x, inventory.y);
+  const k = s && itemAt(s) ? s : null;
 
-  if (button === 2) {
-    if (o) {
-      dropOptic(o);
-    }
-
-    return;
-  }
-
-  if (button !== 0) {
-    return;
-  }
-
-  inventory.drag = o;
-
-  const u = o ? null : hitAt(inventory.x, inventory.y, 'use');
-
-  if (u === 'medkit') {
-    useMedkit();
-  } else if (u === 'vest') {
-    useVest();
+  if (button === 2 && k) {
+    dropItem(k);
+  } else if (button === 0) {
+    inventory.drag = k;
   }
 };

@@ -22,13 +22,8 @@ export const BOT_COUNT = 19;
 /** Render layer of the first-person weapon, drawn after the world so it never sinks into walls. */
 export const VIEWMODEL_LAYER = 1;
 
-/** Spare optics the player can carry without a gun to put them on. */
-export const OPTIC_BAG_SLOTS = 5;
-
-/** Medkits and Kevlar vests the player can carry. */
-export const MAX_MEDKITS = 3;
-
-export const MAX_VESTS = 2;
+/** Bag slots, each holding a spare optic, a medkit or a Kevlar vest. */
+export const BAG_SLOTS = 5;
 
 /** Health a medkit gives back. */
 export const MEDKIT_HEAL = 50;

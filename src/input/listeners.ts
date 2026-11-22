@@ -21,8 +21,7 @@ import { reload } from '../loadout/reload';
 import { loadout } from '../loadout/state';
 import { switchWeapon } from '../loadout/switchWeapon';
 import { player } from '../player/state';
-import { useMedkit } from '../player/useMedkit';
-import { useVest } from '../player/useVest';
+import { useSupply } from '../player/useSupply';
 import { glCanvas } from '../render/glCanvas';
 import { settings } from '../settings/state';
 import { clock } from '../sim/state';
@@ -31,7 +30,7 @@ import { useDoor } from '../world/doors/useDoor';
 import { lockMouse } from './lockMouse';
 import { setPlaying } from './setPlaying';
 import { input, keys } from './state';
-import { GrenadeId, WeaponId } from '../types';
+import { GrenadeId, Supply, WeaponId } from '../types';
 
 /**
  * Inventory cursor speed per pixel of mouse movement. Pointer lock reports the mouse without the system's pointer
@@ -192,11 +191,11 @@ addEventListener('keydown', (e) => {
   }
 
   if (e.code === 'Digit7') {
-    useMedkit();
+    useSupply(Supply.Medkit);
   }
 
   if (e.code === 'Digit8') {
-    useVest();
+    useSupply(Supply.Vest);
   }
 
   if (e.code === 'Digit3') {

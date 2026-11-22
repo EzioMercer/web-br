@@ -1,5 +1,5 @@
 import { bots } from '../../bots/state';
-import { MAX_GRENADES, MAX_MEDKITS, MAX_VESTS } from '../../config';
+import { MAX_GRENADES } from '../../config';
 import { layBodyDown } from '../../combat/layBodyDown';
 import { OPTICS } from '../../data/optics';
 import { WEAPONS } from '../../data/weapons';
@@ -9,7 +9,7 @@ import { opticTarget } from '../../loadout/opticTarget';
 import { loadout } from '../../loadout/state';
 import { endMatch } from '../../match/endMatch';
 import { damagePlayer } from '../../player/damagePlayer';
-import { player, playerBody, supplies } from '../../player/state';
+import { player, playerBody } from '../../player/state';
 import { clock } from '../../sim/state';
 import { doorFocus } from '../../world/doors/state';
 import { looting, pickups } from '../pickups/state';
@@ -125,19 +125,17 @@ export const zoneTick = (dt: number) => {
       // onto a gun without one by itself; with E into the bag, else E swaps it for the optic on the gun
       if (tg && !loadout.owned[tg].optic) {
         auto = true;
-      } else if (loadout.opticBag.includes(null)) {
+      } else if (loadout.bag.includes(null)) {
         take = true;
       } else if (tg) {
         swap = true;
       } else {
-        hint = 'Optic bag full – Tab and drag an optic out to make room';
+        hint = 'Bag full – Tab and drag something out to make room';
       }
-    } else if (k.kind === PickupKind.Armor) {
-      auto = supplies.vests < MAX_VESTS;
-      hint = auto ? hint : 'Carrying the most vests (' + MAX_VESTS + ')';
-    } else if (k.kind === PickupKind.Health) {
-      auto = supplies.medkits < MAX_MEDKITS;
-      hint = auto ? hint : 'Carrying the most medkits (' + MAX_MEDKITS + ')';
+    } else if (k.kind === PickupKind.Armor || k.kind === PickupKind.Health) {
+      // into a free bag slot
+      auto = loadout.bag.includes(null);
+      hint = auto ? hint : 'Bag full – Tab and drag something out to make room';
     } else if (k.kind === PickupKind.Ammo) {
       auto = true; // ammo goes in the bag whatever guns are carried
     } else if (grenadeCount[k.itemId as GrenadeId] < MAX_GRENADES) {

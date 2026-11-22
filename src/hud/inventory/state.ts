@@ -5,6 +5,6 @@ export const inventory = {
   /** Cursor position (CSS px), kept between openings. Negative until first placed. */
   x: -1,
   y: 0,
-  /** Optic slot being dragged (see `opticAt`), if any. */
+  /** Slot whose item is being dragged (see `itemAt`), if any. */
   drag: null as string | null,
 };

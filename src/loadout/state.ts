@@ -1,9 +1,9 @@
-import { OPTIC_BAG_SLOTS } from '../config';
+import { BAG_SLOTS } from '../config';
 import { WEAPONS } from '../data/weapons';
 import { emptyAmmoBag } from './emptyAmmoBag';
 import { WeaponId } from '../types';
 import { ReloadPhase } from './types';
-import type { GrenadeId, OpticId, OwnedWeapon, Weapon } from '../types';
+import type { BagItem, GrenadeId, OwnedWeapon, Weapon } from '../types';
 
 /** The weapons the player carries and the state of the one in hand. */
 export const loadout = {
@@ -15,8 +15,8 @@ export const loadout = {
   } as Record<WeaponId, OwnedWeapon>,
   /** Spare rounds per ammo type, shared by every gun that fires them and kept when a gun is dropped. */
   ammoBag: emptyAmmoBag(),
-  /** Spare optics, waiting for a gun that takes them. */
-  opticBag: new Array<OpticId | null>(OPTIC_BAG_SLOTS).fill(null),
+  /** Bag slots: spare optics (waiting for a gun that takes them), medkits and Kevlar vests. */
+  bag: new Array<BagItem | null>(BAG_SLOTS).fill(null),
   /** Rounds in the magazine of the weapon in hand. */
   ammo: 12,
   scoped: false,

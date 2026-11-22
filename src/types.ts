@@ -75,6 +75,15 @@ export enum OpticId {
 }
 
 /** Ammo type: pistol, SMG, rifle, shotgun, sniper, or none (knife). */
+/** Medical items carried in the bag. */
+export enum Supply {
+  Medkit = 'medkit',
+  Vest = 'vest',
+}
+
+/** What a bag slot holds: a spare optic, a medkit or a Kevlar vest. */
+export type BagItem = OpticId | Supply;
+
 export enum AmmoType {
   Pistol = 'pst',
   Smg = 'smg',
