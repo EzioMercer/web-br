@@ -82,7 +82,7 @@ let last = '';
 
 /**
  * Draws the inventory panel while it is open (both gun slots, the bag of optics, medkits and vests, the ammo, knife,
- * grenades and armor), with its cursor and the item being dragged.
+ * grenades and armor), with its cursor (while Alt is held) and the item being dragged.
  */
 export const updateInventory = () => {
   const el = byId('inv');
@@ -91,7 +91,7 @@ export const updateInventory = () => {
   const ghost = byId('ivdrag');
 
   writeDom(el, 'display', show ? 'block' : 'none');
-  writeDom(cur, 'display', show ? 'block' : 'none');
+  writeDom(cur, 'display', show && inventory.cursor ? 'block' : 'none');
   writeDom(ghost, 'display', show && inventory.drag ? 'block' : 'none');
 
   if (!show) {
@@ -131,8 +131,8 @@ export const updateInventory = () => {
   }
 
   h += '<div class="sm' + (player.armor > 0 ? '' : ' zero') + '">Armor<b>' + Math.ceil(player.armor) + '</b></div>';
-  h += '</div><div class="ivhint">Click a medkit or vest to use it. Drag an item onto another slot to swap them, '
-    + 'out of the panel or right-click it to drop it.</div>';
+  h += '</div><div class="ivhint">Hold Alt for the cursor. Click a medkit or vest to use it. Drag an item onto '
+    + 'another slot to swap them, out of the panel or right-click it to drop it.</div>';
 
   if (h !== last) {
     el.innerHTML = h;

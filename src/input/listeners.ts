@@ -11,6 +11,7 @@ import { throwGrenade } from '../grenades/throwGrenade';
 import { endDrag } from '../hud/inventory/endDrag';
 import { openInventory } from '../hud/inventory/openInventory';
 import { pressInventory } from '../hud/inventory/pressInventory';
+import { setCursor } from '../hud/inventory/setCursor';
 import { inventory } from '../hud/inventory/state';
 import { openBigMap } from '../hud/minimap/openBigMap';
 import { maps } from '../hud/minimap/state';
@@ -57,7 +58,7 @@ addEventListener('mousemove', (e) => {
     return;
   }
 
-  if (inventory.open) {
+  if (inventory.cursor) {
     // not placed yet: updateInventory puts it on the panel on the next frame
     if (inventory.x >= 0) {
       inventory.x = Math.max(0, Math.min(innerWidth - 1, inventory.x + e.movementX * CURSOR_SPEED));
@@ -76,7 +77,7 @@ addEventListener('mousemove', (e) => {
 });
 
 addEventListener('mousedown', (e) => {
-  if (input.playing && inventory.open) {
+  if (input.playing && inventory.cursor) {
     // the cursor is for the inventory: no shooting or aiming
     if (!player.dead) {
       pressInventory(e.button);
@@ -159,6 +160,12 @@ addEventListener('keydown', (e) => {
     return;
   }
 
+  // Alt only brings up the cursor while the inventory is open; otherwise it does nothing
+  if ((e.code === 'AltLeft' || e.code === 'AltRight') && !player.dead) {
+    setCursor(true);
+    return;
+  }
+
   if (e.code === 'KeyM') {
     openBigMap(!maps.bigOpen);
     return;
@@ -220,12 +227,16 @@ addEventListener('keyup', (e) => {
   // a lone Alt press would otherwise focus the browser's menu bar (Firefox on Windows/Linux)
   if (e.code === 'AltLeft' || e.code === 'AltRight') {
     e.preventDefault();
+
+    if (!keys.AltLeft && !keys.AltRight) {
+      setCursor(false);
+    }
   }
 });
 
 addEventListener('blur', () => {
   input.fireHeld = false;
-  inventory.drag = null;
+  setCursor(false);
   grenadeThrow.held = false;
 
   for (const k in keys) {

@@ -35,9 +35,11 @@ body.br #zw{display:flex}
 #zsafe{position:absolute;top:-6px;bottom:-6px;box-sizing:border-box;border-left:2px solid #ffd24a;border-right:2px solid #ffd24a;background:linear-gradient(#ffd24a,#ffd24a) center/100% 2px no-repeat}
 #zrun{position:absolute;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;color:#fff;filter:drop-shadow(0 0 2px #000);transition:left .15s linear}#zrun svg{width:16px;height:16px;display:block}
 #zdist{min-width:44px;text-align:right;font-size:16px;line-height:1;font-variant-numeric:tabular-nums}
-#pcount{display:none;left:calc(16px + env(safe-area-inset-left,0px));top:calc(12px + env(safe-area-inset-top,0px));font-size:28px}
+#tl{left:calc(16px + env(safe-area-inset-left,0px));top:calc(12px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px}
+#tl>.hud{position:static}
+#pcount{display:none;font-size:28px}
 #pcount svg{vertical-align:-3px;margin-right:6px}
-#fps{display:none;left:calc(16px + env(safe-area-inset-left,0px));top:calc(64px + env(safe-area-inset-top,0px));font-size:15px;font-variant-numeric:tabular-nums;background:rgba(0,0,0,.45);padding:2px 8px}
+#fps{display:none;font-size:15px;font-variant-numeric:tabular-nums;background:rgba(0,0,0,.45);padding:2px 8px}
 #fps.on{display:block}
 body.br #kf{top:calc(250px + env(safe-area-inset-top,0px))}
 .pan{background:linear-gradient(180deg,rgba(26,32,38,.8),rgba(10,13,16,.88));border:1px solid rgba(255,255,255,.13);box-shadow:0 3px 14px rgba(0,0,0,.5);clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}

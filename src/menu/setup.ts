@@ -41,7 +41,8 @@ const CONTROLS: [string, string[]][] = [
   ['Put on a Kevlar vest', ['G']],
   ['Switch weapon', ['Mouse wheel']],
   ['Loot / swap / doors', ['E']],
-  ['Inventory (the mouse moves its cursor)', ['Tab']],
+  ['Inventory', ['Tab']],
+  ['Inventory cursor (inventory open)', ['Alt']],
   ['Big map', ['M']],
   ['Pause', ['Esc']],
 ];
