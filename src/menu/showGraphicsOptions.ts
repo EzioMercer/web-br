@@ -2,33 +2,27 @@ import { currentOptions } from '../graphics/currentOptions';
 import { graphics } from '../graphics/state';
 import { GraphicsPreset } from '../graphics/types';
 import { byId } from '../utils/byId';
+import { markOption } from '../utils/dom/markOption';
 import { PRESET_CHOICES } from './graphicsChoices';
 import { settings } from '../settings/state';
 import { refreshRate } from '../graphics/refreshRate';
-
-/** Marks the button whose value is `v` in a row of option buttons. */
-const select = (id: string, v: unknown) => {
-  for (const b of byId(id).children) {
-    b.classList.toggle('on', (b as HTMLElement).dataset.v === String(v));
-  }
-};
 
 /** Shows the selected preset and the graphics options in effect in the Graphics tab. */
 export const showGraphicsOptions = () => {
   const o = currentOptions();
   const pct = Math.round(o.resolution * 100);
 
-  select('gpreset', graphics.preset);
-  select('gview', o.viewDistance);
-  select('gshadow', o.shadows);
-  select('gaa', o.antialias);
-  select('gfpsmax', settings.fpsLimit);
+  markOption('gpreset', graphics.preset);
+  markOption('gview', o.viewDistance);
+  markOption('gshadow', o.shadows);
+  markOption('gaa', o.antialias);
+  markOption('gfpsmax', settings.fpsLimit);
 
   // as many as the browser gives: its screen's refresh rate, once measured
   const hz = refreshRate();
 
   byId('gfpsmax').querySelector<HTMLElement>('[data-v="0"]')!.textContent = hz ? 'Max · ' + hz : 'Max';
-  select('gfps', settings.showFps);
+  markOption('gfps', settings.showFps);
   byId<HTMLInputElement>('gres').value = String(pct);
   byId('gresv').textContent = pct + '%';
 

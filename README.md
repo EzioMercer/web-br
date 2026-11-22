@@ -67,6 +67,8 @@ src/
     doors/      doors and breakable glass
 ```
 
+Outside `src/`: `tools/bench/` has Playwright scripts that play the game headless and measure frame times, draw calls and memory (see its README). `CLAUDE.md` is the working guide for AI-assisted changes: what to reuse and the performance rules.
+
 ## Balance
 
 No single spot or weapon should win on its own. Holding a mountain top with a sniper rifle is strong, but it has a price:

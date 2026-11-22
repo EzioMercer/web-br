@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { srgbTex } from '../render/srgbTex';
+import { labelSprite } from '../utils/three/labelSprite';
 import type { Bot } from './types';
 import { boxMesh } from '../utils/three/boxMesh';
 import { lambert } from '../utils/three/lambert';
@@ -83,15 +83,8 @@ export const buildBotModel = (
   gunG.position.set(0, 1.18, 0.3);
   U.add(gunG);
 
-  const cv = document.createElement('canvas');
+  const { sprite: sp, canvas: cv, texture: tex } = labelSprite(1.6, 0.4);
 
-  cv.width = 256;
-  cv.height = 64;
-
-  const tex = srgbTex(new THREE.CanvasTexture(cv));
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
-
-  sp.scale.set(1.6, 0.4, 1);
   sp.position.set(0, 2.15, 0);
   sp.visible = false;
   U.add(sp);

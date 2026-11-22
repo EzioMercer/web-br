@@ -7,6 +7,8 @@ import { loadSettings } from '../settings/loadSettings';
 import { saveSettings } from '../settings/saveSettings';
 import { settings } from '../settings/state';
 import { byId } from '../utils/byId';
+import { markOption } from '../utils/dom/markOption';
+import { optionButtons } from '../utils/dom/optionButtons';
 import { openSettings } from './openSettings';
 import { selectTab } from './selectTab';
 import { setupGraphicsTab } from './setupGraphicsTab';
@@ -90,20 +92,14 @@ document.querySelectorAll<HTMLElement>('#settings .tab').forEach((t) => {
 });
 
 {
-  const dd = byId('mdiff');
+  const key = () => Object.keys(DIFFICULTIES).find(k => DIFFICULTIES[k] === settings.difficulty);
 
-  for (const k in DIFFICULTIES) {
-    const b = document.createElement('button');
-
-    b.textContent = DIFFICULTIES[k].name;
-    b.className = 'dbtn' + (DIFFICULTIES[k] === settings.difficulty ? ' on' : '');
-    b.onclick = () => {
-      settings.difficulty = DIFFICULTIES[k];
-      [...dd.children].forEach(c => c.classList.toggle('on', c === b));
-      saveSettings();
-    };
-    dd.appendChild(b);
-  }
+  optionButtons('mdiff', Object.keys(DIFFICULTIES).map(k => [k, DIFFICULTIES[k].name] as const), (k) => {
+    settings.difficulty = DIFFICULTIES[k];
+    markOption('mdiff', k);
+    saveSettings();
+  });
+  markOption('mdiff', key());
 }
 
 {

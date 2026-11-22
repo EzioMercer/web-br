@@ -17,7 +17,8 @@ const loops = ['if', 'for', 'while', 'do', 'switch'];
 const vars = ['const', 'let', 'var'];
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules'] },
+  // tools/bench: Node scripts run by hand with Playwright (see its README), not part of the game
+  { ignores: ['dist', 'node_modules', 'tools/bench'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

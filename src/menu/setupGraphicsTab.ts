@@ -5,6 +5,7 @@ import { GraphicsPreset } from '../graphics/types';
 import type { GraphicsOptions } from '../graphics/types';
 import { saveSettings } from '../settings/saveSettings';
 import { byId } from '../utils/byId';
+import { optionButtons } from '../utils/dom/optionButtons';
 import {
   ANTIALIAS_CHOICES,
   FPS_CHOICES,
@@ -35,34 +36,20 @@ export const setupGraphicsTab = () => {
     changed();
   };
 
-  const buttons = <T>(id: string, choices: [T, string][], pick: (v: T) => void) => {
-    const row = byId(id);
-
-    for (const [v, label] of choices) {
-      const b = document.createElement('button');
-
-      b.className = 'dbtn';
-      b.textContent = label;
-      b.dataset.v = String(v);
-      b.onclick = () => pick(v);
-      row.appendChild(b);
-    }
-  };
-
-  buttons('gpreset', PRESET_CHOICES, (p) => {
+  optionButtons('gpreset', PRESET_CHOICES, (p) => {
     graphics.preset = p;
     changed();
   });
-  buttons('gview', VIEW_CHOICES, v => setOption('viewDistance', v));
-  buttons('gshadow', SHADOW_CHOICES, v => setOption('shadows', v));
-  buttons('gaa', ANTIALIAS_CHOICES, v => setOption('antialias', v));
+  optionButtons('gview', VIEW_CHOICES, v => setOption('viewDistance', v));
+  optionButtons('gshadow', SHADOW_CHOICES, v => setOption('shadows', v));
+  optionButtons('gaa', ANTIALIAS_CHOICES, v => setOption('antialias', v));
   // not graphics options: they leave the preset as it is
-  buttons('gfpsmax', FPS_LIMIT_CHOICES, (v) => {
+  optionButtons('gfpsmax', FPS_LIMIT_CHOICES, (v) => {
     settings.fpsLimit = v;
     showGraphicsOptions();
     saveSettings();
   });
-  buttons('gfps', FPS_CHOICES, (v) => {
+  optionButtons('gfps', FPS_CHOICES, (v) => {
     settings.showFps = v;
     showGraphicsOptions();
     saveSettings();
