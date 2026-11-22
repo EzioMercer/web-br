@@ -57,5 +57,5 @@ export const soundMark = (x: number, z: number, shot: boolean, strength: number,
   m.x = x;
   m.z = z;
   m.age = 0;
-  m.strength = Math.max(0.35, Math.min(1, strength));
+  m.strength = Math.max(0.6, Math.min(1, strength));
 };

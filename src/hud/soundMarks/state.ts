@@ -8,9 +8,12 @@ export type SoundMark = {
   z: number;
   /** Seconds since the sound; the mark is hidden from `SOUND_MARK_LIFE` on. */
   age: number;
-  /** Opacity at its brightest (0..1): quieter, farther sounds give fainter marks. */
+  /** Loudness (0..1), scaling the mark's opacity: quieter, farther sounds give fainter marks. */
   strength: number;
 };
+
+/** Opacity of a mark at its brightest: see-through from the start, so it never hides what is behind it. */
+export const SOUND_MARK_OPACITY = 0.55;
 
 /** Seconds a mark stays on screen after its sound. */
 export const SOUND_MARK_LIFE = 1.3;
